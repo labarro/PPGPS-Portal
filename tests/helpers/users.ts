@@ -1,3 +1,5 @@
+import { randomUUID } from 'node:crypto'
+
 import { getPayload } from 'payload'
 
 import config from '../../src/payload.config'
@@ -8,7 +10,8 @@ export const E2E_EMAIL_DOMAIN = '@e2e.example.com'
 
 export const loginUser = {
   email: `login${E2E_EMAIL_DOMAIN}`,
-  password: 'senha-ficticia-e2e-123',
+  // Senha aleatória por execução (sem literais que pareçam segredos).
+  password: randomUUID(),
 }
 
 async function payloadClient() {

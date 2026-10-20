@@ -1,3 +1,5 @@
+import { randomUUID } from 'node:crypto'
+
 import { expect, type Page, test } from '@playwright/test'
 
 import {
@@ -10,7 +12,7 @@ import {
 
 const firstUser = {
   email: `primeiro${E2E_EMAIL_DOMAIN}`,
-  password: 'senha-ficticia-primeiro-123',
+  password: randomUUID(),
 }
 
 async function expectDashboard(page: Page) {

@@ -1,9 +1,12 @@
+import { randomUUID } from 'node:crypto'
+
 import { getPayload, type Payload } from 'payload'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 
 import config from '@/payload.config'
 
 const email = `int-${Date.now()}@example.com`
+const password = randomUUID()
 
 let payload: Payload
 
@@ -35,13 +38,13 @@ describe('Payload (integração com PostgreSQL)', () => {
   it('cria um usuário e autentica com a senha', async () => {
     const user = await payload.create({
       collection: 'users',
-      data: { email, password: 'senha-ficticia-123' },
+      data: { email, password },
     })
     expect(user.email).toBe(email)
 
     const login = await payload.login({
       collection: 'users',
-      data: { email, password: 'senha-ficticia-123' },
+      data: { email, password },
     })
     expect(login.token).toBeTruthy()
     expect(login.user?.email).toBe(email)

@@ -1,0 +1,6 @@
+# Falsos positivos revisados (S01): senhas fictícias literais em testes do commit 09fa642,
+# substituídas por valores aleatórios (randomUUID) no commit seguinte. Não contêm segredos reais.
+09fa6426743b439f4bfc8720d597abc6d4c741ec:tests/helpers/users.ts:generic-api-key:11
+09fa6426743b439f4bfc8720d597abc6d4c741ec:tests/e2e/admin.e2e.spec.ts:generic-api-key:13
+09fa6426743b439f4bfc8720d597abc6d4c741ec:tests/integration/payload.int.test.ts:generic-api-key:38
+09fa6426743b439f4bfc8720d597abc6d4c741ec:tests/integration/payload.int.test.ts:generic-api-key:44
