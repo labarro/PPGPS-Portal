@@ -1,0 +1,12 @@
+# Nunca enviar segredos locais nem artefatos para a Vercel (padrões ancorados na raiz).
+/.env
+/.env.*
+!/.env.example
+/.secrets
+/.neon
+/node_modules
+/.next
+/media
+/coverage
+/playwright-report
+/test-results
