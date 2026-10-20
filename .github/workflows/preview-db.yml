@@ -83,7 +83,7 @@ jobs:
           parent_branch: seed
           database: neondb
           role: neondb_owner
-          suspend_timeout: 300
+          # suspend_timeout omitido: o plano Free não permite alterá-lo (HTTP 412).
           expires_at: ${{ env.EXPIRES_AT }}
 
       - name: Renovar expiração do branch reutilizado

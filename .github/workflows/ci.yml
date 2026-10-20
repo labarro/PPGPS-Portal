@@ -115,6 +115,9 @@ jobs:
     name: Gitleaks (segredos)
     runs-on: ubuntu-24.04
     timeout-minutes: 10
+    permissions:
+      contents: read
+      pull-requests: read
     steps:
       - uses: actions/checkout@v5
         with:
