@@ -1,0 +1,147 @@
+name: Deploy de homologação (staging)
+
+# Cada merge na main: migrate staging (job dedicado com trava de concorrência) ->
+# deploy na Vercel com APP_ENV=staging -> fumaça. Também atualiza o branch Neon `seed`
+# (base dos previews) com as migrations novas e o seed fictício. ADR-0005 / ADR-0009.
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  NEXT_TELEMETRY_DISABLED: '1'
+
+jobs:
+  migrate-staging:
+    name: Migrations em staging
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    environment: staging
+    concurrency:
+      group: migrate-staging
+      cancel-in-progress: false
+    env:
+      APP_ENV: staging
+      DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      PAYLOAD_SECRET: ${{ secrets.PAYLOAD_SECRET }}
+    outputs:
+      enabled: ${{ steps.config.outputs.enabled }}
+    steps:
+      - name: Verificar configuração
+        id: config
+        run: |
+          if [[ -z "$DATABASE_URL" || -z "$PAYLOAD_SECRET" ]]; then
+            echo "::warning::Ambiente 'staging' sem DATABASE_URL/PAYLOAD_SECRET. Homologação não atualizada."
+            echo "enabled=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "enabled=true" >> "$GITHUB_OUTPUT"
+          fi
+      - uses: actions/checkout@v5
+        if: steps.config.outputs.enabled == 'true'
+      - uses: ./.github/actions/setup
+        if: steps.config.outputs.enabled == 'true'
+      - name: Aplicar migrations (nunca no build)
+        if: steps.config.outputs.enabled == 'true'
+        run: |
+          pnpm migrate
+          pnpm migrate:status
+
+  refresh-seed:
+    name: Atualizar branch Neon seed (base dos previews)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    environment: preview
+    concurrency:
+      group: migrate-seed
+      cancel-in-progress: false
+    env:
+      NEON_API_KEY: ${{ secrets.NEON_API_KEY }}
+      NEON_PROJECT_ID: ${{ vars.NEON_PROJECT_ID }}
+      PAYLOAD_SECRET: ${{ secrets.PAYLOAD_SECRET }}
+      SEED_ADMIN_EMAIL: ${{ secrets.SEED_ADMIN_EMAIL }}
+      SEED_ADMIN_PASSWORD: ${{ secrets.SEED_ADMIN_PASSWORD }}
+      APP_ENV: preview
+    steps:
+      - name: Verificar configuração
+        id: config
+        run: |
+          if [[ -z "$NEON_API_KEY" || -z "$NEON_PROJECT_ID" || -z "$PAYLOAD_SECRET" ]]; then
+            echo "::warning::Ambiente 'preview' sem NEON_API_KEY/NEON_PROJECT_ID/PAYLOAD_SECRET. Seed não atualizado."
+            echo "enabled=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "enabled=true" >> "$GITHUB_OUTPUT"
+          fi
+      - uses: actions/checkout@v5
+        if: steps.config.outputs.enabled == 'true'
+      - uses: ./.github/actions/setup
+        if: steps.config.outputs.enabled == 'true'
+      - name: Migrations + seed fictício no branch seed
+        if: steps.config.outputs.enabled == 'true'
+        run: |
+          DATABASE_URL=$(pnpm dlx neon@8.8.0 connection-string seed --project-id "$NEON_PROJECT_ID" --no-analytics | tail -n 1)
+          echo "::add-mask::$DATABASE_URL"
+          export DATABASE_URL
+          pnpm migrate
+          pnpm migrate:status
+          if [[ -n "$SEED_ADMIN_EMAIL" && -n "$SEED_ADMIN_PASSWORD" ]]; then
+            pnpm seed
+          else
+            echo "::notice::SEED_ADMIN_* ausentes: conta fictícia não criada no seed."
+          fi
+
+  deploy-staging:
+    name: Deploy e fumaça (staging)
+    needs: migrate-staging
+    if: needs.migrate-staging.outputs.enabled == 'true'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    environment: staging
+    concurrency:
+      group: deploy-staging
+      cancel-in-progress: false
+    steps:
+      - name: Verificar configuração da Vercel
+        id: config
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+        run: |
+          if [[ -z "$VERCEL_TOKEN" ]]; then
+            echo "::warning::VERCEL_TOKEN ausente: deploy de homologação não executado."
+            echo "enabled=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "enabled=true" >> "$GITHUB_OUTPUT"
+          fi
+      - uses: actions/checkout@v5
+        if: steps.config.outputs.enabled == 'true'
+      - uses: ./.github/actions/setup
+        if: steps.config.outputs.enabled == 'true'
+      - name: Deploy (Vercel, alvo preview com APP_ENV=staging)
+        id: deploy
+        if: steps.config.outputs.enabled == 'true'
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_ORG_ID: ${{ vars.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ vars.VERCEL_PROJECT_ID }}
+          APP_ENV: staging
+          DATABASE_URL: ${{ secrets.DATABASE_URL_POOLED }}
+          PAYLOAD_SECRET: ${{ secrets.PAYLOAD_SECRET }}
+          BASIC_AUTH_USER: ${{ secrets.BASIC_AUTH_USER }}
+          BASIC_AUTH_PASSWORD: ${{ secrets.BASIC_AUTH_PASSWORD }}
+        run: bash scripts/ci/vercel-deploy.sh preview
+      - name: Apontar domínio fixo de homologação
+        if: steps.config.outputs.enabled == 'true' && vars.STAGING_DOMAIN != ''
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_ORG_ID: ${{ vars.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ vars.VERCEL_PROJECT_ID }}
+        run: pnpm dlx vercel@64.7.0 alias set "${{ steps.deploy.outputs.deployment_url }}" "${{ vars.STAGING_DOMAIN }}" --token="$VERCEL_TOKEN" --scope="$VERCEL_ORG_ID"
+      - name: Fumaça
+        if: steps.config.outputs.enabled == 'true'
+        env:
+          BASIC_AUTH_USER: ${{ secrets.BASIC_AUTH_USER }}
+          BASIC_AUTH_PASSWORD: ${{ secrets.BASIC_AUTH_PASSWORD }}
+          VERCEL_AUTOMATION_BYPASS_SECRET: ${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET }}
+        run: bash scripts/ci/smoke-deployment.sh "${{ steps.deploy.outputs.deployment_url }}" protected

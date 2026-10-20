@@ -1,0 +1,48 @@
+import { defineConfig, devices } from '@playwright/test'
+
+import { configureTestDatabase } from './tests/helpers/test-env'
+
+/**
+ * E2E de fumaça (S01). Usa o banco de TESTE e uma porta própria (3100) para não reutilizar
+ * um `pnpm dev` aberto com o banco de desenvolvimento.
+ * - Local: `next dev`.
+ * - CI: `E2E_SERVER_COMMAND="pnpm start"` após `pnpm build`.
+ */
+configureTestDatabase()
+
+const PORT = Number(process.env.E2E_PORT || 3100)
+const baseURL = `http://localhost:${PORT}`
+
+export default defineConfig({
+  testDir: './tests/e2e',
+  forbidOnly: !!process.env.CI,
+  retries: process.env.CI ? 1 : 0,
+  workers: 1,
+  reporter: process.env.CI ? [['github'], ['html', { open: 'never' }]] : 'list',
+  timeout: 60_000,
+  use: {
+    baseURL,
+    locale: 'pt-BR',
+    trace: 'on-first-retry',
+  },
+  projects: [
+    {
+      name: 'chromium',
+      use: { ...devices['Desktop Chrome'] },
+    },
+  ],
+  webServer: {
+    command: process.env.E2E_SERVER_COMMAND || `pnpm exec next dev --port ${PORT}`,
+    url: baseURL,
+    reuseExistingServer: !process.env.CI,
+    timeout: 180_000,
+    env: {
+      APP_ENV: 'local',
+      PORT: String(PORT),
+      DATABASE_URL: process.env.DATABASE_URL ?? '',
+      PAYLOAD_SECRET: process.env.PAYLOAD_SECRET ?? '',
+      BASIC_AUTH_USER: '',
+      BASIC_AUTH_PASSWORD: '',
+    },
+  },
+})

@@ -1,0 +1,167 @@
+name: Preview por PR (branch Neon efêmero)
+
+# ADR-0005 / planejamento 24.2:
+# - cada PR recebe o branch Neon `preview/pr-N`, criado a partir de `seed` (nunca de produção);
+# - as migrations do PR são aplicadas nesse branch ANTES do deploy (nunca no build);
+# - o branch expira após 7 dias sem atualização e é removido quando o PR é fechado;
+# - no máximo MAX_PREVIEWS branches de preview simultâneos (limite do Neon Free).
+on:
+  pull_request:
+    types: [opened, reopened, synchronize, closed]
+
+concurrency:
+  group: preview-pr-${{ github.event.pull_request.number }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  pull-requests: write
+
+env:
+  NEON_PROJECT_ID: ${{ vars.NEON_PROJECT_ID }}
+  NEON_BRANCH: preview/pr-${{ github.event.pull_request.number }}
+  MAX_PREVIEWS: '5'
+  NEXT_TELEMETRY_DISABLED: '1'
+
+jobs:
+  preview:
+    name: Banco efêmero, migrations e deploy de preview
+    if: github.event.action != 'closed' && github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    environment: preview
+    steps:
+      - name: Verificar configuração do Neon
+        id: config
+        env:
+          NEON_API_KEY: ${{ secrets.NEON_API_KEY }}
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+        run: |
+          if [[ -z "$NEON_API_KEY" || -z "$NEON_PROJECT_ID" ]]; then
+            echo "::warning::NEON_API_KEY (secret) e/ou NEON_PROJECT_ID (variável) ausentes no ambiente 'preview'. Preview não criado."
+            echo "enabled=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "enabled=true" >> "$GITHUB_OUTPUT"
+          fi
+          if [[ -n "$VERCEL_TOKEN" ]]; then
+            echo "vercel=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "::warning::VERCEL_TOKEN ausente: o banco do preview é preparado, mas o deploy não."
+            echo "vercel=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - uses: actions/checkout@v5
+        if: steps.config.outputs.enabled == 'true'
+      - uses: ./.github/actions/setup
+        if: steps.config.outputs.enabled == 'true'
+
+      - name: Limitar previews simultâneos
+        if: steps.config.outputs.enabled == 'true'
+        env:
+          NEON_API_KEY: ${{ secrets.NEON_API_KEY }}
+        run: |
+          branches=$(pnpm dlx neon@8.8.0 branches list --project-id "$NEON_PROJECT_ID" --output json --no-analytics)
+          others=$(echo "$branches" | jq --arg me "$NEON_BRANCH" '[.[] | select(.name | startswith("preview/")) | select(.name != $me)] | length')
+          echo "Outros previews ativos: $others (máximo $MAX_PREVIEWS)"
+          if (( others >= MAX_PREVIEWS )); then
+            echo "::error::Limite de $MAX_PREVIEWS previews simultâneos atingido. Feche PRs antigos."
+            exit 1
+          fi
+
+      - name: Calcular expiração (7 dias)
+        if: steps.config.outputs.enabled == 'true'
+        run: echo "EXPIRES_AT=$(date -u --date '+7 days' +'%Y-%m-%dT%H:%M:%SZ')" >> "$GITHUB_ENV"
+
+      - name: Criar (ou reutilizar) branch Neon a partir de seed
+        if: steps.config.outputs.enabled == 'true'
+        id: neon
+        uses: neondatabase/create-branch-action@v6
+        with:
+          project_id: ${{ vars.NEON_PROJECT_ID }}
+          api_key: ${{ secrets.NEON_API_KEY }}
+          branch_name: ${{ env.NEON_BRANCH }}
+          parent_branch: seed
+          database: neondb
+          role: neondb_owner
+          # suspend_timeout omitido: o plano Free não permite alterá-lo (HTTP 412).
+          expires_at: ${{ env.EXPIRES_AT }}
+
+      - name: Renovar expiração do branch reutilizado
+        if: steps.config.outputs.enabled == 'true' && steps.neon.outputs.created != 'true'
+        env:
+          NEON_API_KEY: ${{ secrets.NEON_API_KEY }}
+        run: pnpm dlx neon@8.8.0 branches set-expiration "$NEON_BRANCH" --project-id "$NEON_PROJECT_ID" --expires-at "$EXPIRES_AT" --no-analytics
+
+      - name: Aplicar migrations no branch efêmero (antes do deploy)
+        if: steps.config.outputs.enabled == 'true'
+        env:
+          DATABASE_URL: ${{ steps.neon.outputs.db_url }}
+          PAYLOAD_SECRET: ${{ secrets.PAYLOAD_SECRET }}
+          APP_ENV: preview
+        run: |
+          pnpm migrate
+          pnpm migrate:status
+
+      - name: Deploy de preview na Vercel
+        id: deploy
+        if: steps.config.outputs.enabled == 'true' && steps.config.outputs.vercel == 'true'
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_ORG_ID: ${{ vars.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ vars.VERCEL_PROJECT_ID }}
+          APP_ENV: preview
+          DATABASE_URL: ${{ steps.neon.outputs.db_url_pooled }}
+          PAYLOAD_SECRET: ${{ secrets.PAYLOAD_SECRET }}
+          BASIC_AUTH_USER: ${{ secrets.BASIC_AUTH_USER }}
+          BASIC_AUTH_PASSWORD: ${{ secrets.BASIC_AUTH_PASSWORD }}
+        run: bash scripts/ci/vercel-deploy.sh preview
+
+      - name: Fumaça do preview
+        if: steps.deploy.outputs.deployment_url != ''
+        env:
+          BASIC_AUTH_USER: ${{ secrets.BASIC_AUTH_USER }}
+          BASIC_AUTH_PASSWORD: ${{ secrets.BASIC_AUTH_PASSWORD }}
+          VERCEL_AUTOMATION_BYPASS_SECRET: ${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET }}
+        run: bash scripts/ci/smoke-deployment.sh "${{ steps.deploy.outputs.deployment_url }}" protected
+
+      - name: Comentar no PR
+        if: steps.config.outputs.enabled == 'true'
+        uses: actions/github-script@v8
+        env:
+          DEPLOY_URL: ${{ steps.deploy.outputs.deployment_url }}
+          BRANCH_ID: ${{ steps.neon.outputs.branch_id }}
+        with:
+          script: |
+            const marker = '<!-- preview-db -->'
+            const url = process.env.DEPLOY_URL || '(deploy na Vercel não configurado: VERCEL_TOKEN ausente)'
+            const body = `${marker}\n**Preview do PR**\n\n- Banco: branch Neon \`${process.env.NEON_BRANCH}\` (\`${process.env.BRANCH_ID}\`), criado de \`seed\`, expira em ${process.env.EXPIRES_AT}\n- App: ${url}\n- Acesso: autenticação básica + \`noindex\``
+            const { owner, repo } = context.repo
+            const issue_number = context.payload.pull_request.number
+            const comments = await github.paginate(github.rest.issues.listComments, { owner, repo, issue_number })
+            const existing = comments.find((c) => c.body?.includes(marker))
+            if (existing) await github.rest.issues.updateComment({ owner, repo, comment_id: existing.id, body })
+            else await github.rest.issues.createComment({ owner, repo, issue_number, body })
+
+  cleanup:
+    name: Remover branch Neon do PR fechado
+    if: github.event.action == 'closed'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    environment: preview
+    steps:
+      - name: Remover branch (se existir)
+        env:
+          NEON_API_KEY: ${{ secrets.NEON_API_KEY }}
+        run: |
+          if [[ -z "$NEON_API_KEY" || -z "$NEON_PROJECT_ID" ]]; then
+            echo "::warning::Neon não configurado; nada a remover."
+            exit 0
+          fi
+          neon() { npx -y neon@8.8.0 "$@" --no-analytics; }
+          exists=$(neon branches list --project-id "$NEON_PROJECT_ID" --output json | jq --arg b "$NEON_BRANCH" '[.[] | select(.name == $b)] | length')
+          if [[ "$exists" == "0" ]]; then
+            echo "Branch $NEON_BRANCH não existe (já removido ou expirado)."
+            exit 0
+          fi
+          neon branches delete "$NEON_BRANCH" --project-id "$NEON_PROJECT_ID"
+          echo "Branch $NEON_BRANCH removido."

@@ -1,0 +1,44 @@
+# Serviços LOCAIS de desenvolvimento (ADR-0005). Variáveis lidas do `.env` gerado por
+# `pnpm env:local`. Não use estes serviços para dados reais.
+name: ppgps-portal
+
+services:
+  postgres:
+    # Mesma versão maior do Neon (PostgreSQL 18).
+    image: postgres:18-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:?execute pnpm env:local}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?execute pnpm env:local}
+      POSTGRES_DB: ${POSTGRES_DB:-ppgps}
+    ports:
+      - '127.0.0.1:${POSTGRES_PORT:-5432}:5432'
+    volumes:
+      - pgdata:/var/lib/postgresql
+      - ./docker/postgres/init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}']
+      interval: 2s
+      timeout: 5s
+      retries: 30
+
+  minio:
+    # Storage S3 compatível local; usado pelo adaptador de storage a partir da S02.
+    # A MinIO deixou de publicar imagens oficiais (Docker Hub/Quay) em 2025; usa-se a
+    # imagem mantida pela Chainguard, fixada por digest para reprodutibilidade.
+    image: cgr.dev/chainguard/minio@sha256:32c504bea4574d8f29d719b37bc0dad920ecf3e22b81dc5cea0bb105af2ce10f
+    restart: unless-stopped
+    command: ['server', '/data', '--console-address', ':9001']
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:?execute pnpm env:local}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:?execute pnpm env:local}
+    ports:
+      - '127.0.0.1:${MINIO_API_PORT:-9000}:9000'
+      - '127.0.0.1:${MINIO_CONSOLE_PORT:-9001}:9001'
+    volumes:
+      - miniodata:/data
+    # Imagem distroless (sem shell/curl): sem healthcheck; `--wait` aguarda o estado "running".
+
+volumes:
+  pgdata:
+  miniodata:
