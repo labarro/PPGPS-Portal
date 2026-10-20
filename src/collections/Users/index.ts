@@ -17,5 +17,5 @@ export const Users: CollectionConfig = {
     useAsTitle: 'email',
   },
   auth: true,
-  fields: [],
+  fields: [{ name: 'driftProbe', type: 'text' }],
 }
