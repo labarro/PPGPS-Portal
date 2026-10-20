@@ -1,0 +1,67 @@
+name: Verificação de migrations
+
+# Bloqueante (AGENTS.md §6.8; ADR-0005; ADR-0008):
+# 1. aplica todas as migrations em banco limpo;
+# 2. detecta drift (alteração de schema sem migration) e tipos/import map desatualizados;
+# 3. executa down e novamente up da última leva de migrations.
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: migrations-check-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  NEXT_TELEMETRY_DISABLED: '1'
+  APP_ENV: local
+
+jobs:
+  migrations:
+    name: Banco limpo, drift e down/up
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    services:
+      postgres:
+        image: postgres:18-alpine
+        env:
+          POSTGRES_USER: ci
+          POSTGRES_PASSWORD: ci
+          POSTGRES_DB: ppgps_migrations
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U ci -d ppgps_migrations"
+          --health-interval 2s --health-timeout 5s --health-retries 30
+    env:
+      DATABASE_URL: postgres://ci:ci@localhost:5432/ppgps_migrations
+    steps:
+      - uses: actions/checkout@v5
+      - uses: ./.github/actions/setup
+      - name: Segredo efêmero do Payload
+        run: echo "PAYLOAD_SECRET=$(openssl rand -hex 32)" >> "$GITHUB_ENV"
+
+      - name: 1. Aplicar todas as migrations em banco limpo
+        run: pnpm migrate && pnpm migrate:status
+
+      - name: 2a. Drift de schema (configuração x última migration)
+        run: pnpm migrate:check
+
+      - name: 2b. Tipos e import map gerados estão versionados
+        run: |
+          pnpm generate:types
+          pnpm generate:importmap
+          git diff --exit-code -- src/payload-types.ts "src/app/(payload)/admin/importMap.js" || {
+            echo "::error::payload-types.ts ou importMap.js desatualizados. Rode pnpm generate:types e pnpm generate:importmap e versione o resultado."
+            exit 1
+          }
+
+      - name: 3. down e novamente up da última leva
+        run: |
+          pnpm migrate:down
+          pnpm migrate
+          pnpm migrate:status

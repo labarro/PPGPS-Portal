@@ -1,0 +1,42 @@
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+      timezone: America/Sao_Paulo
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: chore
+      prefix-development: chore
+      include: scope
+    groups:
+      payload:
+        patterns: ['payload', '@payloadcms/*']
+      next-react:
+        patterns: ['next', 'react', 'react-dom', 'eslint-config-next', '@types/react*']
+      dev-tooling:
+        dependency-type: development
+        update-types: [minor, patch]
+    ignore:
+      # Versões MAIORES de Next/Payload/React só em sprint dedicada (AGENTS.md §2).
+      - dependency-name: next
+        update-types: [version-update:semver-major]
+      - dependency-name: payload
+        update-types: [version-update:semver-major]
+      - dependency-name: '@payloadcms/*'
+        update-types: [version-update:semver-major]
+      - dependency-name: react
+        update-types: [version-update:semver-major]
+      - dependency-name: react-dom
+        update-types: [version-update:semver-major]
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+      timezone: America/Sao_Paulo
+    commit-message:
+      prefix: ci

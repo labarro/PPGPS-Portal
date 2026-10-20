@@ -1,0 +1,108 @@
+name: Deploy de produção (release aprovada)
+
+# Somente por tag vX.Y.Z na main, com aprovação manual no GitHub Environment `production`
+# (revisores obrigatórios configurados pelo supervisor). Agentes nunca disparam este fluxo.
+# Ordem (ADR-0005): ponto de restauração -> migrate (trava de concorrência) -> deploy -> fumaça.
+# Publicação pública só a partir da S06 (domínio, remoção de noindex, decisão de hospedagem).
+on:
+  push:
+    tags: ['v*.*.*']
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Tag da release já existente (ex.: v1.0.0)'
+        required: true
+
+permissions:
+  contents: read
+
+concurrency:
+  group: production
+  cancel-in-progress: false
+
+env:
+  NEXT_TELEMETRY_DISABLED: '1'
+  RELEASE_TAG: ${{ github.event.inputs.tag || github.ref_name }}
+
+jobs:
+  verify:
+    name: Validar release
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+          ref: ${{ env.RELEASE_TAG }}
+      - name: Tag semântica e contida na main
+        run: |
+          [[ "$RELEASE_TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]] || { echo "::error::Tag inválida: $RELEASE_TAG"; exit 1; }
+          git merge-base --is-ancestor "$RELEASE_TAG" origin/main || { echo "::error::A tag não está na main"; exit 1; }
+
+  restore-point:
+    name: Ponto de restauração (branch Neon predeploy)
+    needs: verify
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    environment: production
+    env:
+      NEON_API_KEY: ${{ secrets.NEON_API_KEY }}
+      NEON_PROJECT_ID: ${{ vars.NEON_PROJECT_ID }}
+      NEON_PRODUCTION_BRANCH: ${{ vars.NEON_PRODUCTION_BRANCH || 'production' }}
+    steps:
+      - name: Criar predeploy-<tag> e manter só os 2 mais recentes
+        run: |
+          neon() { npx -y neon@8.8.0 "$@" --no-analytics; }
+          name="predeploy-${RELEASE_TAG}"
+          neon branches create --project-id "$NEON_PROJECT_ID" --name "$name" \
+            --parent "$NEON_PRODUCTION_BRANCH" --no-compute --no-secrets --output json >/dev/null
+          echo "Ponto de restauração criado: $name"
+          neon branches list --project-id "$NEON_PROJECT_ID" --output json \
+            | jq -r '[.[] | select(.name | startswith("predeploy-"))] | sort_by(.created_at) | reverse | .[2:] | .[].name' \
+            | while read -r old; do [[ -n "$old" ]] && neon branches delete "$old" --project-id "$NEON_PROJECT_ID"; done
+      # O pg_dump criptografado do ponto de restauração entra com a infraestrutura de backup (S02).
+
+  migrate:
+    name: Migrations em produção
+    needs: restore-point
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    environment: production
+    concurrency:
+      group: migrate-production
+      cancel-in-progress: false
+    env:
+      APP_ENV: production
+      DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      PAYLOAD_SECRET: ${{ secrets.PAYLOAD_SECRET }}
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: ${{ env.RELEASE_TAG }}
+      - uses: ./.github/actions/setup
+      - run: pnpm migrate
+      - run: pnpm migrate:status
+
+  deploy:
+    name: Deploy e fumaça (produção)
+    needs: migrate
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    environment: production
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: ${{ env.RELEASE_TAG }}
+      - uses: ./.github/actions/setup
+      - name: Deploy (Vercel --prod)
+        id: deploy
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_ORG_ID: ${{ vars.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ vars.VERCEL_PROJECT_ID }}
+          APP_ENV: production
+          DATABASE_URL: ${{ secrets.DATABASE_URL_POOLED }}
+          PAYLOAD_SECRET: ${{ secrets.PAYLOAD_SECRET }}
+        run: bash scripts/ci/vercel-deploy.sh production
+      - name: Fumaça pós-deploy
+        run: bash scripts/ci/smoke-deployment.sh "${{ steps.deploy.outputs.deployment_url }}" production
