@@ -1,48 +1,12 @@
-import AxeBuilder from '@axe-core/playwright'
-import { expect, type Page, test } from '@playwright/test'
+import { expect, test } from '@playwright/test'
 
 import { strongTestPassword } from '../helpers/test-env'
-
-const GROUP_NAME = 'Grupo de Pesquisa em Bioética e Promoção da Saúde - Unicesumar'
-const SHORT_NAME = 'Bioética e Promoção da Saúde'
-
-async function expectNoSeriousA11yViolations(page: Page) {
-  const results = await new AxeBuilder({ page })
-    .withTags(['wcag2a', 'wcag2aa', 'wcag21aa', 'wcag22aa'])
-    .analyze()
-  const blocking = results.violations.filter(
-    (violation) => violation.impact === 'serious' || violation.impact === 'critical',
-  )
-  expect(blocking, JSON.stringify(blocking, null, 2)).toEqual([])
-}
-
-/** Nenhuma marca institucional: sem imagens/SVG de logotipo e sem referências a arquivos de marca. */
-async function expectNoInstitutionalLogos(page: Page) {
-  const offenders = await page.evaluate(() => {
-    const pattern = /unicesumar|ppgps|cnpq|logo/i
-    const found: string[] = []
-    for (const img of Array.from(
-      document.querySelectorAll('img, image, picture source, object, embed'),
-    )) {
-      const attrs = ['src', 'srcset', 'href', 'data', 'alt']
-        .map((a) => img.getAttribute(a) ?? '')
-        .join(' ')
-      if (pattern.test(attrs)) found.push(`${img.tagName}: ${attrs}`)
-    }
-    for (const svg of Array.from(document.querySelectorAll('svg title, svg [aria-label]'))) {
-      const text = `${svg.textContent ?? ''} ${svg.getAttribute('aria-label') ?? ''}`
-      if (pattern.test(text)) found.push(`SVG: ${text}`)
-    }
-    for (const el of Array.from(document.querySelectorAll<HTMLElement>('header *, footer *'))) {
-      const bg = getComputedStyle(el).backgroundImage
-      if (bg && bg !== 'none' && /url\(/.test(bg)) found.push(`background: ${bg}`)
-    }
-    return found
-  })
-  expect(offenders).toEqual([])
-  // Cabeçalho e rodapé não têm nenhuma imagem: a marca é o nome em texto (wordmark).
-  await expect(page.locator('header img, header svg title, footer img')).toHaveCount(0)
-}
+import {
+  expectNoInstitutionalLogos,
+  expectNoSeriousA11yViolations,
+  GROUP_NAME,
+  SHORT_NAME,
+} from './helpers'
 
 test.describe('Layout público (S02)', () => {
   test('carrega em pt-BR com cabeçalhos de segurança, CSP report-only e noindex', async ({

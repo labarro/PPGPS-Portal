@@ -61,3 +61,6 @@ node_modules/
 
 # Credenciais geradas localmente para transferência aos GitHub Environments (nunca versionar)
 .secrets/
+
+# Lighthouse CI (relatÃ³rios locais; no CI viram artefato)
+/.lighthouseci/

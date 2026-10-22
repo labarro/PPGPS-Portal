@@ -80,6 +80,8 @@ Atualização de versão **maior** de Next/Payload/React só em sprint dedicada.
 | Verificar *drift* (schema sem migration) | `pnpm migrate:check` |
 | Gerar tipos / import map do Payload | `pnpm generate:types` / `pnpm generate:importmap` |
 | Popular dados fictícios | `pnpm seed` |
+| Conteúdo institucional público verificado (idempotente; bloqueado em produção) | `pnpm seed:content` |
+| Lighthouse CI (app em `localhost:3100`) | `pnpm dlx @lhci/cli@0.15.1 autorun` |
 | Desenvolvimento | `pnpm dev` |
 | Lint / formatação | `pnpm lint` / `pnpm format:check` |
 | Tipos | `pnpm typecheck` |

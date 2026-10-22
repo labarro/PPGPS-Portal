@@ -2,6 +2,8 @@ import config from '@payload-config'
 import { getPayload } from 'payload'
 import { cache } from 'react'
 
+import { cachedRead } from '../content/cache'
+import { CACHE_TAGS } from '../content/cache-tags'
 import { defaultLocale } from '../i18n/locales'
 import { SITE_FULL_NAME, SITE_SHORT_NAME } from './identity'
 
@@ -20,7 +22,12 @@ export type SiteChrome = {
   }
 }
 
-export const DEFAULT_NAVIGATION: SiteLink[] = [{ label: 'Início', href: '/' }]
+/** Menu padrão enquanto o global "Navegação" estiver vazio (rotas existentes na S03). */
+export const DEFAULT_NAVIGATION: SiteLink[] = [
+  { label: 'Início', href: '/' },
+  { label: 'O grupo', href: '/o-grupo' },
+  { label: 'Linhas temáticas', href: '/linhas' },
+]
 
 export const DEFAULT_CHROME: SiteChrome = {
   siteName: SITE_FULL_NAME,
@@ -46,13 +53,19 @@ export const getSiteChrome = cache(async (): Promise<SiteChrome> => {
   if (process.env.NEXT_PHASE === 'phase-production-build') return DEFAULT_CHROME
 
   try {
-    const payload = await getPayload({ config })
-    const common = { overrideAccess: false, locale: defaultLocale, depth: 0 } as const
-    const [settings, navigation, footer] = await Promise.all([
-      payload.findGlobal({ slug: 'site-settings', ...common }),
-      payload.findGlobal({ slug: 'navigation', ...common }),
-      payload.findGlobal({ slug: 'footer', ...common }),
-    ])
+    const [settings, navigation, footer] = await cachedRead(
+      ['site-chrome'],
+      [CACHE_TAGS.siteChrome],
+      async () => {
+        const payload = await getPayload({ config })
+        const common = { overrideAccess: false, locale: defaultLocale, depth: 0 } as const
+        return Promise.all([
+          payload.findGlobal({ slug: 'site-settings', ...common }),
+          payload.findGlobal({ slug: 'navigation', ...common }),
+          payload.findGlobal({ slug: 'footer', ...common }),
+        ])
+      },
+    )
     const nav = toLinks(navigation.items)
     return {
       siteName: settings.siteName || SITE_FULL_NAME,

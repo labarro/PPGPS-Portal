@@ -90,6 +90,8 @@ jobs:
         run: echo "PAYLOAD_SECRET=$(openssl rand -hex 32)" >> "$GITHUB_ENV"
       - name: Migrations (job separado do build)
         run: pnpm migrate && pnpm migrate:status
+      - name: Conteúdo institucional da S03 (seed idempotente)
+        run: pnpm seed:content
       - run: pnpm build
       - run: pnpm exec playwright install --with-deps chromium
       - run: pnpm test:e2e
@@ -99,6 +101,67 @@ jobs:
           name: playwright-report
           path: playwright-report/
           retention-days: 7
+
+  lighthouse:
+    name: Lighthouse CI (mobile, orçamentos)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    services:
+      postgres:
+        image: postgres:18-alpine
+        env:
+          POSTGRES_USER: ci
+          POSTGRES_PASSWORD: ci
+          POSTGRES_DB: ppgps_test
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U ci -d ppgps_test"
+          --health-interval 2s --health-timeout 5s --health-retries 30
+    env:
+      DATABASE_URL: postgres://ci:ci@localhost:5432/ppgps_test
+      PORT: '3100'
+    steps:
+      - uses: actions/checkout@v5
+      - uses: ./.github/actions/setup
+      - uses: ./.github/actions/test-services
+      - name: Segredo efêmero do Payload
+        run: echo "PAYLOAD_SECRET=$(openssl rand -hex 32)" >> "$GITHUB_ENV"
+      - name: Migrations e conteúdo institucional (seed)
+        run: pnpm migrate && pnpm seed:content
+      - run: pnpm build
+      - name: Servidor de produção local (porta 3100)
+        run: |
+          pnpm start --port 3100 > /tmp/next.log 2>&1 &
+          for i in $(seq 1 60); do
+            if curl -fsS -o /dev/null http://localhost:3100/robots.txt; then exit 0; fi
+            sleep 2
+          done
+          cat /tmp/next.log
+          exit 1
+      # Relatórios só em disco (artefato do run): nada é enviado a serviços externos.
+      # `is-crawlable` é ignorado: fora da produção o site é `noindex` de propósito.
+      - name: Lighthouse CI (acessibilidade e SEO ≥ 0,90; orçamentos de JS e terceiros)
+        run: pnpm dlx @lhci/cli@0.15.1 autorun
+      - name: Resumo das notas
+        if: always()
+        run: |
+          {
+            echo '### Lighthouse (mobile)'
+            echo ''
+            echo '| Página | Desempenho | Acessibilidade | Boas práticas | SEO | JS (bytes) |'
+            echo '|---|---|---|---|---|---|'
+            for f in .lighthouseci/lhr-*.json; do
+              [ -f "$f" ] || continue
+              jq -r '[.finalDisplayedUrl, .categories.performance.score, .categories.accessibility.score, .categories["best-practices"].score, .categories.seo.score, ([.audits["resource-summary"].details.items[] | select(.resourceType=="script") | .transferSize] | first)] | "| \(.[0]) | \(.[1]) | \(.[2]) | \(.[3]) | \(.[4]) | \(.[5]) |"' "$f"
+            done
+          } | tee -a "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: lighthouse-report
+          path: .lighthouseci/
+          include-hidden-files: true
+          retention-days: 14
 
   build:
     name: Build sem acesso ao banco

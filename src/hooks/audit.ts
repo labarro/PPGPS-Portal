@@ -117,7 +117,7 @@ export const auditAfterChange: CollectionAfterChangeHook = async ({
   const fields = changedFields(previousDoc, doc)
   if (fields.length > 0) {
     await writeAudit(req, {
-      action: 'update',
+      action: updateAction(doc),
       targetCollection: collection.slug,
       documentId: doc.id,
       diffSummary: summarize(fields),
@@ -144,7 +144,7 @@ export const auditGlobalAfterChange: GlobalAfterChangeHook = async ({
   const fields = changedFields(previousDoc, doc)
   if (fields.length > 0) {
     await writeAudit(req, {
-      action: 'update',
+      action: updateAction(doc),
       targetCollection: `global:${global.slug}`,
       diffSummary: summarize(fields),
     })
@@ -164,6 +164,11 @@ export const auditAfterLogin: CollectionAfterLoginHook = async ({ collection, re
     documentId: (user as { id?: string | number }).id,
   })
   return user
+}
+
+/** Em coleções/globals com rascunho, salvar a versão publicada é registrado como `publish`. */
+export function updateAction(doc: { _status?: unknown } | null | undefined): AuditAction {
+  return doc?._status === 'published' ? 'publish' : 'update'
 }
 
 function summarize(fields: string[]): string | null {
