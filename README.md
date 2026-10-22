@@ -1,8 +1,8 @@
 # PPGPS-Portal
 
-Portal acadêmico do grupo de pesquisa **Bioética e Promoção da Saúde** (DGP/CNPq) e de suas atividades. Não é site oficial da UniCesumar nem do PPGPS. O nome do repositório (`PPGPS-Portal`) é apenas técnico.
+Portal acadêmico do **Grupo de Pesquisa em Bioética e Promoção da Saúde - Unicesumar** (DGP/CNPq), publicado como iniciativa do grupo, com foco em Bioética e Promoção da Saúde. Não é site oficial da UniCesumar nem do PPGPS. O nome do repositório (`PPGPS-Portal`) é apenas técnico.
 
-> Situação: **S01 — setup técnico, ambientes e pipeline** (ver [`docs/PROGRESS.md`](./docs/PROGRESS.md)).
+> Situação: **S00 e S01 concluídas** (22/10/2026); próxima sprint **S02** (ver [`docs/PROGRESS.md`](./docs/PROGRESS.md)). Planejamento **v1.3**.
 
 Stack: Next.js 16 (App Router) + Payload CMS 3 + PostgreSQL 18 (Neon nos ambientes publicados), TypeScript estrito, pnpm. Versões fixadas no [ADR-0007](./docs/adr/0007-versoes-fixadas.md).
 
@@ -72,7 +72,7 @@ O CI (`migrations-check.yml`) falha se houver schema sem migration, tipos desatu
 | Local | Docker | `pnpm dev` | — |
 | Preview (PR) | `preview/pr-N` (de `seed`, expira em 7 dias) | `preview-db.yml` | Autenticação básica + `noindex` |
 | Homologação | `staging` | `deploy-staging.yml` (merge na `main`) — `ppgps-portal-staging.vercel.app` | Autenticação básica + `noindex` |
-| Produção | `production` | `deploy-production.yml` (tag `vX.Y.Z` + aprovação manual) | Público (a partir da S06) |
+| Produção | `production` | `deploy-production.yml` (tag `vX.Y.Z`, disparo pelo dono do repositório e variável `PRODUCTION_DEPLOY_ENABLED=true`, **não definida** até a S06) | Público (a partir da S06) |
 
 Migrations rodam sempre em job próprio, com `concurrency` por ambiente, **antes** do deploy. O deploy automático por Git da Vercel está desativado. Detalhes: [ADR-0005](./docs/adr/0005-ambientes-migrations-rollback.md) e [ADR-0009](./docs/adr/0009-neon-vercel-deploy-controlado.md).
 
@@ -84,7 +84,7 @@ Variáveis do repositório (*Settings → Secrets and variables → Actions → 
 |---|---|
 | `preview` | `NEON_API_KEY`, `PAYLOAD_SECRET`, `BASIC_AUTH_USER`, `BASIC_AUTH_PASSWORD`, `VERCEL_TOKEN`, opcionais `SEED_ADMIN_EMAIL`/`SEED_ADMIN_PASSWORD` (fictícios), `VERCEL_AUTOMATION_BYPASS_SECRET` |
 | `staging` | `DATABASE_URL` (direta), `DATABASE_URL_POOLED`, `PAYLOAD_SECRET`, `BASIC_AUTH_USER`, `BASIC_AUTH_PASSWORD`, `VERCEL_TOKEN`, opcional `VERCEL_AUTOMATION_BYPASS_SECRET` |
-| `production` (revisores obrigatórios) | `NEON_API_KEY`, `DATABASE_URL`, `DATABASE_URL_POOLED`, `PAYLOAD_SECRET`, `VERCEL_TOKEN` |
+| `production` (a criar; revisores obrigatórios indisponíveis no plano GitHub Free com repositório privado — ADR-0009) | `NEON_API_KEY`, `DATABASE_URL`, `DATABASE_URL_POOLED`, `PAYLOAD_SECRET`, `VERCEL_TOKEN` |
 
 Cada ambiente usa valores **distintos** de `PAYLOAD_SECRET` e de autenticação básica. Enquanto os segredos não existirem, os workflows de preview/homologação apenas emitem aviso e não fazem deploy.
 
@@ -92,7 +92,7 @@ Cada ambiente usa valores **distintos** de `PAYLOAD_SECRET` e de autenticação 
 
 - [`AGENTS.md`](./AGENTS.md) — regras do projeto (agentes e pessoas)
 - [`docs/PROGRESS.md`](./docs/PROGRESS.md) — estado atual e próximos passos
-- [`docs/PLANEJAMENTO_PORTAL_PPGPS.md`](./docs/PLANEJAMENTO_PORTAL_PPGPS.md) — plano diretor (v1.2)
+- [`docs/PLANEJAMENTO_PORTAL_PPGPS.md`](./docs/PLANEJAMENTO_PORTAL_PPGPS.md) — plano diretor (v1.3)
 - [`docs/sprints/`](./docs/sprints/) — fichas das sprints S00–S11
 - [`docs/adr/`](./docs/adr/) — decisões arquiteturais
 - [`docs/convencoes-git.md`](./docs/convencoes-git.md) — branches, commits e releases

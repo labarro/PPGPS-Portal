@@ -1,6 +1,6 @@
 # Convenções de Git: branches, commits, PRs e releases
 
-> Aplicáveis a partir da S01. Baseadas no planejamento v1.2 (seções 22.2, 23.3, 24.4 e 29.4) e no ADR-0005.
+> Aplicáveis a partir da S01. Baseadas no planejamento v1.3 (seções 22.2, 23.3, 24.4 e 29.4) e nos ADR-0005 e ADR-0009.
 > Instruções explícitas do supervisor em uma sessão prevalecem (ex.: "não faça commit").
 
 ## 1. Branches
@@ -108,4 +108,9 @@ Agentes **não** alteram configurações do repositório. Checklist para o super
 - [ ] Ambiente `production` no GitHub Actions com aprovação manual obrigatória
 - [ ] Ativar secret scanning / push protection (se disponível no plano) e Dependabot/Renovate
 
-Situação atual: **pendente** (registrar a data de configuração em `docs/PROGRESS.md`).
+Situação atual (verificada em 22/10/2026): **indisponível no plano atual.** O repositório é privado em conta GitHub Free, e a API retorna HTTP 403 para proteção de branch, *rulesets* e revisores de ambiente.
+
+Até o supervisor optar por GitHub Pro/Team ou repositório público, valem os controles compensatórios:
+- disciplina manual de PR com CI verde e merge *squash*;
+- agentes nunca fazem push direto na `main` nem merge sem autorização;
+- `deploy-production.yml` exige `PRODUCTION_DEPLOY_ENABLED=true` e disparo pelo dono do repositório (ADR-0009).

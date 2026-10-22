@@ -2,11 +2,11 @@
 
 | Campo | Valor |
 |---|---|
-| Status | Proposto (aguarda aceite do supervisor; conferido para o escopo do grupo em 20/10/2026, sem mudança de decisão) |
+| Status | **Aceito** |
 | Data | 19/10/2026 |
 | Sprint | S00 |
 | Autor | Agente |
-| Aprovação | — |
+| Aprovação | Responsável técnico (supervisor), 22/10/2026 — aprovação expressa dos ADRs 0001–0009 |
 
 ## Contexto
 

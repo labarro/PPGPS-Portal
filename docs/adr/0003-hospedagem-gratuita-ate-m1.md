@@ -2,11 +2,14 @@
 
 | Campo | Valor |
 |---|---|
-| Status | Proposto (aguarda aceite do supervisor; conferido para o escopo do grupo em 20/10/2026, sem mudança de decisão) |
+| Status | **Aceito** |
 | Data | 19/10/2026 |
 | Sprint | S00 |
 | Autor | Agente |
-| Aprovação | — |
+| Aprovação | Responsável técnico (supervisor), 22/10/2026 — aprovação expressa dos ADRs 0001–0009 |
+
+
+> **Nota de 22/10/2026 (ADR-0010, Q3):** o coordenador definiu hospedagem própria, independente do site institucional, e domínio próprio a adquirir no futuro. A alternativa "infraestrutura da UniCesumar" deixa de ser plano B. A decisão de produção continua na S06.
 
 ## Contexto
 

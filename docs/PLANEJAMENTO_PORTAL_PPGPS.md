@@ -1,12 +1,12 @@
 # Planejamento do Portal Acadêmico do Grupo de Pesquisa "Bioética e Promoção da Saúde"
 
-> **Plano diretor técnico e funcional** do portal acadêmico do grupo de pesquisa **Bioética e Promoção da Saúde** (Diretório de Grupos de Pesquisa do CNPq), de suas linhas, integrantes, laboratório e atividades. O grupo é certificado pela UniCesumar e reúne pesquisadores vinculados ao Programa de Pós-Graduação em Promoção da Saúde (PPGPS); essas instituições aparecem **apenas como referências contextuais**. O portal **não** é site oficial da UniCesumar nem do PPGPS.
+> **Plano diretor técnico e funcional** do portal acadêmico do **Grupo de Pesquisa em Bioética e Promoção da Saúde - Unicesumar** (nome de exibição definido pelo coordenador, Q2), registrado no Diretório de Grupos de Pesquisa do CNPq, com foco temático em **Bioética** e **Promoção da Saúde**, seus integrantes e atividades. O portal é uma **iniciativa do grupo** (Q1): não é site oficial da UniCesumar nem do Programa de Pós-Graduação em Promoção da Saúde (PPGPS), que aparecem apenas como referências textuais, sem logotipos.
 >
 > | Item | Valor |
 > |---|---|
-> | Versão do documento | **1.2** |
-> | Data da versão | 20/10/2026 |
-> | Situação | Escopo aprovado **conceitualmente** pelo responsável do grupo. **Não há** autorização formal para publicação do site, uso de marcas ou divulgação de dados pessoais (validações Q1, Q2, Q4 e Q5 da seção 32) |
+> | Versão do documento | **1.3** |
+> | Data da versão | 22/10/2026 |
+> | Situação | Planejamento v1.2 aprovado pelo responsável técnico como base (22/10/2026). Respostas do coordenador às Q1–Q12 incorporadas (seção 32; ADR-0010). Publicação do portal autorizada como iniciativa do grupo; **uso de logotipos institucionais não autorizado**; dados pessoais exigem registro individual por titular (Q4) |
 > | Execução prevista | Agente de IA (Claude Code ou similar), sob supervisão de um desenvolvedor responsável |
 > | Idioma do MVP | Português (inglês planejado para a V2) |
 > | Nome do arquivo | Mantido como `PLANEJAMENTO_PORTAL_PPGPS.md` (e o repositório como `PPGPS-Portal`) para não quebrar referências; o nome técnico não indica vínculo oficial com o programa |
@@ -20,7 +20,7 @@
 >
 > **Marcos de entrega usados neste documento**
 >
-> - **M1 – Primeira publicação:** identidade do grupo, linhas, laboratório (se confirmado), integrantes que autorizaram a exibição e blog acadêmico em produção (sprints S00–S06).
+> - **M1 – Primeira publicação:** identidade do grupo, linhas temáticas (Bioética e Promoção da Saúde), integrantes com autorização registrada e blog acadêmico em produção (sprints S00–S06). O laboratório fica fora do escopo atual (Q6).
 > - **M2 – MVP completo:** orientações, egressos, produção científica do grupo, busca, eventos, projetos, impacto e indicadores simples (sprints S07–S11).
 > - **V2 / V3 – Evoluções:** expansão funcional (S12–S17) e inteligência/indicadores (S18–S20).
 
@@ -31,6 +31,30 @@
 | 1.0 | 19/10/2026 | Versão inicial do plano diretor (33 seções, MVP em 12 sprints com lançamento único) |
 | 1.1 | 19/10/2026 | Revisão técnica: marcos M1/M2, blog antecipado, renumeração de sprints, egressos remodelados, pipeline de migrations/ambientes/backup, estimativas, segurança progressiva |
 | 1.2 | 20/10/2026 | **Correção de escopo:** o portal passa a ser exclusivo do grupo de pesquisa "Bioética e Promoção da Saúde" e de suas atividades/laboratório, e não do PPGPS inteiro. Detalhes abaixo |
+| 1.3 | 22/10/2026 | **Respostas do coordenador (Q1–Q12) e aprovações do responsável técnico:** nome e identidade visual, publicação como iniciativa do grupo sem aviso ostensivo, apenas dois usuários administrativos, foco em Bioética e Promoção da Saúde, laboratório fora do escopo atual. Detalhes abaixo |
+
+**Alterações da versão 1.3** (stack Next.js + Payload CMS 3 + PostgreSQL + Cloudflare R2, arquitetura técnica, ambientes, marcos, módulos acadêmicos e sequência de sprints preservados; decisões em ADR-0010)
+
+1. **Aprovações registradas (22/10/2026):** o responsável técnico aprovou o planejamento v1.2 como base, os ADRs 0001–0009 (agora *Aceitos*), o teste em ambiente limpo da S01 e o merge do PR #7. Escopo exclusivo do grupo reafirmado.
+2. **Publicação e identidade (Q1, Q2):**
+   - Portal publicado como iniciativa do grupo, com o nome "Grupo de Pesquisa em Bioética e Promoção da Saúde - Unicesumar".
+   - **Removida a obrigação do aviso ostensivo** de portal não oficial (rodapé e páginas); `/sobre-o-portal` identifica discretamente o grupo como mantenedor.
+   - Identidade visual **azul-marinho e branco**; nenhum logotipo institucional sem autorização formal.
+   - Seções 1, 5.4, 8.1, 16.1 e 16.7.
+3. **Hospedagem (Q3):** hospedagem própria, independente do site institucional; domínio próprio a adquirir no futuro (seções 24.1 e 25.1).
+4. **Acesso (Q5, Q8, Q9):**
+   - Somente **coordenador** (`editor`) e **desenvolvedor** (`admin`) têm contas.
+   - Papel `researcher`, edição de perfil por integrantes, submissões de pesquisadores e convites em massa removidos do MVP; integrantes são registros acadêmicos.
+   - Fluxo editorial operado pelos dois usuários.
+   - Seções 4, 10.2, 13.3, 14 e 15.
+5. **Dados pessoais e imagens (Q4, Q12):** as autorizações informadas pelo coordenador ficam registradas como autorizações do grupo. **Não** substituem o registro individual por titular (`ConsentRecord`) nem os controles de imagem, origem e licença (seções 8.2, 17.2 e 17.3).
+6. **Foco temático (Q7):**
+   - As linhas temáticas do portal passam a ser **Bioética** e **Promoção da Saúde** (coleção `research-lines`, rótulo "Linhas temáticas").
+   - As quatro linhas do DGP ficam como **referência histórica** em `GroupProfile.dgpResearchLines`, sem páginas próprias e sem serem tratadas como extintas.
+   - Seções 3.1, 5, 8.1, 13.3 e 18.
+7. **Laboratório (Q6):** fora do escopo atual. Removidos a página `/o-grupo/laboratorio`, a chamada na homepage e o tipo `laboratory` de projetos; caminho futuro na seção 13.7.
+8. **Orientações, egressos e conteúdo (Q10, Q11):** módulos confirmados e geridos pelo coordenador e pelo desenvolvedor; sem conteúdo prioritário; critérios de conteúdo do M2 passam a "se houver"; regra de evidência de impacto mantida.
+9. **Sprints:** a seção 19.5 lista as mudanças por sprint; S00 e S01 encerradas (`docs/PROGRESS.md`). Validações remanescentes na seção 32.
 
 **Alterações da versão 1.2 (stack, arquitetura técnica, marcos e sequência de sprints preservados)**
 
@@ -90,18 +114,18 @@
 29. [Estratégia de desenvolvimento com IA](#29-estratégia-de-desenvolvimento-com-ia)
 30. [Critérios de conclusão de cada fase](#30-critérios-de-conclusão-de-cada-fase)
 31. [Evoluções futuras](#31-evoluções-futuras)
-32. [Validações pendentes com os responsáveis do grupo](#32-validações-pendentes-com-os-responsáveis-do-grupo)
+32. [Validações com o coordenador do grupo (Q1–Q12)](#32-validações-com-o-coordenador-do-grupo-q1q12)
 33. [Fontes e referências consultadas](#33-fontes-e-referências-consultadas)
 
 ---
 
 ## 1. Resumo executivo
 
-**O que será construído.** Um portal acadêmico próprio do grupo de pesquisa **Bioética e Promoção da Saúde**, que funcione como ponto focal de informação, divulgação científica e acompanhamento da produção do grupo, de suas linhas, de seu laboratório e de suas atividades. O portal organiza em dados estruturados as pessoas, os vínculos com o grupo, as orientações conduzidas por seus pesquisadores, os egressos, as publicações, os eventos, os projetos e as ações de impacto social, além de oferecer um **blog acadêmico de ensaios reflexivos** com fluxo editorial.
+**O que será construído.** Um portal acadêmico próprio do grupo de pesquisa **Bioética e Promoção da Saúde**, que funcione como ponto focal de informação, divulgação científica e acompanhamento da produção do grupo, de seus eixos temáticos (Bioética e Promoção da Saúde) e de suas atividades. O portal organiza em dados estruturados as pessoas, os vínculos com o grupo, as orientações conduzidas por seus pesquisadores, os egressos, as publicações, os eventos, os projetos e as ações de impacto social, além de oferecer um **blog acadêmico de ensaios reflexivos** com fluxo editorial.
 
 **Por que.** O grupo tem informações públicas dispersas (espelho no DGP, currículos Lattes, menções na página do PPGPS) e nenhum canal próprio de divulgação. O espelho do DGP mostra um grupo ativo (certificado desde 2021; 4 linhas; 11 pesquisadores e 14 estudantes; 36 registros de ex-integrantes; parceria com instituição do RS), cuja trajetória de pessoas (estudantes que se tornam pesquisadores) e produção não está organizada em lugar algum. O portal transforma esse acervo em informação navegável, relacionada e atualizável sem alterar código.
 
-**Escopo institucional.** O portal representa **exclusivamente o grupo** e suas atividades. A UniCesumar (instituição que certifica o grupo), o PPGPS (programa ao qual pesquisadores do grupo se vinculam) e o CNPq/DGP aparecem **somente como referências contextuais**, com texto e links, sem logotipos, sem falar em nome dessas instituições e com aviso explícito de que o portal **não é site oficial** delas (seção 5.4). Não há obrigação de cadastrar docentes, grupos, linhas, projetos ou produção do programa que não pertençam ao grupo.
+**Escopo institucional.** O portal representa **exclusivamente o grupo** e é publicado como **iniciativa do grupo** (Q1). A UniCesumar (instituição que certifica o grupo e integra seu nome de exibição, Q2), o PPGPS e o CNPq/DGP aparecem **somente como referências textuais**, com links, sem logotipos e sem falar em nome dessas instituições (seção 5.4). Não há aviso ostensivo de portal não oficial; `/sobre-o-portal` identifica o grupo como mantenedor. Não há obrigação de cadastrar docentes, grupos, linhas, projetos ou produção do programa que não pertençam ao grupo.
 
 **Decisões principais.**
 
@@ -109,30 +133,30 @@
 |---|---|
 | Arquitetura | Monólito modular: **um único app Next.js (App Router) + Payload CMS 3** no mesmo repositório e processo (inalterado) |
 | Banco | PostgreSQL (adaptador oficial do Payload, baseado em Drizzle) com migrations versionadas, executadas por job dedicado antes do deploy |
-| UI pública | Tailwind CSS + shadcn/ui (Radix), renderização estática/ISR para SEO; identidade visual própria do grupo |
-| Admin | Painel do Payload em `/admin`, com RBAC (admin, editor, pesquisador), versões e rascunhos |
+| UI pública | Tailwind CSS + shadcn/ui (Radix), renderização estática/ISR para SEO; identidade visual própria do grupo em azul-marinho e branco (Q2) |
+| Admin | Painel do Payload em `/admin`, com RBAC de dois papéis: `admin` (desenvolvedor) e `editor` (coordenador); versões e rascunhos. Site público sem login (Q5) |
 | Modelo | Grupo único (global `GroupProfile`); instituições e programas como referências; pontos de expansão documentados sem antecipar complexidade (seção 13.7) |
 | Arquivos | Cloudflare R2 (S3 compatível) |
 | Ambientes | Local, preview por PR (banco efêmero), homologação protegida e produção, isolados entre si (seção 24.2) |
 | Hospedagem até M1 | Planos gratuitos (Vercel Hobby, Neon Free, R2 Free, GitHub Actions) |
 | Hospedagem em produção | Decisão registrada em ADR na S06, antes do M1 (seção 25) |
-| Privacidade | Nenhuma pessoa exibida publicamente sem autorização registrada, inclusive docentes |
+| Privacidade | Nenhuma pessoa exibida publicamente sem autorização individual registrada, inclusive docentes; a autorização do grupo informada pelo coordenador (Q4) não a substitui |
 | Execução | Sprints com *timebox* nominal de 1 semana, implementadas por agente de IA, com revisão humana obrigatória ao fim de cada uma |
 
 **Entrega incremental em marcos.**
 
 | Marco | Conteúdo | Sprints | Calendário estimado [ESTIMADO] |
 |---|---|---|---|
-| **M1 – Primeira publicação** | Identidade do grupo, linhas, laboratório (se confirmado), integrantes autorizados, blog com fluxo editorial, páginas legais | S00–S06 | 7 a 10 semanas a partir do início |
+| **M1 – Primeira publicação** | Identidade do grupo, linhas temáticas (Bioética e Promoção da Saúde), integrantes autorizados, blog com fluxo editorial, páginas legais | S00–S06 | 7 a 10 semanas a partir do início |
 | **M2 – MVP completo** | + Orientações, egressos e ex-integrantes, produção científica do grupo, importação e deduplicação, busca global, eventos, projetos, impacto, indicadores públicos simples | S07–S11 | + 6 a 9 semanas após o M1 |
-| **V2** | Inglês, área do integrante, ORCID, OpenAlex, newsletter, relatórios de curadoria | S12–S17 | Após o M2 |
+| **V2** | Inglês, ORCID, OpenAlex, newsletter, relatórios de curadoria (área do integrante condicionada a nova decisão, Q5) | S12–S17 | Após o M2 |
 | **V3** | Indicadores administrativos, dashboards, métricas de veículos, relatórios | S18–S20 | Após dados curados por ≥ 1 ano |
 
-O gargalo previsto não é escrever código, e sim **revisão humana, coleta de autorizações dos integrantes e validação de conteúdo pelos responsáveis do grupo**. Essas dependências nunca bloqueiam o desenvolvimento (usa-se dado público verificado ou fictício), mas bloqueiam a publicação de cada marco (seções 20.1 e 32).
+O gargalo previsto não é escrever código, e sim **revisão humana, coleta de autorizações individuais dos integrantes e produção/validação de conteúdo pelo coordenador** — que, com o desenvolvedor, é o único mantenedor do conteúdo (Q9). Essas dependências nunca bloqueiam o desenvolvimento (usa-se dado público verificado ou fictício), mas bloqueiam a publicação de cada marco (seções 20.1 e 32).
 
 **Segurança, privacidade e qualidade** são implementadas progressivamente desde a S01 (seção 17.7); a última sprint de cada marco apenas reaudita.
 
-**Riscos centrais.** Falta de atualização do conteúdo, ausência de autorizações (publicação, marcas, dados pessoais), confusão do portal com um site oficial, dados acadêmicos duplicados, falha de migration em produção e dependência de uma única pessoa. As mitigações (papéis editoriais, aviso de portal não oficial, consentimento por escopo, deduplicação por DOI, pipeline de deploy com ponto de restauração, documentação para agentes) são tratadas como requisitos, não como apêndices.
+**Riscos centrais.** Falta de atualização do conteúdo (concentrado em duas pessoas), ausência de autorizações individuais de titulares, uso indevido de marcas institucionais, dados acadêmicos duplicados, falha de migration em produção e dependência de poucas pessoas. As mitigações (guia do editor, lembretes de atualização, consentimento por escopo, referências institucionais apenas textuais, deduplicação por DOI, pipeline de deploy com ponto de restauração, documentação para agentes) são tratadas como requisitos, não como apêndices.
 
 ---
 
@@ -244,7 +268,7 @@ URL informada: <http://dgp.cnpq.br/dgp/espelhogrupo/719693>. Acesso: 19/10/2026.
 | Categoria | Itens |
 |---|---|
 | **Verificado** | Dados do grupo no DGP (nome, certificação, ano de formação, líderes, área, 4 linhas, recursos humanos, egressos no sentido de ex-integrantes, instituição parceira); menção do grupo na página do PPGPS com nome alternativo; existência de pesquisadores do grupo no corpo docente do PPGPS; preços e limites dos serviços citados |
-| **Premissas** | Portal do grupo, complementar e não oficial; publicação sujeita à autorização formal dos responsáveis do grupo; MVP só em português; hospedagem gratuita até o lançamento; DGP, Lattes e Sucupira sem API utilizável (transcrição ou importação de arquivos exportados); líderes do grupo como instância de aprovação editorial; laboratório do grupo a confirmar |
+| **Premissas** | Portal do grupo (iniciativa do grupo, Q1); MVP só em português; hospedagem gratuita até o lançamento e própria em produção (Q3); DGP, Lattes e Sucupira sem API utilizável (transcrição ou importação de arquivos exportados); coordenador e desenvolvedor como instância editorial (Q8); laboratório fora do escopo atual (Q6); nome curto "Bioética e Promoção da Saúde" para títulos [a confirmar] |
 | **Sugestões** | Blog com ciclo Ideia → Ensaio → Publicação; perfis com ORCID; índice de orientações dos pesquisadores do grupo; indicadores públicos resumidos do grupo; newsletter; área do integrante; integrações ORCID, Crossref e OpenAlex; versão em inglês |
 
 ---
@@ -255,11 +279,11 @@ URL informada: <http://dgp.cnpq.br/dgp/espelhogrupo/719693>. Acesso: 19/10/2026.
 
 | # | Objetivo | Métrica de sucesso sugerida |
 |---|---|---|
-| O1 | Centralizar a informação do grupo em dados estruturados e relacionados | Identidade do grupo, 4 linhas e perfis de todos os integrantes que autorizaram cadastrados no lançamento |
+| O1 | Centralizar a informação do grupo em dados estruturados e relacionados | Identidade do grupo, as 2 linhas temáticas (Bioética e Promoção da Saúde) e perfis de todos os integrantes que autorizaram cadastrados no lançamento |
 | O2 | Dar visibilidade aos pesquisadores e à produção científica do grupo | Perfis autorizados com Lattes/ORCID (M1); catálogo com a produção do grupo dos últimos 5 anos (M2) [PREMISSA] |
 | O3 | Tornar rastreável a formação acadêmica conduzida no grupo (orientações e egressos) | Orientações em andamento (autorizadas) e concluídas consultáveis por orientador, linha e ano |
 | O4 | Fortalecer a comunicação científica com a sociedade | Ensaios publicados com regularidade (meta sugerida: 2 por mês após o lançamento) |
-| O5 | Permitir atualização sem desenvolvedor | Todo conteúdo editável pelo painel; zero deploys necessários para alterar conteúdo |
+| O5 | Permitir atualização sem alterar código | Todo conteúdo editável pelo painel pelo coordenador; zero deploys necessários para alterar conteúdo |
 | O6 | Preparar a base para indicadores do grupo | Modelo de dados apto a calcular os indicadores da seção 26 sem migração estrutural |
 
 ### 3.2. Proposta de valor por público
@@ -268,14 +292,14 @@ URL informada: <http://dgp.cnpq.br/dgp/espelhogrupo/719693>. Acesso: 19/10/2026.
 |---|---|
 | Sociedade e imprensa | Linguagem acessível no blog; projetos e ações de impacto social do grupo com evidências |
 | Estudantes interessados em integrar o grupo ou ser orientados | Entender linhas, pesquisadores, temas de orientação e trajetória de egressos |
-| Pesquisadores do grupo | Perfil acadêmico consolidado, espaço editorial próprio, visibilidade da produção |
+| Pesquisadores do grupo | Perfil acadêmico consolidado (mantido pela coordenação), espaço editorial para ensaios, visibilidade da produção |
 | Estudantes integrantes | Visibilidade da pesquisa em andamento (com consentimento), participação no blog |
-| Líderes do grupo | Visão organizada da produção, das orientações e das atividades; base para relatórios (ex.: atualização do DGP) |
+| Coordenador do grupo | Visão organizada da produção, das orientações e das atividades; publicação sem depender de código; base para relatórios (ex.: atualização do DGP) |
 | Parceiros e financiadores | Evidências de projetos, resultados e colaborações do grupo |
 
 ### 3.3. O que o portal **não** é
 
-- Não é site oficial da UniCesumar nem do PPGPS, não fala em nome dessas instituições e não substitui seus sistemas (secretaria, Lyceum, Studeo, RDU) nem o espelho do grupo no DGP.
+- Não é site oficial da UniCesumar nem do PPGPS (é iniciativa do grupo), não fala em nome dessas instituições e não substitui seus sistemas (secretaria, Lyceum, Studeo, RDU) nem o espelho do grupo no DGP.
 - Não é portal do programa: não apresenta todos os docentes, grupos, linhas, editais ou processos seletivos do PPGPS (apenas link para o site oficial).
 - Não é um periódico científico: ensaios do blog não passam por revisão por pares e são identificados como tal.
 - Não é sistema de avaliação CAPES nem fonte oficial para a Plataforma Sucupira ou para o DGP.
@@ -291,22 +315,20 @@ URL informada: <http://dgp.cnpq.br/dgp/espelhogrupo/719693>. Acesso: 19/10/2026.
 |---|---|---|
 | **Ana, candidata** | Fisioterapeuta interessada em pesquisar bioética e envelhecimento | Linhas, pesquisadores, temas de orientação, egressos; link para o programa oficial onde se candidatar |
 | **Carlos, cidadão** | Leitor interessado em envelhecimento saudável e bioética | Textos acessíveis, projetos e ações abertas à comunidade |
-| **Profa. Marta, pesquisadora do grupo** | Pesquisadora com orientações e produção | Manter perfil e produção atualizados com pouco esforço; publicar ensaios |
-| **João, doutorando integrante** | Estudante do grupo com pesquisa em andamento | Aparecer como integrante (se autorizar), propor ensaios |
-| **Paula, editora** | Responsável editorial designada pelos líderes | Revisar, aprovar, agendar e arquivar conteúdo com rastreabilidade |
-| **Prof. Lucas, líder do grupo** | Responsável pelo grupo | Aprovar conteúdo, gerir integrantes, projetos e produção; autorizar publicações |
-| **Admin técnico** | Desenvolvedor responsável | Usuários, papéis, backups, deploy, integrações |
+| **Profa. Marta, pesquisadora do grupo** | Pesquisadora com orientações e produção (sem conta no portal) | Perfil e produção atualizados pela coordenação; encaminhar ensaios para revisão |
+| **João, doutorando integrante** | Estudante do grupo com pesquisa em andamento (sem conta no portal) | Aparecer como integrante (se autorizar), propor ensaios à coordenação |
+| **Coordenador do grupo** (`editor`) | Responsável pelo grupo e por seu conteúdo | Cadastrar, revisar, aprovar, agendar e publicar todo o conteúdo acadêmico e editorial; colher autorizações dos integrantes |
+| **Desenvolvedor responsável** (`admin`) | Responsável técnico | Usuários, papéis, backups, deploy, integrações; também revisa e publica conteúdo (Q8, Q9) |
 
 ### 4.2. Perfis de acesso (resumo; detalhes na seção 14)
 
 | Perfil | Autenticado | Escopo |
 |---|---|---|
 | Visitante | Não | Somente conteúdo publicado e com visibilidade pública |
-| Pesquisador (`researcher`) | Sim | O próprio perfil, rascunhos de ensaios próprios, sugestões de publicações e orientações próprias |
-| Editor (`editor`) | Sim | Todo o conteúdo editorial e acadêmico do grupo; aprova e publica (líderes e editor-chefe) |
-| Administrador (`admin`) | Sim | Tudo, incluindo usuários, papéis, configurações e auditoria |
+| Editor (`editor`) | Sim | Coordenador do grupo: todo o conteúdo editorial e acadêmico; revisa, aprova e publica; consentimentos e importações; lê a auditoria |
+| Administrador (`admin`) | Sim | Desenvolvedor responsável: tudo, incluindo usuários, papéis, configurações técnicas e auditoria |
 
-> O papel `group_manager` da v1.1 foi removido: com um único grupo, os líderes atuam como editores. Ele pode ser reintroduzido se o portal vier a hospedar vários grupos (seção 13.7).
+> **v1.3 (Q5):** apenas duas contas administrativas. O papel `researcher` foi removido do MVP; integrantes são registros acadêmicos (`Person`) sem conta. O papel `group_manager` (v1.1) continua removido. Reintroduzir qualquer papel exige ADR (seção 13.7).
 
 ---
 
@@ -316,9 +338,9 @@ URL informada: <http://dgp.cnpq.br/dgp/espelhogrupo/719693>. Acesso: 19/10/2026.
 
 ```mermaid
 flowchart TD
-    G["Grupo de pesquisa Bioética e Promoção da Saúde"] --> L["Linhas do grupo (4 no DGP)"]
-    G --> LAB["Laboratório e atividades (a confirmar, Q6)"]
-    G --> PR["Projetos do grupo (pesquisa, extensão, cooperação, laboratório)"]
+    G["Grupo de Pesquisa em Bioética e Promoção da Saúde - Unicesumar"] --> L["Linhas temáticas: Bioética e Promoção da Saúde"]
+    G --> HL["Linhas do DGP (referência histórica)"]
+    G --> PR["Projetos do grupo (pesquisa, extensão, cooperação)"]
     G --> ED["Blog acadêmico"]
     PE["Pessoas"] -. vínculos datados com o grupo .-> G
     PE --> OR["Orientações e conclusões acadêmicas"]
@@ -327,7 +349,7 @@ flowchart TD
     REF["Referências contextuais: UniCesumar, PPGPS, CNPq/DGP, parceiros"] -. texto e links .-> G
 ```
 
-- **Nível 1 – Grupo:** identidade, objetivos, histórico, linhas do grupo, laboratório e atividades, referências institucionais contextuais, contato do grupo.
+- **Nível 1 – Grupo:** identidade, objetivos, histórico (incluindo as linhas registradas no DGP como referência), linhas temáticas Bioética e Promoção da Saúde, referências institucionais textuais, contato do grupo. O laboratório não é apresentado nesta versão (Q6).
 - **Nível 2 – Integrantes:** perfis (somente com autorização) que agregam vínculos com o grupo, linhas de atuação, produção, orientações, eventos, projetos e ensaios.
 - **Nível 3 – Atividades e produção:** orientações, publicações, eventos, projetos, evidências de impacto e ensaios.
 
@@ -337,9 +359,9 @@ flowchart TD
 
 **M1 – Primeira publicação (S00–S06).** Colocar no ar, o quanto antes, um portal confiável do grupo, com o menor volume possível de dados pessoais e de dependências externas.
 
-- Portal público em português: Início, O grupo (apresentação, objetivos, histórico, referências institucionais, contato do grupo), Linhas do grupo, Laboratório (se confirmado), Integrantes (somente quem autorizou) e Blog.
-- Painel administrativo com papéis, fluxo editorial, versões, auditoria, consentimentos e mídias seguras.
-- Páginas de privacidade, acessibilidade e "sobre o portal", com o aviso de portal não oficial.
+- Portal público em português, sem login: Início, O grupo (apresentação, objetivos, histórico, referências institucionais, contato do grupo), Linhas temáticas (Bioética e Promoção da Saúde), Integrantes (somente quem autorizou) e Blog.
+- Painel administrativo com dois papéis (coordenador e desenvolvedor), fluxo editorial, versões, auditoria, consentimentos e mídias seguras.
+- Páginas de privacidade, acessibilidade e "sobre o portal" (com identificação discreta do grupo como mantenedor).
 - SEO técnico, monitoramento, backups e pipeline de deploy seguro.
 
 **M2 – MVP completo (S07–S11).** Acrescenta os módulos de dados acadêmicos que dependem de levantamento mais demorado:
@@ -347,7 +369,7 @@ flowchart TD
 - Orientações conduzidas por pesquisadores do grupo (públicas conforme regras de visibilidade), conclusões acadêmicas, egressos com trajetória autorizada e ex-integrantes.
 - Catálogo da produção científica do grupo, cadastro por DOI (Crossref), importação CSV/BibTeX/RIS com deduplicação, citação e exportação.
 - Busca global.
-- Eventos e participações; projetos do grupo (incluindo atividades do laboratório); evidências de impacto e ODS.
+- Eventos e participações; projetos do grupo (sem atividades do laboratório nesta versão, Q6); evidências de impacto e ODS — conforme houver conteúdo (Q11).
 - Indicadores públicos **simples** do grupo (contagens com data de corte).
 
 **Justificativa da divisão.** O M1 depende de textos do grupo e das autorizações de poucos titulares (líderes e pesquisadores). O M2 depende de dados que **não existem em fonte pública** (relação orientador–orientando), de consentimentos de estudantes e egressos e de curadoria de produção.
@@ -357,12 +379,13 @@ flowchart TD
 | Item | Destino |
 |---|---|
 | Docentes, grupos, linhas, projetos integradores, discentes, editais e produção do PPGPS que não pertençam ao grupo | **Fora de escopo permanente** (apenas link para o site oficial) |
-| Uso de logotipos ou identidade visual da UniCesumar, do PPGPS ou do CNPq | Somente com autorização formal (Q2); não previsto no MVP |
+| Uso de logotipos ou identidade visual da UniCesumar, do PPGPS ou do CNPq | Somente com autorização formal específica; não concedida na Q2; não previsto no MVP |
+| Laboratório do grupo (página, atividades, projetos `laboratory`) | Fora do escopo atual por decisão do coordenador (Q6); reavaliar com nova manifestação |
 | Conceito CAPES, números e avaliações do programa | Fora de escopo (não pertencem ao grupo) |
 | Hospedagem de múltiplos grupos | Evolução futura (seção 31), com migração planejada |
 | Versão em inglês | V2 |
 | Formulário de contato com proteção anti-spam (MVP usa o e-mail do grupo) | V2 |
-| Área do integrante com conteúdos restritos | V2 |
+| Contas de integrantes e área do integrante com conteúdos restritos | Fora do MVP (Q5); reavaliar na V2 somente com ADR e decisão do coordenador |
 | Sincronização automática com ORCID e OpenAlex | V2 |
 | Dashboards e indicadores administrativos, exportações | V3 |
 | Login com ORCID ou SSO institucional | V2/V3 |
@@ -376,27 +399,27 @@ flowchart TD
 | Permitido (referência contextual) | Proibido sem autorização formal registrada |
 |---|---|
 | Texto factual: "grupo certificado pela UniCesumar no Diretório dos Grupos de Pesquisa do CNPq"; "pesquisadores vinculados ao PPGPS/UniCesumar" | Logotipos, selos e marcas da UniCesumar, do PPGPS ou do CNPq |
-| Links para o site oficial do PPGPS, o espelho do grupo no DGP, Currículos Lattes, RDU e páginas oficiais de parceiros | Layout, cores ou nomes que sugiram site oficial; domínio institucional sem cessão formal |
+| Links para o site oficial do PPGPS, o espelho do grupo no DGP, Currículos Lattes, RDU e páginas oficiais de parceiros | Layout, elementos gráficos ou cores que imitem o site institucional; uso do nome da instituição além do nome de exibição definido (Q2) e das referências textuais; domínio institucional sem cessão formal |
 | Afiliação institucional de cada pessoa no próprio perfil (com autorização da pessoa) | Falar em nome da instituição ou do programa; divulgar editais, processos seletivos ou números do programa como conteúdo próprio |
 
-- **Aviso obrigatório** no rodapé e em `/sobre-o-portal`: "Portal do grupo de pesquisa Bioética e Promoção da Saúde. Não é site oficial da UniCesumar nem do Programa de Pós-Graduação em Promoção da Saúde. Informações oficiais: [link para o site do programa]" (texto final validado na Q2).
-- As referências ficam no global `GroupProfile.institutionalReferences` (somente texto e URL), exibidas em "O grupo › Referências institucionais" e no rodapé.
-- A eventual exigência institucional de comunicar ou aprovar sites de grupos que mencionem a instituição é verificada pelos responsáveis do grupo (Q1); o agente não contata a universidade.
+- **v1.3 (Q1):** o portal é publicado como iniciativa do grupo, **sem aviso ostensivo** de portal não oficial. `/sobre-o-portal` informa de forma discreta que o portal é mantido pelo grupo, que o conteúdo é de sua responsabilidade e onde encontrar as informações oficiais do programa (link). Texto configurável em `GroupProfile.responsibilityNote` (opcional).
+- As referências ficam no global `GroupProfile.institutionalReferences` (somente texto e URL), exibidas em "O grupo › Referências institucionais" e, se marcadas, no rodapé.
+- **Risco residual:** a resposta à Q1 não informou se a UniCesumar exige comunicação prévia sobre sites de grupos que mencionem a instituição. A decisão é do coordenador; o agente não contata a universidade. Menções e marcas são retiradas imediatamente a pedido da instituição (seção 15.6).
 
 ---
 
 ## 6. Requisitos funcionais
 
-Prioridade MoSCoW: **M** (Must), **S** (Should), **C** (Could), **W** (Won't nesta versão). Marco: **M1**, **M2**, **V2**, **V3**. "M1 → M2" indica requisito entregue em parte no M1 e completado no M2. Os identificadores da v1.1 foram mantidos; a coluna "v1.2" indica o que mudou com a correção de escopo.
+Prioridade MoSCoW: **M** (Must), **S** (Should), **C** (Could), **W** (Won't nesta versão). Marco: **M1**, **M2**, **V2**, **V3**. "M1 → M2" indica requisito entregue em parte no M1 e completado no M2. Os identificadores da v1.1 foram mantidos; a coluna "v1.2" indica o que mudou com a correção de escopo e, quando marcado, com a v1.3 (respostas Q1–Q12).
 
 ### 6.1. Portal público
 
 | ID | Requisito | Prior. | Marco | Sprint | v1.2 |
 |---|---|---|---|---|---|
-| RF-001 | Homepage com apresentação do grupo, linhas, ensaios e integrantes em destaque (M1); produção recente, eventos, projetos e indicadores resumidos (M2) | M | M1 → M2 | S03, S05, S08, S10 | Reescrito para o grupo |
+| RF-001 | Homepage com apresentação do grupo, linhas temáticas, ensaios e integrantes em destaque (M1); produção recente, eventos, projetos e indicadores resumidos (M2) | M | M1 → M2 | S03, S05, S08, S10 | Reescrito para o grupo; v1.3: sem laboratório |
 | RF-002 | Páginas "O grupo" (apresentação, objetivos, histórico, referências institucionais, contato do grupo) editáveis no CMS | M | M1 | S03 | Substitui as páginas do programa |
-| RF-003 | Página de cada linha do grupo com integrantes que nela atuam (M1) e produção, orientações e projetos relacionados (M2) | M | M1 → M2 | S03, S04, S07, S08, S10 | Linhas do grupo (não do programa) |
-| RF-004 | Página do laboratório e das atividades do grupo (M1, se confirmado na Q6), com projetos e eventos relacionados (M2) | S | M1 → M2 | S03, S10 | Substitui a listagem de 7 grupos |
+| RF-003 | Página de cada linha temática (Bioética; Promoção da Saúde) com integrantes que nela atuam (M1) e produção, orientações e projetos relacionados (M2); linhas do DGP exibidas como referência histórica em "O grupo", sem páginas próprias | M | M1 → M2 | S03, S04, S07, S08, S10 | v1.3: 2 eixos temáticos (Q7) |
+| RF-004 | Página do laboratório e das atividades do grupo | W | — | — | v1.3: fora do escopo atual por decisão do coordenador (Q6) |
 | RF-005 | Diretório de integrantes com filtros por papel, linha e situação (atual/ex-integrante) (M1); egressos (M2) | M | M1 → M2 | S04, S07 | Somente integrantes do grupo, com autorização |
 | RF-006 | Perfil de pessoa com apresentação, formação, vínculos com o grupo, afiliações, Lattes e ORCID (M1); ensaios (M1); orientações, publicações, projetos e eventos (M2) | M | M1 → M2 | S04, S05, S07, S08, S10 | Perfil exige autorização |
 | RF-007 | Orientações conduzidas por pesquisadores do grupo (em andamento e concluídas), com filtros por orientador, nível, linha, programa de referência, situação e ano | M | M2 | S07 | Restrito ao grupo |
@@ -405,7 +428,7 @@ Prioridade MoSCoW: **M** (Must), **S** (Should), **C** (Could), **W** (Won't nes
 | RF-010 | Página de publicação com metadados completos, citação formatada e links (DOI, PDF autorizado, repositório) | M | M2 | S08 | — |
 | RF-011 | Blog com listagem, categorias, tags, página do ensaio, autores e indicação de natureza do texto | M | M1 | S05 | — |
 | RF-012 | Eventos do grupo (futuros e passados) e participações de integrantes, com trabalhos apresentados | M | M2 | S10 | Restrito ao grupo |
-| RF-013 | Projetos do grupo (pesquisa, extensão, cooperação e atividades do laboratório) com equipe, período, financiamento, resultados e ODS | M | M2 | S10 | Removidos os projetos integradores do programa |
+| RF-013 | Projetos do grupo (pesquisa, extensão e cooperação; sem laboratório nesta versão, Q6) com equipe, período, financiamento, resultados e ODS | M | M2 | S10 | Removidos os projetos integradores do programa |
 | RF-014 | Página de impacto social com evidências verificadas e ODS | S | M2 | S10 | — |
 | RF-015 | Busca global por pessoas, publicações, ensaios, projetos, eventos e páginas | M | M2 | S09, S10 | — |
 | RF-016 | Citação em ABNT e APA; exportação BibTeX/RIS | S | M2 | S08 | — |
@@ -413,7 +436,7 @@ Prioridade MoSCoW: **M** (Must), **S** (Should), **C** (Could), **W** (Won't nes
 | RF-018 | Página "Referências institucionais" com links para UniCesumar, PPGPS, espelho DGP, RDU e parceiros, sem duplicar documentos oficiais | S | M1 | S03 | Antes "Documentos oficiais" do programa (M) |
 | RF-019 | Versão em inglês das páginas do grupo e perfis | S | V2 | S12 | — |
 | RF-020 | Inscrição em newsletter | C | V2 | S16 | — |
-| RF-021 | Páginas de privacidade, acessibilidade e "sobre o portal" editáveis no CMS, com aviso de portal não oficial (aviso no rodapé desde a S02) | M | M1 | S02, S06 | Inclui o aviso |
+| RF-021 | Páginas de privacidade, acessibilidade e "sobre o portal" editáveis no CMS; "sobre o portal" identifica discretamente o grupo como mantenedor | M | M1 | S06 | v1.3: sem aviso ostensivo no rodapé (Q1) |
 | RF-022 | Formulário de contato com proteção anti-spam (MVP exibe o e-mail do grupo) | C | V2 | S16 | — |
 
 ### 6.2. Administração e conteúdo
@@ -422,20 +445,20 @@ Prioridade MoSCoW: **M** (Must), **S** (Should), **C** (Could), **W** (Won't nes
 |---|---|---|---|---|---|
 | RF-101 | CRUD das entidades pelo painel, sem alterar código (cada coleção entra na sprint do seu módulo) | M | M1 → M2 | S02–S10 | — |
 | RF-102 | Rascunhos, versões e restauração de versão para conteúdos editoriais e acadêmicos | M | M1 | S03, S05 | — |
-| RF-103 | Fluxo editorial de ensaios: rascunho → em revisão → aprovado → publicado → arquivado (com devolução) | M | M1 | S05 | — |
+| RF-103 | Fluxo editorial de ensaios: rascunho → em revisão → aprovado → publicado → arquivado (com devolução), operado pelo coordenador e pelo desenvolvedor | M | M1 | S05 | v1.3: dois revisores (Q8) |
 | RF-104 | Publicação agendada de ensaios | S | M1 | S05 | — |
 | RF-105 | Gestão de mídias e documentos com texto alternativo, créditos, licença e autorização de uso | M | M1 | S02 | — |
-| RF-106 | Gestão de usuários e papéis (admin, editor, researcher) | M | M1 | S02, S04 | Sem `group_manager` e sem escopo por grupo |
+| RF-106 | Gestão de usuários e papéis (`admin`, `editor`); contas criadas pelo admin | M | M1 | S02 | v1.3: sem `researcher` (Q5) |
 | RF-107 | Registro de auditoria das operações administrativas (quem, o quê, quando) | M | M1 | S02 | — |
 | RF-108 | Registro de autorização (consentimento) para exibição de dados pessoais e de imagem de **qualquer** pessoa, inclusive docentes e líderes | M | M1 | S04 | Ampliado |
 | RF-109 | Importação de publicação por DOI (metadados Crossref) | M | M2 | S08 | — |
 | RF-110 | Importação em lote de publicações (CSV, BibTeX, RIS) com pré-visualização e detecção de duplicatas | S | M2 | S09 | — |
-| RF-111 | Importação de pessoas e vínculos com o grupo por planilha (carga inicial a partir do DGP, somente com autorização) | S | M1 | S04 | Restrito ao grupo |
+| RF-111 | Importação de pessoas e vínculos com o grupo por planilha (carga inicial a partir do DGP, somente com autorização individual registrada) | S | M1 | S04 | Restrito ao grupo |
 | RF-112 | Fila de revisão de possíveis duplicatas (pessoas e publicações) com mesclagem | S | M2 | S09 | — |
 | RF-113 | Pré-visualização do conteúdo antes de publicar | M | M1 | S03, S05 | — |
-| RF-114 | Notificação por e-mail ao editor quando um ensaio entra em revisão (e ao autor na devolução/aprovação) | S | M1 | S05 | — |
-| RF-115 | Pesquisador edita o próprio perfil; alterações sensíveis passam por aprovação | S | M1 | S04 | — |
-| RF-116 | Sincronização ORCID (leitura de obras públicas) com revisão | S | V2 | S14 | — |
+| RF-114 | Notificação por e-mail entre os usuários quando um ensaio entra em revisão ou é devolvido | C | M1 | S05 | v1.3: opcional (apenas dois usuários) |
+| RF-115 | Pesquisador edita o próprio perfil; alterações sensíveis passam por aprovação | W | — | — | v1.3: removido (Q5, Q9): só coordenador e desenvolvedor editam |
+| RF-116 | Sincronização ORCID (leitura de obras públicas) com revisão, operada pelos usuários administrativos | S | V2 | S14 | v1.3: sem login de pesquisadores |
 | RF-117 | Enriquecimento via OpenAlex (conceitos, citações, open access) | C | V2 | S15 | — |
 | RF-118 | Dashboard de indicadores administrativos do grupo com filtros e exportação CSV | S | V3 | S18 | Do grupo |
 | RF-119 | Registro de conclusões acadêmicas (mestrado, doutorado, pós-doutorado) vinculadas a orientações de pesquisadores do grupo, com programa e instituição de referência | M | M2 | S07 | Programa como referência |
@@ -476,24 +499,24 @@ Cada módulo indica objetivo, conteúdo, regras, visibilidade e versão.
 
 **Hierarquia da homepage (de cima para baixo):**
 
-1. **Hero:** nome do grupo (conforme Q2), frase de propósito (editável), duas chamadas ("Conheça as linhas" e "Leia o blog").
-2. **Linhas do grupo:** cartões das linhas com descrição curta e link.
+1. **Hero:** nome do grupo ("Grupo de Pesquisa em Bioética e Promoção da Saúde - Unicesumar", Q2), frase de propósito (editável), duas chamadas ("Conheça as linhas temáticas" e "Leia o blog").
+2. **Linhas temáticas:** cartões de Bioética e Promoção da Saúde com descrição curta e link.
 3. **Destaques editoriais:** os 3 ensaios mais recentes (ou fixados pelo editor).
 4. **Produção recente:** as 5 publicações mais recentes do grupo, com tipo e veículo (M2).
 5. **Agenda:** próximos eventos do grupo (até 3) e o último realizado (M2).
 6. **Integrantes em destaque:** seleção editorial entre perfis **autorizados**.
-7. **Laboratório, projetos e impacto:** chamada para o laboratório (M1, se confirmado) e até 3 projetos com evidência verificada e selos ODS (M2).
+7. **Projetos e impacto:** até 3 projetos com evidência verificada e selos ODS (M2, se houver). Sem chamada para o laboratório nesta versão (Q6).
 8. **Indicadores públicos resumidos:** contagens do grupo (publicações nos últimos 5 anos, orientações concluídas, projetos ativos, integrantes). Exibidos apenas quando a base estiver validada (flag no CMS) (M2).
 9. **Referências institucionais:** faixa discreta, somente texto e links (UniCesumar, PPGPS, espelho DGP, parceiros).
-10. **Rodapé:** contato do grupo, links úteis, páginas legais e **aviso de portal não oficial** (seção 5.4).
+10. **Rodapé:** nome do grupo, contato, links úteis, páginas legais e referências institucionais marcadas para o rodapé (somente texto). Sem aviso ostensivo de portal não oficial (Q1, seção 5.4).
 
 **Regras:** todas as seções podem ser ocultadas ou reordenadas pelo *global* "Homepage"; seções sem conteúdo não são renderizadas.
 
-**Por marco:** no M1 a homepage exibe hero, linhas, destaques editoriais, integrantes em destaque, laboratório (se confirmado) e referências; produção recente (S08), agenda, projetos/impacto e indicadores (S10) entram no M2 sem alteração de layout.
+**Por marco:** no M1 a homepage exibe hero, linhas temáticas, destaques editoriais, integrantes em destaque e referências; produção recente (S08), agenda, projetos/impacto e indicadores (S10) entram no M2 sem alteração de layout, conforme houver conteúdo.
 
-**Páginas "O grupo" (M1):** apresentação (repercussões e propósito), objetivos, histórico (formação em 2021, certificação, marcos), líderes, referências institucionais (seção 5.4), contato do grupo e link para o espelho do DGP. Dados vêm do global `GroupProfile` e de `pages`.
+**Páginas "O grupo" (M1):** apresentação (repercussões e propósito), objetivos, histórico (formação em 2021, certificação, marcos e as **quatro linhas registradas no DGP como referência histórica**, sem páginas próprias e sem indicação de extinção, Q7), líderes, referências institucionais (seção 5.4), contato do grupo e link para o espelho do DGP. Dados vêm do global `GroupProfile` e de `pages`.
 
-**Laboratório e atividades (M1/M2):** no M1, página editorial descrevendo o laboratório do grupo (nome, finalidade, vínculos, atividades), **somente se confirmado pelos responsáveis (Q6)**; no M2, suas atividades estruturadas como projetos do tipo `laboratory` e eventos (seção 8.7). Atividades de laboratórios de terceiros (ex.: do programa) só aparecem quando houver participação do grupo confirmada.
+**Laboratório (v1.3, Q6):** o grupo possui laboratório, mas suas informações **não** são incluídas nesta versão: sem página, sem chamada na homepage, sem projetos `laboratory`. Não se inventam nome, atividades ou vínculos, e laboratórios de terceiros (ex.: LIIPS) não são atribuídos ao grupo. Reintrodução somente com nova manifestação do coordenador (seção 13.7).
 
 ### 8.2. Pesquisadores e integrantes
 
@@ -501,7 +524,8 @@ Cada módulo indica objetivo, conteúdo, regras, visibilidade e versão.
 - **Vínculos com o grupo (`Membership`)** com papel, nível de treinamento (para estudantes), linhas de atuação, data de início, data de fim, situação, motivo de encerramento e fonte. Papéis (alinhados ao DGP): líder, pesquisador, estudante (graduação/IC, especialização/MBA, mestrado, doutorado, pós-doutorado), técnico, colaborador estrangeiro, colaborador externo.
 - **Múltiplos papéis ao longo do tempo:** linha do tempo de vínculos ("Estudante de mestrado 2021–2023 → Pesquisadora 2023–atual"). O papel em destaque é o vínculo ativo de maior hierarquia.
 - **Seções agregadas automaticamente no perfil:** publicações (via autoria), orientações, projetos, participações em eventos e ensaios.
-- **Visibilidade:** **todo** perfil público — inclusive de docentes e líderes — exige autorização registrada (`ConsentRecord` com escopo `public_profile`); foto exige escopo `photo`; e-mail público exige escopo `email`. Sem autorização, a pessoa aparece apenas como nome em autorias já públicas e em contagens agregadas, sem página própria. Motivo: o portal não tem base institucional para exibir dados de docentes do programa (v1.2).
+- **Visibilidade:** **todo** perfil público — inclusive de docentes e líderes — exige autorização individual registrada (`ConsentRecord` com escopo `public_profile`); foto exige escopo `photo`; e-mail público exige escopo `email`. Sem autorização, a pessoa aparece apenas como nome em autorias já públicas e em contagens agregadas, sem página própria. **v1.3 (Q4):** a autorização do grupo informada pelo coordenador é registrada como contexto, mas não substitui o registro individual (LGPD: vontade do titular, evidência e revogação). O coordenador pode colher e encaminhar os registros.
+- **Manutenção:** perfis, vínculos e afiliações são cadastrados e atualizados somente pelo coordenador e pelo desenvolvedor (Q5, Q9). Integrantes não têm conta; pedidos de correção chegam pelo contato do grupo.
 
 ### 8.3. Orientações acadêmicas (módulo central, M2)
 
@@ -520,16 +544,16 @@ Cada módulo indica objetivo, conteúdo, regras, visibilidade e versão.
 | OR-4 | O orientador deve ter vínculo de pesquisador com o grupo válido no período **ou** ser marcado como externo, com instituição informada (somente editor registra orientador externo); nesse caso, a orientação só é registrada se o orientando for integrante do grupo ou houver coorientador do grupo |
 | OR-5 | Situação "concluída" exige ano de conclusão e um orientador principal ativo na data de conclusão (exibido publicamente) |
 | OR-6 | Para mestrado, doutorado e pós-doutorado, "concluída" exige uma Conclusão acadêmica correspondente (criada no mesmo fluxo); nível, programa e instituição de referência devem coincidir |
-| OR-7 | Após a conclusão, participantes, nível, programa e datas ficam **bloqueados** para pesquisadores; somente o editor altera, com justificativa obrigatória registrada na auditoria |
+| OR-7 | Após a conclusão, participantes, nível, programa e datas ficam **bloqueados**; somente `editor`/`admin` alteram, com justificativa obrigatória registrada na auditoria |
 | OR-8 | "Interrompida" nunca é exibida individualmente ao público e não gera egresso; conta apenas em indicadores administrativos |
 | OR-9 | Mudança de orientador é troca de participação (OR-3); mudança de programa encerra a orientação como "transferida" e, se for o caso, inicia outra |
 | OR-10 | Bancas (S10) relacionam-se com a orientação via evento do tipo "banca"; membros de banca não são participantes da orientação |
 
-**Visibilidade pública** (a confirmar com os responsáveis do grupo, Q4 e Q9)
+**Visibilidade pública** (módulo autorizado pelo coordenador na Q10; regra de exibição de orientações concluídas a confirmar no item em aberto da Q4)
 
 - **Concluídas:** título, nível, ano, programa de referência, orientador(es) e nome do orientando (dados já públicos no trabalho depositado). O nome do orientando só vira link para perfil se houver consentimento de perfil público. Se o titular se opuser, a orientação é exibida como "Orientação concluída (dados restritos)" e entra apenas em contagens agregadas.
 - **Em andamento:** públicas **somente** com consentimento do orientando; título provisório só aparece se marcado como divulgável.
-- **Área interna (V2):** todas as orientações, prazos e observações, visíveis a integrantes autenticados com permissão.
+- **Área interna:** fora do MVP (Q5, sem contas de integrantes); dados não públicos ficam visíveis apenas aos dois usuários administrativos.
 
 ### 8.4. Egressos e ex-integrantes (M2)
 
@@ -559,13 +583,13 @@ Cada módulo indica objetivo, conteúdo, regras, visibilidade e versão.
 
 ### 8.5. Publicações científicas
 
-- **Abrangência:** produção **relacionada ao grupo** — publicações com ao menos um autor interno com vínculo ativo com o grupo no ano da publicação e aderência a ao menos uma linha do grupo, confirmada pelo editor. A inclusão é curada; **não** há obrigação de cadastrar toda a produção dos integrantes nem a do PPGPS.
+- **Abrangência:** produção **relacionada ao grupo** — publicações com ao menos um autor interno com vínculo ativo com o grupo no ano da publicação e aderência a ao menos uma linha temática (Bioética ou Promoção da Saúde), confirmada pelo coordenador ou pelo desenvolvedor. A inclusão é curada; **não** há obrigação de cadastrar toda a produção dos integrantes nem a do PPGPS.
 - **Tipos controlados:** artigo em periódico, livro, capítulo de livro, trabalho completo em anais, resumo, resumo expandido, dissertação, tese, produto técnico/tecnológico, material educativo, relatório técnico, preprint, outro.
 - **Campos:** título, subtítulo, ano, data de publicação, autoria ordenada, veículo, volume, número, páginas, DOI, ISBN, ISSN (do veículo), resumo, palavras-chave, idioma, links, arquivo PDF (apenas com licença compatível), licença, acesso aberto, linhas do grupo, projetos (S10) e orientação de origem.
 - **Autoria:** cada autor é uma `Autoria` com ordem, nome como publicado e vínculo opcional a uma `Pessoa` interna (autores externos ficam apenas com o nome publicado).
 - **Filtros e busca:** autor interno, ano (intervalo), tipo, linha, projeto, palavra-chave e acesso aberto; busca textual em título, resumo e palavras-chave.
 - **Deduplicação:** DOI normalizado é único; sem DOI, impressão digital (título normalizado + ano + sobrenome do primeiro autor) e similaridade de título geram alerta (seção 15.4).
-- **Integrações:** Crossref (S08); ORCID e OpenAlex (V2). Lattes e Sucupira sem API aberta para este uso [PREMISSA]; importar arquivos exportados pelo próprio pesquisador.
+- **Integrações:** Crossref (S08); ORCID e OpenAlex (V2). Lattes e Sucupira sem API aberta para este uso [PREMISSA]; importar arquivos exportados pelos pesquisadores e encaminhados à coordenação.
 
 ### 8.6. Eventos científicos
 
@@ -575,10 +599,10 @@ Cada módulo indica objetivo, conteúdo, regras, visibilidade e versão.
 - **Bancas:** evento do tipo "banca", ligado à orientação; a data futura gera divulgação na agenda.
 - **Eventos futuros** aparecem na home e na agenda; após a data, passam automaticamente para "realizados".
 
-### 8.7. Projetos, laboratório e impacto social
+### 8.7. Projetos e impacto social
 
-- **Entidade `Projeto`:** tipo (pesquisa, extensão, cooperação, atividade de laboratório), título, descrição, objetivos, período, situação, coordenação e equipe (participação com papel), financiadores (nome, edital, valor opcional e público só se autorizado), parceiros (texto/URL), instituição executora de referência, públicos atendidos, local, ODS relacionados (com justificativa), produtos gerados e galeria. Registram-se apenas projetos **do grupo** ou com participação formal de integrantes, confirmada pelos líderes.
-- **Laboratório:** apresentado como página no M1 (seção 8.1) e com atividades como projetos do tipo `laboratory` no M2. Uma coleção própria de laboratórios não é criada no MVP (seção 13.7).
+- **Entidade `Projeto`:** tipo (pesquisa, extensão, cooperação), título, descrição, objetivos, período, situação, coordenação e equipe (participação com papel), financiadores (nome, edital, valor opcional e público só se autorizado), parceiros (texto/URL), instituição executora de referência, públicos atendidos, local, ODS relacionados (com justificativa), produtos gerados e galeria. Registram-se apenas projetos **do grupo** ou com participação formal de integrantes, confirmada pelo coordenador. Não há projetos prioritários definidos (Q11).
+- **Laboratório:** fora do escopo atual (Q6, seção 8.1). Nem página, nem tipo `laboratory`, nem coleção própria no MVP (seção 13.7).
 - **Evidência de impacto:** descrição, indicador, valor, período, **fonte da evidência**, documento/link comprobatório, responsável e data da verificação e **nível de evidência** (declarado / documentado / publicado com revisão por pares).
 - **Regra anti-alegação sem comprovação:** evidências sem fonte não são exibidas; números exibem sempre a fonte e o período.
 - **ODS:** tabela fixa dos 17 ODS; associação exige justificativa curta.
@@ -588,8 +612,8 @@ Cada módulo indica objetivo, conteúdo, regras, visibilidade e versão.
 - **Natureza do conteúdo (campo obrigatório e exibido como selo):** ensaio reflexivo, divulgação científica, análise crítica, opinião acadêmica fundamentada, resenha, notícia do grupo, entrevista.
 - **Aviso fixo:** "Texto de natureza ensaística, sem revisão por pares. As opiniões são de responsabilidade dos autores e não representam posição institucional." (configurável por natureza).
 - **Editor:** rich text (Lexical) com títulos, listas, citações, imagens com legenda e crédito, links, notas e blocos de referências estruturadas; colagem do Word higienizada.
-- **Autoria:** autor principal e coautores ligados a `Pessoa`; autores convidados externos permitidos (nome e mini-bio).
-- **Taxonomia:** categorias controladas pelo editor (ex.: Bioética, Envelhecimento, Promoção da Saúde, Saúde Global, Tecnologias em Saúde, Políticas Públicas) e tags (livres, com moderação).
+- **Autoria:** autor principal e coautores ligados a `Pessoa`; autores convidados externos permitidos (nome e mini-bio). Os autores não precisam de conta: o coordenador ou o desenvolvedor cadastram o texto em nome deles (Q5, Q9).
+- **Taxonomia:** categorias controladas pelo editor, com **Bioética** e **Promoção da Saúde** como principais (Q7); outras (ex.: Envelhecimento, Saúde Global, Tecnologias em Saúde, Políticas Públicas) a critério do coordenador. Tags criadas pelos usuários administrativos.
 - **Fluxo editorial:** seção 15.2.
 - **Ciclo de maturação [SUGESTÃO]:** campo `estágio de desenvolvimento` (ideia, ensaio, em discussão, em desenvolvimento acadêmico, publicado como artigo) e relação "resultou em" com `Publicação` (S08).
 - **SEO e compartilhamento:** título SEO, descrição, imagem OG automática, URL canônica, JSON-LD `BlogPosting`, tempo de leitura e compartilhamento sem rastreadores.
@@ -598,7 +622,7 @@ Cada módulo indica objetivo, conteúdo, regras, visibilidade e versão.
 
 ### 8.9. Administração e gerenciamento de conteúdo
 
-- Painel do Payload em `/admin`, em português, com grupos de navegação: **Grupo** (perfil do grupo, linhas, páginas), **Integrantes** (pessoas, vínculos, orientações, conclusões, egressos), **Produção** (publicações, veículos, importações, duplicatas), **Editorial** (ensaios, categorias, tags), **Atividades** (eventos, projetos, evidências), **Mídia** (imagens, documentos), **Governança** (consentimentos, auditoria, usuários) e **Configurações** (homepage, navegação, rodapé, SEO global).
+- Painel do Payload em `/admin`, em português, usado apenas pelo coordenador e pelo desenvolvedor, com grupos de navegação: **Grupo** (perfil do grupo, linhas temáticas, páginas), **Integrantes** (pessoas, vínculos, orientações, conclusões, egressos), **Produção** (publicações, veículos, importações, duplicatas), **Editorial** (ensaios, categorias, tags), **Atividades** (eventos, projetos, evidências), **Mídia** (imagens, documentos), **Governança** (consentimentos, auditoria, usuários) e **Configurações** (homepage, navegação, rodapé, SEO global).
 - Visões em lista com colunas e filtros salvos; ações em lote (publicar, arquivar).
 - Pré-visualização das páginas públicas a partir do rascunho.
 - Campos de ajuda explicando regras e consentimento.
@@ -609,7 +633,7 @@ Cada módulo indica objetivo, conteúdo, regras, visibilidade e versão.
 
 ### 9.1. Navegação principal
 
-`Início · O grupo · Linhas · Integrantes · Produção · Blog · Eventos · Projetos e impacto` + ícone de busca. Itens de módulos do M2 (Produção, Eventos, Projetos e impacto) ficam ocultos até existirem dados.
+`Início · O grupo · Linhas temáticas · Integrantes · Produção · Blog · Eventos · Projetos e impacto` + ícone de busca. Itens de módulos do M2 (Produção, Eventos, Projetos e impacto) ficam ocultos até existirem dados.
 
 ### 9.2. Sitemap
 
@@ -619,10 +643,9 @@ flowchart LR
     H --> GR["/o-grupo"]
     GR --> GR1["/o-grupo/historico"]
     GR --> GR2["/o-grupo/objetivos"]
-    GR --> GR3["/o-grupo/laboratorio"]
     GR --> GR4["/o-grupo/referencias-institucionais"]
     GR --> GR5["/o-grupo/contato"]
-    H --> LI["/linhas e /linhas/[slug]"]
+    H --> LI["/linhas e /linhas/[slug] (Bioética, Promoção da Saúde)"]
     H --> IN["/integrantes e /integrantes/[slug]"]
     IN --> IN1["/integrantes/orientacoes"]
     IN --> IN2["/integrantes/egressos"]
@@ -653,7 +676,7 @@ flowchart LR
 
 ```mermaid
 flowchart LR
-    A["Home"] --> B["Linha do grupo"]
+    A["Home"] --> B["Linha temática"]
     B --> C["Perfil do pesquisador (autorizado)"]
     C --> D["Publicações do pesquisador"]
     C --> E["Orientações do pesquisador"]
@@ -663,13 +686,15 @@ flowchart LR
 
 ### 10.2. Fluxo editorial de ensaio
 
+> **v1.3 (Q8, Q9):** todas as transições são feitas pelo coordenador (`editor`) ou pelo desenvolvedor (`admin`). Os autores enviam os textos por fora do sistema. A auditoria registra quem submeteu, aprovou e publicou; recomenda-se que a aprovação seja feita por quem não redigiu o texto, quando possível [SUGESTÃO].
+
 ```mermaid
 stateDiagram-v2
-    [*] --> Rascunho: pesquisador cria
-    Rascunho --> EmRevisao: autor submete
-    EmRevisao --> Devolvido: editor solicita ajustes
-    Devolvido --> EmRevisao: autor reenvia
-    EmRevisao --> Aprovado: editor aprova
+    [*] --> Rascunho: editor/admin cria (em nome dos autores)
+    Rascunho --> EmRevisao: editor/admin submete
+    EmRevisao --> Devolvido: revisor solicita ajustes
+    Devolvido --> EmRevisao: ajustes feitos
+    EmRevisao --> Aprovado: editor/admin aprova
     Aprovado --> Agendado: editor define data
     Aprovado --> Publicado: editor publica
     Agendado --> Publicado: data atingida
@@ -682,16 +707,16 @@ stateDiagram-v2
 
 ```mermaid
 flowchart TD
-    A["Pesquisador ou editor informa DOI"] --> B{"DOI já existe?"}
+    A["Coordenador ou desenvolvedor informa DOI"] --> B{"DOI já existe?"}
     B -- Sim --> C["Abre registro existente e sugere vincular autoria"]
     B -- Não --> D["Busca metadados no Crossref"]
     D --> E["Pré-preenche formulário"]
-    E --> F["Usuário associa autores internos e linhas do grupo"]
+    E --> F["Usuário associa autores internos e linhas temáticas"]
     F --> G{"Impressão digital similar a outro registro?"}
     G -- Sim --> H["Alerta de possível duplicata"]
     G -- Não --> I["Salva como rascunho"]
     H --> I
-    I --> J["Editor confirma a aderência ao grupo e publica"]
+    I --> J["Coordenador ou desenvolvedor confirma a aderência ao grupo e publica"]
 ```
 
 ### 10.4. Registro de conclusão (ex.: estudante do grupo defende o mestrado e segue para o doutorado)
@@ -718,9 +743,9 @@ flowchart TD
 
 ### 10.5. Concessão e revogação de consentimento
 
-1. Os responsáveis do grupo coletam a autorização do titular (termo ou formulário aprovado na Q4); o editor registra o consentimento (escopos: perfil público, foto, e-mail, orientação em andamento, informações de egresso), data, meio e documento comprobatório (armazenado de forma privada).
+1. O coordenador coleta a autorização individual do titular (termo a definir, item em aberto da Q4); o coordenador ou o desenvolvedor registra o consentimento (escopos: perfil público, foto, e-mail, orientação em andamento, informações de egresso), data, meio e documento comprobatório (armazenado de forma privada).
 2. A visibilidade pública é calculada a partir do consentimento vigente.
-3. Revogação: o editor registra a revogação e o conteúdo deixa de ser exibido imediatamente (revalidação do cache), mantendo apenas o necessário (ex.: autoria em publicação já pública).
+3. Revogação: o coordenador ou o desenvolvedor registra a revogação e o conteúdo deixa de ser exibido imediatamente (revalidação do cache), mantendo apenas o necessário (ex.: autoria em publicação já pública).
 
 ---
 
@@ -925,15 +950,15 @@ erDiagram
 
 | Entidade | Campos principais | Restrições e regras |
 |---|---|---|
-| **GroupProfile** (global) | officialName, alternativeNames[] (nome + fonte), acronym?, summary, description, objectives, history (rich text), dgpUrl, dgpId, certificationStatus, certifiedAt, formationYear, predominantArea, leaders (→Person, S04; `leadersText` temporário na S03), institutionalReferences[] (name, kind: institution/program/unit/partner/funder, relationText, url, showInFooter), contactEmail, disclaimerText, source, collectedAt | Instância única; publicação exige ≥ 1 líder; referências institucionais são **somente texto e URL** (sem campo de logotipo institucional no MVP); `disclaimerText` obrigatório |
-| **ResearchLine** | name, slug, description, order, active, relatedProgramLineText? (referência textual opcional a linha de programa), source | `slug` único; linhas do grupo apenas |
-| **Project** | title, slug, type (research/extension/cooperation/laboratory), code?, summary, description, objectives, startDate, endDate, status, lines[], partners[] (texto/URL), hostInstitutionText?, audiences[], location, sdgs[] (com justificativa), gallery[], visibility | `endDate ≥ startDate`; status "concluído" exige `endDate`; criado na S10 |
+| **GroupProfile** (global) | officialName, alternativeNames[] (nome + fonte), acronym?, summary, description, objectives, history (rich text), dgpUrl, dgpId, certificationStatus, certifiedAt, formationYear, predominantArea, leaders (→Person, S04; `leadersText` temporário na S03), institutionalReferences[] (name, kind: institution/program/unit/partner/funder, relationText, url, showInFooter), dgpResearchLines[] (name, source, collectedAt, note — referência histórica, v1.3), contactEmail, responsibilityNote? (texto discreto de responsabilidade para `/sobre-o-portal`, v1.3), source, collectedAt | Instância única; publicação exige ≥ 1 líder; `officialName` = nome de exibição definido na Q2; referências institucionais são **somente texto e URL** (sem campo de logotipo institucional no MVP); `dgpResearchLines` não geram páginas |
+| **ResearchLine** | name, slug, description, order, active, relatedProgramLineText? (referência textual opcional a linha de programa), source | `slug` único; **linhas temáticas do portal** — Bioética e Promoção da Saúde (Q7); rótulo público "Linhas temáticas" |
+| **Project** | title, slug, type (research/extension/cooperation; `laboratory` fora do escopo, Q6), code?, summary, description, objectives, startDate, endDate, status, lines[], partners[] (texto/URL), hostInstitutionText?, audiences[], location, sdgs[] (com justificativa), gallery[], visibility | `endDate ≥ startDate`; status "concluído" exige `endDate`; criado na S10 |
 | **ProjectMember** | project, person, role (coordinator/vice/researcher/student/collaborator), startDate, endDate | Único por (project, person, role, startDate) |
 | **Funding** | project, funder, call (edital), amount?, currency, amountPublic (bool), period | `amount` exibido só se `amountPublic` |
 | **ImpactEvidence** | project, title, description, indicator, value, unit, periodStart, periodEnd, evidenceLevel (declared/documented/peer_reviewed), sourceType, sourceUrl/document, verifiedBy (→User), verifiedAt, visibility | Exibição pública exige `sourceUrl` ou documento + `verifiedAt` |
 | **SDG** | number (1–17), name, color, icon | Tabela fixa (seed) |
 | **Person** | fullName, citationName, nameVariants[], slug, photo (→Media), shortBio, academicBio (rich text), externalEducation[] (level, course, institution, country, year), expertise[], affiliations[] (institutionText, programText?, positionText, url?, current), publicEmail?, lattesUrl, orcid, otherProfiles[], visibility, consentStatus (calculado), archivedAt | `slug` único (exceto reservados); `orcid` único com dígito verificador válido; `lattesUrl` único em formato `lattes.cnpq.br/<16 dígitos>` ou `buscatextual`; **página pública exige consentimento `public_profile` vigente** |
-| **Membership** | person, role (leader/researcher/student/technician/foreign_collaborator/external_collaborator), trainingLevel? (undergraduate/specialization/masters/doctorate/postdoc/other; somente estudantes), lines[] (→ResearchLine), startDate, endDate?, status (active/ended), endReason (left/training_completed/role_changed/other), source (dgp_transcription/manual/spreadsheet), sourceUrl, collectedAt | Sem sobreposição do mesmo (person, role, trainingLevel); `endDate ≥ startDate`; `trainingLevel` obrigatório se `role=student`; vínculo encerrado sem outro ativo gera condição de ex-integrante |
+| **Membership** | person, role (leader/researcher/student/technician/foreign_collaborator/external_collaborator — papéis de vínculo do DGP, sem relação com papéis de sistema), trainingLevel? (undergraduate/specialization/masters/doctorate/postdoc/other; somente estudantes), lines[] (→ResearchLine), startDate, endDate?, status (active/ended), endReason (left/training_completed/role_changed/other), source (dgp_transcription/manual/spreadsheet), sourceUrl, collectedAt | Sem sobreposição do mesmo (person, role, trainingLevel); `endDate ≥ startDate`; `trainingLevel` obrigatório se `role=student`; vínculo encerrado sem outro ativo gera condição de ex-integrante |
 | **AcademicCompletion** | person, type (masters_degree/doctoral_degree/postdoc), programName, institutionName, programUrl?, modality (academic/minter/dinter/sandwich), partnerInstitution?, supervision, startDate, defenseDate, completionDate?, finalWork? (→Publication, S08+), repositoryUrl, source, visibility | Único por (person, type, programName, startDate); `supervision.status=completed` e nível compatível; `defenseDate ≥ startDate`; mesma pessoa da orientação (orientando); criação e alteração somente por editor (com justificativa após publicada) |
 | **AlumniProfile** | person (único), testimonial, laterContributions, displayPreferences, consentRecord, reviewedAt | Exibição pública exige consentimento `alumni_info` vigente |
 | **CareerEntry** | person, kind (academic/professional/public_sector/private_sector/third_sector), organization, position, city, country, startDate?, endDate?, isCurrent, visibility, source, reviewedAt | No máximo uma entrada `isCurrent` por (person, kind, organization); pública apenas com consentimento `alumni_info` |
@@ -947,14 +972,16 @@ erDiagram
 | **EventParticipation** | event, person, role (organizer/speaker/oral/poster/attendee/examiner/evaluator/moderator), presentationTitle, publication?, award?, relatedSupervision? | Único por (event, person, role, presentationTitle) |
 | **Essay** | title, slug, subtitle, excerpt, cover, content (rich text), nature, category, tags[], references[], developmentStage, resultingPublications[] (S08), workflowStatus, publishedAt, scheduledAt, archivedAt, seo, readingTime | Publicação exige revisão aprovada por editor; `nature` obrigatória |
 | **EssayAuthor** | essay, person? ou guestName/guestBio, order, role (author/co_author/guest) | ≥ 1 autor |
-| **Category / Tag** | name, slug, description | Categoria controlada por editor; tag criada por pesquisador fica pendente até moderação |
-| **Page** | title, slug, layout (blocos), seo, workflowStatus | Páginas do grupo (laboratório, histórico etc.) e legais |
+| **Category / Tag** | name, slug, description | Categorias e tags criadas por `editor`/`admin` (sem moderação de terceiros, Q5) |
+| **Page** | title, slug, layout (blocos), seo, workflowStatus | Páginas do grupo (histórico etc.) e legais; sem página de laboratório (Q6) |
 | **Media** | file, alt, caption, credit, license, consentRecord?, containsIdentifiablePeople (bool), focalPoint | `alt` obrigatório (exceto decorativa marcada); pessoas identificáveis exigem consentimento |
 | **Document** | file, title, type, license, visibility (public/members/admin) | Documentos privados servidos por URL assinada |
 | **ConsentRecord** | person, scopes[] (public_profile/photo/email/ongoing_supervision/alumni_info), objection? (oposição à exibição de orientação concluída), grantedAt, method, evidence (Document privado), collectedBy, revokedAt?, notes | Somente admin/editor; nunca público; nunca copiado para fora da produção |
-| **User** | email, name, roles[] (admin/editor/researcher), person?, active, lastLoginAt, loginAttempts, lockUntil | E-mail único; papel mínimo obrigatório |
+| **User** | email, name, roles[] (admin/editor), person?, active, lastLoginAt, loginAttempts, lockUntil | E-mail único; papel obrigatório; no MVP, somente o coordenador (`editor`) e o desenvolvedor (`admin`) têm conta (Q5) |
 | **AuditLog** | user, action (create/update/delete/publish/unpublish/login/role_change/export), collection, documentId, diffSummary, ip (truncado), at | Somente inserção (imutável); retenção de 2 anos [PREMISSA] |
-| **Globals** | GroupProfile, Homepage, Navigation, Footer (inclui aviso de portal não oficial), SiteSettings (SEO padrão, flags como exibir indicadores) | Editáveis por editor/admin |
+| **Globals** | GroupProfile, Homepage, Navigation, Footer (identificação do grupo e referências marcadas; sem aviso obrigatório, Q1), SiteSettings (SEO padrão, flags como exibir indicadores) | Editáveis por editor/admin |
+
+**Alterados na v1.3:** `User.roles` sem `researcher`; `GroupProfile.disclaimerText` (obrigatório) → `responsibilityNote` (opcional); `GroupProfile.dgpResearchLines` adicionado; `Project.type` sem `laboratory`; moderação de tags removida.
 
 **Removidos em relação à v1.1:** `Program` e `ResearchGroup` (coleções) → `GroupProfile` + campos de referência; `ExternalId` → campos validados; `ResearchLine.scope/program/group/parentProgramLine`; `Membership.unitType/program/group/modality/partnerInstitution/completion/studentLevel` (substituídos por `role`, `trainingLevel` e `lines`; modalidade fica na orientação e na conclusão); `Project.type=integrator`; `Publication.groups`; `User.managedGroups`; papel `group_manager`; `Event.hostedByProgram` → `hostedByGroup`.
 
@@ -980,14 +1007,14 @@ Cada coleção é criada apenas na sprint indicada (regra de não antecipação,
 | Sprint | Marco | Entidades criadas | Relações/campos adicionados a entidades existentes |
 |---|---|---|---|
 | S01 | M1 | User (mínimo), Media (mínimo) | — |
-| S02 | M1 | AuditLog, Document; globals Navigation, Footer (com aviso), SiteSettings | User.roles, User.active; campos de autorização em Media |
-| S03 | M1 | ResearchLine, Page; globals GroupProfile, Homepage | — (líderes em `GroupProfile.leadersText`, temporário) |
+| S02 | M1 | AuditLog, Document; globals Navigation, Footer, SiteSettings | User.roles (`admin`, `editor`), User.active; campos de autorização em Media |
+| S03 | M1 | ResearchLine (2 linhas temáticas), Page; globals GroupProfile (com `dgpResearchLines`), Homepage | — (líderes em `GroupProfile.leadersText`, temporário) |
 | S04 | M1 | Person, Membership, ConsentRecord | GroupProfile.leaders (remove `leadersText`), User.person, Media.consentRecord |
 | S05 | M1 | Essay, EssayAuthor, Category, Tag | — |
 | S07 | M2 | Supervision, SupervisionParticipant, AcademicCompletion, AlumniProfile, CareerEntry | — |
 | S08 | M2 | Publication, Authorship, Venue, Keyword | Supervision.resultingPublication, AcademicCompletion.finalWork, Essay.resultingPublications |
 | S09 | M2 | DuplicateCandidate, índice de busca (coleção `search`) | — |
-| S10 | M2 | Event, EventParticipation, Project, ProjectMember, Funding, ImpactEvidence, SDG | Supervision.project, Publication.projects, EventParticipation.relatedSupervision |
+| S10 | M2 | Event, EventParticipation, Project (sem tipo `laboratory`), ProjectMember, Funding, ImpactEvidence, SDG | Supervision.project, Publication.projects, EventParticipation.relatedSupervision |
 | S18–S19 | V3 | VenueMetric, snapshots de indicadores | — |
 
 ### 13.7. Pontos de expansão futura (não implementar sem ADR e ficha)
@@ -996,7 +1023,8 @@ Cada coleção é criada apenas na sprint indicada (regra de não antecipação,
 |---|---|---|
 | Hospedar outros grupos | Migrar `GroupProfile` para coleção `research-groups`; adicionar `group` a `Membership`, `ResearchLine`, `Project`, `Publication` (*expand/contract*); reintroduzir `group_manager` e `User.managedGroups` | Decisão formal de ampliar o portal |
 | Instituições/programas normalizados | Criar coleção `institutions` e migrar `programName`/`institutionName`/afiliações por script idempotente | Indicadores por instituição ou volume que gere inconsistência |
-| Vários laboratórios ou laboratório com estrutura própria (equipamentos, serviços) | Coleção `labs` relacionada a projetos | Confirmação na Q6 e demanda dos líderes |
+| Laboratório do grupo (página, projetos `laboratory`) ou vários laboratórios com estrutura própria | Página editorial e tipo `laboratory` em `Project`; coleção `labs` se houver estrutura própria | Nova manifestação do coordenador autorizando a inclusão (Q6) + ficha de sprint |
+| Contas de integrantes (papel `researcher`, área do integrante, edição do próprio perfil) | Reintroduzir papel e regras de acesso por pessoa (`isOwnerPerson`, `isParticipant`) com testes por papel | Decisão do coordenador + ADR (Q5) |
 | Múltiplos identificadores por entidade (OpenAlex, Crossref member) | Coleção `external-ids` | Integrações da V2 (S14–S15) |
 
 ---
@@ -1006,52 +1034,49 @@ Cada coleção é criada apenas na sprint indicada (regra de não antecipação,
 ### 14.1. Autenticação
 
 - **Payload Auth** na coleção `users`: e-mail e senha com hash forte, sessão por cookie `HttpOnly`, `Secure`, `SameSite=Lax`.
-- **Sem cadastro público:** contas são criadas por convite (admin/editor), com link de definição de senha de validade curta.
+- **Sem cadastro público nem login de visitantes:** contas são criadas pelo `admin`; no MVP existem apenas duas (coordenador e desenvolvedor, Q5). A definição de senha usa link de validade curta.
 - **Política de senha:** mínimo de 12 caracteres e verificação contra senhas comuns.
 - **Bloqueio** após 5 tentativas falhas por 15 minutos (`maxLoginAttempts`, `lockTime`).
 - **Recuperação de acesso** por e-mail com token de uso único e expiração de 1 hora.
 - **Expiração de sessão** por inatividade (ex.: 8 h) e logout em todos os dispositivos ao trocar senha.
-- **V2:** 2FA (TOTP) para admin/editor e login com ORCID para pesquisadores.
+- **V2:** 2FA (TOTP) para admin/editor. Login com ORCID para pesquisadores não está previsto (sem contas de integrantes, Q5).
 
 ### 14.2. Papéis
 
 | Papel | Descrição |
 |---|---|
-| `admin` | Gestão técnica e de usuários; acesso total; 1–2 titulares (responsável técnico) |
-| `editor` | Líderes do grupo e editor-chefe designado; curadoria de dados; aprova e publica qualquer conteúdo |
-| `researcher` | Integrante com conta (pesquisador ou estudante); edita o próprio perfil e cria rascunhos/sugestões |
+| `admin` | **Desenvolvedor responsável.** Acesso total: usuários, papéis, configurações técnicas, auditoria, importações e todo o conteúdo; também revisa e publica (Q8, Q9) |
+| `editor` | **Coordenador do grupo.** Cria, edita, revisa, aprova e publica todo o conteúdo acadêmico e editorial, inclusive consentimentos, mídias e importações; lê a auditoria; **não** gerencia usuários, papéis nem configurações técnicas |
 | Visitante | Sem conta; somente leitura pública |
 
-> `group_manager` (v1.1) foi removido; pode voltar se o portal vier a hospedar vários grupos (seção 13.7).
+> **v1.3 (Q5):** `researcher` removido do MVP; integrantes são registros acadêmicos sem conta. `group_manager` (v1.1) continua removido. Reintrodução de papéis somente com ADR (seção 13.7).
 
 ### 14.3. Matriz de permissões (MVP: M1 + M2)
 
 Legenda: **T** total · **P** somente próprios · **R** rascunho/sugestão sujeita a aprovação · **L** leitura · **—** sem acesso.
 
-| Recurso | admin | editor | researcher | visitante |
-|---|---|---|---|---|
-| Usuários e papéis | T | L | — | — |
-| Configurações globais, navegação e perfil do grupo | T | T | L | L (público) |
-| Linhas do grupo e páginas | T | T | L | L (publicadas) |
-| Pessoas | T | T | P (próprio perfil; campos sensíveis R) | L (perfis autorizados) |
-| Vínculos com o grupo | T | T | L (próprios) | L (públicos) |
-| Orientações em andamento | T | T | R (onde é participante) | L (com consentimento) |
-| Orientações concluídas (bloqueadas, OR-7) | T | T (com justificativa) | L (onde é participante) | L (públicas) |
-| Conclusões acadêmicas | T | T | L (próprias) | L (públicas) |
-| Perfil de egresso e trajetória | T | T | P (própria, revisada por editor) | L (com consentimento) |
-| Publicações | T | T | R (onde é autor) | L (publicadas) |
-| Eventos e participações | T | T | R (próprias) | L (publicados) |
-| Projetos e evidências | T | T | R (onde é membro) | L (públicos verificados) |
-| Ensaios | T | T (revisa, aprova, publica) | R (próprios; submete) | L (publicados) |
-| Mídia | T | T | P (envio próprio) | L (públicas) |
-| Consentimentos | T | T | L (próprios) | — |
-| Auditoria | L | L | — | — |
-| Importações e duplicatas | T | T | — | — |
+| Recurso | admin (desenvolvedor) | editor (coordenador) | visitante |
+|---|---|---|---|
+| Usuários e papéis | T | L (própria conta) | — |
+| Configurações técnicas (SiteSettings técnicos, integrações) | T | L | — |
+| Navegação, rodapé, homepage e perfil do grupo | T | T | L (público) |
+| Linhas temáticas e páginas | T | T | L (publicadas) |
+| Pessoas e vínculos com o grupo | T | T | L (perfis autorizados) |
+| Orientações em andamento | T | T | L (com consentimento) |
+| Orientações concluídas (bloqueadas, OR-7) | T (com justificativa) | T (com justificativa) | L (públicas) |
+| Conclusões acadêmicas, perfil de egresso e trajetória | T | T | L (com consentimento) |
+| Publicações | T | T | L (publicadas) |
+| Eventos, projetos e evidências | T | T | L (publicados/verificados) |
+| Ensaios | T (revisa, aprova, publica) | T (revisa, aprova, publica) | L (publicados) |
+| Mídia e documentos | T | T | L (públicas) |
+| Consentimentos | T | T | — |
+| Auditoria | L | L | — |
+| Importações e duplicatas | T | T | — |
 
 ### 14.4. Autorização por recurso
 
 - Implementada em funções de acesso do Payload (`read`, `create`, `update`, `delete`) e acesso por campo (ex.: `consentStatus`, `visibility` e `workflowStatus=published` só alteráveis por editor).
-- Funções em `src/access/` são puras e testadas (`isAdmin`, `isEditor`, `isOwnerPerson(doc)`, `isParticipant(doc)`), compondo políticas por coleção.
+- Funções em `src/access/` são puras e testadas (`isAdmin`, `isEditor`, `isAdminOrEditor`, `isAuthenticated`, filtros públicos de visibilidade), compondo políticas por coleção. Funções por pessoa (`isOwnerPerson`, `isParticipant`) não são criadas no MVP (Q5).
 - Consultas de `read` retornam filtros (`where`) e não apenas booleanos, garantindo que listagens também respeitem o escopo.
 - A API REST pública é somente leitura com as mesmas regras; GraphQL desabilitado; rotas customizadas exigem verificação explícita de sessão e papel.
 - Toda mudança de papel gera registro `role_change` na auditoria.
@@ -1064,21 +1089,19 @@ Legenda: **T** total · **P** somente próprios · **R** rascunho/sugestão suje
 
 | Papel | Responsabilidade | Titular [PREMISSA] |
 |---|---|---|
-| Responsáveis pelo grupo | Autorizar formalmente o portal e cada publicação de marco; aprovar textos do grupo; coletar autorizações dos integrantes; arbitrar conflitos | Líderes registrados no DGP (Lucas França Garcia e Leonardo Pestillo de Oliveira, em 19/10/2026) — confirmar na Q1 |
-| Editor-chefe | Linha editorial do blog, aprovação final de ensaios, política de conteúdo | Designado pelos líderes (Q8) |
-| Curador(a) de dados | Integrantes, vínculos, orientações e publicações; deduplicação; atualização semestral | Integrante designado pelos líderes (Q10) |
-| Pesquisadores | Manter o próprio perfil; propor ensaios e publicações | Integrantes com conta |
-| Responsável técnico | Infraestrutura, segurança, backups, atualizações | Desenvolvedor responsável (supervisor do agente) |
-| Canal do titular (LGPD) | Receber solicitações de titulares e decidir sobre dados pessoais | A definir com os responsáveis do grupo (Q4) |
-| UniCesumar / PPGPS | **Não** são instâncias de aprovação do portal; são consultadas apenas se a política institucional exigir (verificação pelos líderes, Q1/Q2) | — |
+| Coordenador do grupo (`editor`) | Autorizar cada publicação de marco; aprovar textos do grupo; revisar e publicar ensaios e dados acadêmicos; curadoria (integrantes, vínculos, orientações, produção); coletar autorizações individuais | Coordenador do grupo (Q1, Q8, Q9, Q10); identificação nominal a registrar |
+| Desenvolvedor responsável (`admin`) | Infraestrutura, segurança, backups, atualizações; também revisa, cadastra e publica conteúdo | Supervisor técnico do agente (Q8, Q9) |
+| Integrantes | Fornecer à coordenação textos, dados de produção, correções e autorizações; propor ensaios | Sem conta no portal (Q5) |
+| Canal do titular (LGPD) | Receber solicitações de titulares e decidir sobre dados pessoais | A definir pelo coordenador (item em aberto da Q4) |
+| UniCesumar / PPGPS | **Não** são instâncias de aprovação do portal (Q1); eventual exigência institucional é responsabilidade do coordenador | — |
 
 ### 15.2. Fluxo editorial
 
 | Estado | Quem altera | Visível ao público | Observações |
 |---|---|---|---|
-| Rascunho | Autor | Não | Edição livre |
-| Em revisão | Autor submete | Não | Editor notificado por e-mail; autor perde edição até a devolução |
-| Devolvido | Editor | Não | Comentários de revisão obrigatórios |
+| Rascunho | Editor/admin (em nome dos autores) | Não | Edição livre |
+| Em revisão | Editor/admin | Não | Notificação por e-mail opcional (RF-114) |
+| Devolvido | Editor/admin | Não | Comentários de revisão obrigatórios |
 | Aprovado | Editor | Não | Pronto para publicar ou agendar |
 | Agendado | Editor | Não (até a data) | Publicação automática por job |
 | Publicado | Editor | Sim | Alterações geram nova versão; correções relevantes registram nota de errata |
@@ -1086,19 +1109,21 @@ Legenda: **T** total · **P** somente próprios · **R** rascunho/sugestão suje
 
 **Critérios de revisão de ensaios (checklist do editor):** natureza corretamente indicada; argumentação fundamentada e referências quando houver afirmações factuais; ausência de dados pessoais de terceiros ou de pacientes; imagens com licença e crédito; linguagem acessível; conflitos de interesse declarados; ausência de aconselhamento clínico individual; nenhum texto apresentado como posição oficial da UniCesumar ou do PPGPS.
 
-**Dados acadêmicos** (publicações, orientações, eventos, projetos) usam fluxo simplificado: rascunho → publicado, com publicação por editor. Sugestões de pesquisadores ficam como rascunho até a validação.
+**Dados acadêmicos** (publicações, orientações, eventos, projetos) usam fluxo simplificado: rascunho → publicado, com publicação por `editor`/`admin`. Não há sugestões de pesquisadores no sistema (Q5, Q9).
 
 ### 15.3. Política de atualização
 
 | Conteúdo | Frequência mínima | Responsável | Gatilho automático [SUGESTÃO] |
 |---|---|---|---|
-| Integrantes e vínculos | Semestral (e a cada atualização do DGP) | Curador | Lembrete por e-mail em março e agosto |
-| Orientações | A cada defesa ou ingresso | Curador | Alerta de orientações "em andamento" além do prazo regular |
-| Publicações | Trimestral | Pesquisadores + curador | Relatório de integrantes sem produção registrada no ano |
-| Perfis | Anual | Pesquisadores | Selo "atualizado em" e alerta após 12 meses |
-| Eventos | Contínua | Editor | Eventos passados sem participação registrada |
-| Projetos e evidências | Semestral | Coordenadores de projeto | Projetos com término vencido e status "ativo" |
-| Páginas do grupo | Anual ou quando houver mudança | Líderes/editor | — |
+| Integrantes e vínculos | Semestral (e a cada atualização do DGP) | Coordenador | Lembrete por e-mail em março e agosto |
+| Orientações | A cada defesa ou ingresso | Coordenador | Alerta de orientações "em andamento" além do prazo regular |
+| Publicações | Trimestral | Coordenador (com dados enviados pelos integrantes) | Relatório de integrantes sem produção registrada no ano |
+| Perfis | Anual | Coordenador | Selo "atualizado em" e alerta após 12 meses |
+| Eventos | Contínua | Coordenador | Eventos passados sem participação registrada |
+| Projetos e evidências | Semestral | Coordenador | Projetos com término vencido e status "ativo" |
+| Páginas do grupo | Anual ou quando houver mudança | Coordenador | — |
+
+> O desenvolvedor pode executar qualquer uma dessas atualizações (Q9).
 
 Toda página exibe **"Última atualização em …"** para transparência.
 
@@ -1125,11 +1150,12 @@ Toda página exibe **"Última atualização em …"** para transparência.
 - PDFs de publicações só são hospedados quando a licença permitir; caso contrário, o portal aponta para o DOI ou o repositório institucional.
 - Dissertações e teses: link para o repositório oficial (ex.: RDU) em vez de cópia.
 - Ensaios do blog: licença padrão sugerida **CC BY-NC-ND 4.0** [SUGESTÃO], com autor podendo escolher outra; termo de cessão de direitos de publicação aceito no primeiro envio.
-- Imagens: licença e crédito obrigatórios; imagens de terceiros sem licença são proibidas; logotipos institucionais só com autorização (Q2).
+- Imagens: licença e crédito obrigatórios; imagens de terceiros sem licença são proibidas; logotipos institucionais só com autorização formal (não concedida na Q2).
+- Materiais do grupo: a autorização informada pelo coordenador (Q12) cobre fotografias, documentos e materiais **do grupo**, mantidos os registros de origem, crédito e licença; não cobre o direito de imagem individual (seção 17.3).
 
 ### 15.6. Remoção de conteúdo
 
-- Solicitações de remoção (titular, autor, instituição) pelo canal do titular definido na Q4; resposta em até 15 dias [PREMISSA alinhada à prática da LGPD].
+- Solicitações de remoção (titular, autor, instituição) pelo canal do titular (a definir, item em aberto da Q4; até lá, e-mail de contato do grupo); resposta em até 15 dias [PREMISSA alinhada à prática da LGPD].
 - Remoção de dado pessoal: ocultação imediata (visibilidade) e, se cabível, anonimização; registro na auditoria.
 - Conteúdo com erro factual: correção com nota de errata, não exclusão silenciosa.
 - Solicitação de instituição para retirar menção ou marca é atendida imediatamente e registrada.
@@ -1140,27 +1166,27 @@ Toda página exibe **"Última atualização em …"** para transparência.
 
 ### 16.1. Direção visual
 
-**"Acadêmico contemporâneo":** sóbrio, editorial e legível, inspirado em portais de pesquisa e revistas digitais, evitando a estética de sistema administrativo **e evitando imitar o site oficial da UniCesumar**.
+**"Acadêmico contemporâneo" em azul-marinho e branco (Q2):** sóbrio, editorial e legível, inspirado em portais de pesquisa e revistas digitais, evitando a estética de sistema administrativo **e sem reproduzir elementos gráficos do site da UniCesumar**.
 
 | Elemento | Proposta |
 |---|---|
 | Tipografia | Serifada editorial para títulos e textos longos do blog (ex.: *Source Serif 4* ou *Literata*) + sans-serif para interface (ex.: *Inter* ou *IBM Plex Sans*); fontes self-hosted via `next/font` |
-| Cor | Base neutra (off-white e grafite) + 1 cor primária **própria do grupo** (a definir com os responsáveis, Q2; sem reproduzir a paleta institucional) + 1 cor de destaque; contraste AA garantido |
-| Marca | Nome do grupo em texto (wordmark tipográfico) até haver logotipo próprio aprovado; **nenhum** logotipo da UniCesumar, do PPGPS ou do CNPq sem autorização formal |
+| Cor | **Azul-marinho** (primária) e **branco** (fundo e texto sobre o azul), com cinzas neutros de apoio e, se necessário, uma cor de destaque discreta para estados e foco. Valores exatos definidos em tokens na S02, com contraste AA verificado (texto ≥ 4,5:1; componentes ≥ 3:1) |
+| Marca | Nome do grupo em texto (wordmark tipográfico: "Grupo de Pesquisa em Bioética e Promoção da Saúde - Unicesumar", com versão curta) até haver logotipo próprio aprovado; **nenhum** logotipo da UniCesumar, do PPGPS ou do CNPq sem autorização formal |
 | Layout | Grade de 12 colunas, medida de leitura de 65–75 caracteres no blog, espaço em branco generoso |
 | Imagens | Fotografias reais do grupo (com autorização); evitar banco de imagens genérico; ilustrações sóbrias para estados vazios |
 | Iconografia | lucide-react, traço uniforme |
 | Selos | Tipo de publicação, natureza do ensaio, ODS, acesso aberto, situação (em andamento/concluída) |
 | Modo escuro | Não no MVP; tokens preparados |
 
-> O MVP usa tokens de design centralizados (`globals.css`/Tailwind) para troca simples quando a identidade do grupo for definida.
+> O MVP usa tokens de design centralizados (`globals.css`/Tailwind). A identidade azul-marinho e branco foi definida na Q2; um logotipo próprio, se criado, entra por troca de tokens e assets, sem refatoração.
 
 ### 16.2. Navegação
 
-- **Desktop:** cabeçalho fixo compacto com navegação principal e menus suspensos para "O grupo" (Apresentação, Histórico, Objetivos, Laboratório, Referências institucionais, Contato) e "Integrantes" (Atuais, Ex-integrantes, Egressos, Orientações); busca com atalho de teclado (`/` ou `Ctrl+K`) no M2.
+- **Desktop:** cabeçalho fixo compacto com navegação principal e menus suspensos para "O grupo" (Apresentação, Histórico, Objetivos, Referências institucionais, Contato) e "Integrantes" (Atuais, Ex-integrantes, Egressos, Orientações); busca com atalho de teclado (`/` ou `Ctrl+K`) no M2.
 - **Mobile:** cabeçalho com nome do grupo, busca e botão de menu; menu em painel lateral (Sheet do shadcn/ui) com foco preso e fechamento por `Esc`.
 - *Breadcrumbs* em páginas de detalhe; link "Pular para o conteúdo".
-- Rodapé com aviso de portal não oficial em todas as páginas.
+- Rodapé com nome do grupo, contato, páginas legais e referências institucionais selecionadas (sem aviso ostensivo, Q1).
 
 ### 16.3. Padrões de componentes
 
@@ -1181,8 +1207,8 @@ Toda página exibe **"Última atualização em …"** para transparência.
 
 ### 16.4. Layouts conceituais
 
-- **O grupo:** apresentação, líderes (autorizados), linhas, laboratório, integrantes ativos, projetos e produção recente (M2), referências institucionais e link para o espelho do DGP.
-- **Linha do grupo:** descrição, integrantes que atuam na linha, produção, orientações e projetos relacionados (M2).
+- **O grupo:** apresentação, líderes (autorizados), linhas temáticas, linhas do DGP como referência histórica, integrantes ativos, projetos e produção recente (M2), referências institucionais e link para o espelho do DGP.
+- **Linha temática:** descrição, integrantes que atuam na linha, produção, orientações e projetos relacionados (M2).
 - **Perfil de pessoa:** cabeçalho (foto, nome, papel atual, linhas, afiliações, links Lattes/ORCID) → apresentação → seções âncora: Publicações | Orientações | Projetos | Eventos | Ensaios | Trajetória.
 - **Catálogo de produção:** coluna lateral de filtros (desktop) + lista com ordenação + paginação; contagem de resultados e filtros ativos removíveis.
 - **Ensaio:** cabeçalho editorial (natureza, título, subtítulo, autores, data) → corpo → referências → "Desdobramentos" → aviso de natureza → ensaios relacionados.
@@ -1202,7 +1228,7 @@ Toda página exibe **"Última atualização em …"** para transparência.
 
 ### 16.7. SEO e metadados
 
-- `generateMetadata` por rota: título no padrão "Título · <nome curto do grupo>" (definido na Q2; nunca "PPGPS" ou "UniCesumar"), descrição, URL canônica, Open Graph e Twitter Card.
+- `generateMetadata` por rota: título no padrão "Título · Bioética e Promoção da Saúde" (nome curto [PREMISSA a confirmar com o coordenador]; nunca "PPGPS"); a home usa o nome completo da Q2; descrição, URL canônica, Open Graph e Twitter Card.
 - JSON-LD: `ResearchOrganization`/`Organization` (o grupo; instituições apenas como referência textual, sem `parentOrganization` que sugira vínculo oficial), `Person` (perfis com `sameAs` para Lattes e ORCID), `ScholarlyArticle` (publicações), `BlogPosting` (ensaios), `Event` (eventos), `BreadcrumbList`.
 - `sitemap.xml` dinâmico apenas com conteúdo público; `robots.txt` bloqueando `/admin` e `/api`; ambientes de homologação com `noindex`.
 - Imagens OG geradas dinamicamente (`next/og`) para ensaios e publicações.
@@ -1228,28 +1254,30 @@ Toda página exibe **"Última atualização em …"** para transparência.
 | Classe | Exemplos | Quem vê | Controle |
 |---|---|---|---|
 | **Pública** | Páginas do grupo, perfis autorizados, publicações, ensaios publicados, eventos, projetos, evidências verificadas, orientações concluídas (conforme regras), egressos autorizados | Qualquer pessoa | `visibility=public` + estado publicado + consentimento quando aplicável |
-| **Restrita a integrantes** (V2) | Orientações em andamento sem consentimento público, ideias de ensaios, documentos internos do grupo, agenda interna | Usuários autenticados com vínculo ativo | `visibility=members` |
+| **Restrita a integrantes** (fora do MVP, Q5) | Orientações em andamento sem consentimento público, ideias de ensaios, documentos internos do grupo, agenda interna | Ninguém além dos usuários administrativos enquanto não houver contas de integrantes | `visibility=members` (reservado) |
 | **Administrativa** | Consentimentos e comprovantes, auditoria, e-mails pessoais, dados de contas, rascunhos, evidências não verificadas, relatórios internos | Editor/admin | `visibility=admin`, acesso por papel |
 
 ### 17.2. LGPD
 
-- **Papéis:** o controlador dos dados e o canal do titular são definidos com os responsáveis do grupo (Q4). [PREMISSA] Os líderes respondem pelo tratamento no âmbito do grupo, sem prejuízo de eventuais exigências da UniCesumar, que deverão ser verificadas pelos próprios líderes.
+- **Papéis:** o controlador dos dados e o canal do titular ainda **não** foram definidos (item em aberto da Q4). [PREMISSA] O coordenador responde pelo tratamento no âmbito do grupo, sem prejuízo de eventuais exigências da UniCesumar, a verificar pelo próprio coordenador.
+- **Manifestação do coordenador (Q4, 22/10/2026):** a publicação de informações dos integrantes está autorizada pelo grupo. É registrada como autorização do grupo e **não** substitui o consentimento individual por escopo descrito abaixo nem dispensa as demais exigências da LGPD.
 - **Bases legais propostas [PREMISSA a validar juridicamente]:**
   - **Todos os integrantes** (pesquisadores — inclusive docentes —, estudantes, técnicos e colaboradores externos): **consentimento** específico por escopo (perfil público, foto, e-mail, orientação em andamento, informações de egresso), registrado em `ConsentRecord` e revogável. A v1.1 propunha legítimo interesse/atividade institucional para docentes; isso foi removido porque o portal não é institucional.
   - Autoria em publicações já públicas: dado tornado manifestamente público pelo titular; exibição limitada ao nome como publicado.
   - Orientações concluídas: dados constantes de trabalho depositado em repositório público, com direito de oposição (seção 8.3); regra a confirmar na Q4/Q9.
-- **Aprovação conceitual ≠ autorização:** a concordância do responsável pelo grupo com a proposta não substitui as autorizações individuais dos titulares nem a autorização formal de publicação (Q1).
+- **Autorização do grupo ≠ autorização do titular:** nem a aprovação conceitual (20/10/2026) nem as respostas do coordenador (Q1, Q4, Q12) substituem as autorizações individuais dos titulares.
 - **Minimização:** nenhum CPF, matrícula, data de nascimento, telefone pessoal ou endereço. E-mail público apenas se o titular optar.
 - **Direitos do titular:** página de privacidade com canal de contato; procedimento de acesso, correção, oposição e eliminação (seção 15.6).
 - **Dados de saúde:** o portal não coleta dados de saúde de pessoas. Ensaios e projetos não podem conter dados identificáveis de pacientes ou participantes de pesquisa.
 - **Cookies:** apenas cookies estritamente necessários (sessão do admin). Analytics sem cookies dispensam banner [PREMISSA a validar]; se algum rastreador com cookies for adotado, implementar banner com opção de recusa.
-- **Transferência internacional:** provedores (Vercel, Neon, Cloudflare) podem processar dados fora do Brasil; registrar na política de privacidade e escolher região mais próxima quando disponível (Q3).
+- **Transferência internacional:** com a hospedagem própria e externa definida na Q3, provedores (Vercel, Neon, Cloudflare) podem processar dados fora do Brasil; registrar na política de privacidade e escolher região mais próxima quando disponível (Neon `sa-east-1` e funções Vercel `gru1` já configurados na S01).
 
 ### 17.3. Autorização para uso de imagem
 
-- Fotos com pessoas identificáveis exigem `ConsentRecord` com escopo "foto" (ou termo de evento assinado) vinculado à mídia.
-- Fotos de menores de idade: não publicar no MVP sem termo dos responsáveis e aprovação do editor-chefe.
-- Fotos de atendimentos em saúde (ex.: atividades do LIIPS) somente sem identificação do participante ou com termo específico.
+- **Q12 (22/10/2026):** o coordenador informou que há autorização para usar fotografias, documentos e materiais do grupo. Isso é registrado como autorização de uso dos materiais do grupo, com origem, crédito e licença em cada mídia.
+- Fotos com pessoas identificáveis continuam exigindo autorização individual: `ConsentRecord` com escopo "foto" ou termo de evento assinado, vinculado à mídia.
+- Fotos de menores de idade: não publicar no MVP sem termo dos responsáveis legais e aprovação do coordenador.
+- Fotos de atendimentos em saúde ou de participantes de pesquisa: somente sem identificação do participante ou com termo específico.
 
 ### 17.4. Segurança da aplicação
 
@@ -1315,18 +1343,17 @@ Nenhum controle é deixado para o fim. Cada sprint introduz os controles necess�
 
 ### 18.1. Objetivo do MVP
 
-Publicar um portal que represente o grupo de pesquisa Bioética e Promoção da Saúde de forma completa e confiável, com dados estruturados de integrantes, orientações e produção, e com um blog acadêmico operacional e governado, permitindo que os responsáveis e os integrantes mantenham o conteúdo sem desenvolvedor. O MVP é entregue em **dois marcos**: o M1 publica cedo o que tem menor dependência de dados pessoais; o M2 completa os módulos de dados acadêmicos.
+Publicar um portal que represente o grupo de pesquisa Bioética e Promoção da Saúde de forma completa e confiável, com dados estruturados de integrantes, orientações e produção, e com um blog acadêmico operacional e governado, permitindo que o coordenador mantenha o conteúdo sem alterar código (com apoio do desenvolvedor, os únicos usuários administrativos, Q9). O MVP é entregue em **dois marcos**: o M1 publica cedo o que tem menor dependência de dados pessoais; o M2 completa os módulos de dados acadêmicos.
 
 ### 18.2. M1 – Primeira publicação (S00–S06)
 
-- [ ] Layout responsivo e acessível com identidade própria do grupo; navegação desktop e mobile; aviso de portal não oficial
-- [ ] Homepage configurável (hero, linhas, integrantes em destaque, ensaios recentes, laboratório, referências institucionais)
-- [ ] Páginas "O grupo" (apresentação, objetivos, histórico, referências institucionais, contato do grupo)
-- [ ] Linhas do grupo (4 no DGP) com integrantes que nelas atuam
-- [ ] Página do laboratório e das atividades (somente se confirmado na Q6)
-- [ ] Diretório e perfis de integrantes **que autorizaram**, com vínculos datados, Lattes e ORCID
+- [ ] Layout responsivo e acessível com identidade própria do grupo (azul-marinho e branco); navegação desktop e mobile; sem logotipos institucionais
+- [ ] Homepage configurável (hero, linhas temáticas, integrantes em destaque, ensaios recentes, referências institucionais)
+- [ ] Páginas "O grupo" (apresentação, objetivos, histórico com as linhas do DGP como referência, referências institucionais, contato do grupo)
+- [ ] Linhas temáticas Bioética e Promoção da Saúde com integrantes que nelas atuam
+- [ ] Diretório e perfis de integrantes **com autorização individual registrada**, com vínculos datados, Lattes e ORCID
 - [ ] Blog com fluxo editorial completo, categorias, tags, coautoria, agendamento, SEO, RSS
-- [ ] Admin com papéis (admin, editor, researcher), versões, auditoria e consentimentos
+- [ ] Admin com dois papéis (`admin` e `editor`), versões, auditoria e consentimentos
 - [ ] Mídias no R2 com autorização de imagem
 - [ ] Páginas de privacidade, acessibilidade e "sobre o portal"
 - [ ] SEO técnico (metadados, sitemap, JSON-LD), monitoramento, backup verificado e pipeline de deploy com rollback
@@ -1341,7 +1368,7 @@ Publicar um portal que represente o grupo de pesquisa Bioética e Promoção da 
 - [ ] Cadastro por DOI (Crossref) e importação CSV/BibTeX/RIS com deduplicação e mesclagem
 - [ ] Relação ensaio → publicação e orientação → dissertação/tese
 - [ ] Busca global
-- [ ] Eventos e participações; projetos do grupo (incluindo atividades do laboratório); evidências de impacto e ODS
+- [ ] Eventos e participações; projetos do grupo; evidências de impacto e ODS (conforme houver conteúdo, Q11; sem laboratório, Q6)
 - [ ] Homepage completa e indicadores públicos simples do grupo (contagens com data de corte)
 
 ### 18.4. Critérios de publicação de cada marco
@@ -1349,11 +1376,11 @@ Publicar um portal que represente o grupo de pesquisa Bioética e Promoção da 
 | Critério | M1 | M2 |
 |---|---|---|
 | Funcionalidades | Checklist 18.2 aceito em homologação | Checklist 18.3 aceito em homologação |
-| Conteúdo mínimo | Perfil do grupo e textos de "O grupo" revisados pelos líderes; 4 linhas; perfis de **todos os integrantes que autorizaram** (no mínimo os líderes); ≥ 3 ensaios publicados; páginas legais; aviso de portal não oficial | + Orientações concluídas de pesquisadores do grupo com trabalhos em repositório público; produção do grupo dos últimos 5 anos (meta, curada); eventos e projetos vigentes do grupo; consentimentos de estudantes/egressos exibidos |
+| Conteúdo mínimo | Perfil do grupo e textos de "O grupo" revisados pelo coordenador; 2 linhas temáticas com descrição; perfis de **todos os integrantes com autorização individual** (no mínimo os líderes); ≥ 3 ensaios publicados; páginas legais | + Orientações concluídas de pesquisadores do grupo com trabalhos em repositório público; produção do grupo (meta: últimos 5 anos, curada); eventos e projetos do grupo **se houver** (Q11); consentimentos de estudantes/egressos exibidos |
 | Qualidade | 0 violações axe sérias/críticas; Lighthouse mobile ≥ 90 nas 4 categorias em home, linha, perfil e ensaio | Idem em todas as rotas, incluindo catálogo, orientações e busca |
 | Operação | Backup de produção ativo e restauração testada; deploy com ponto de restauração; monitoramento | Restauração retestada; runbooks revisados |
-| Privacidade | Nenhuma pessoa exibida sem autorização registrada; política de privacidade publicada; nenhuma marca institucional sem autorização | Regras de orientação/egresso validadas pelos líderes; amostragem manual |
-| Validação | Q1–Q8 respondidas (Q6 apenas se a página do laboratório for publicada) e **autorização formal por escrito dos responsáveis do grupo** para a publicação | Q9–Q12 respondidas e autorização formal dos responsáveis para o M2 |
+| Privacidade | Nenhuma pessoa exibida sem autorização individual registrada; controlador e canal do titular definidos (Q4); política de privacidade publicada; nenhum logotipo institucional | Regras de orientação/egresso validadas pelo coordenador; amostragem manual |
+| Validação | Q1–Q12 respondidas (22/10/2026); itens em aberto da seção 32 necessários ao M1 resolvidos (textos Q7, política editorial Q8, lista de integrantes Q5, controlador/canal Q4); **registro escrito das respostas do coordenador arquivado** e autorização de publicação do M1 confirmada pelo coordenador | Itens em aberto do M2 resolvidos (Q10) e confirmação do coordenador para o M2 |
 
 ---
 
@@ -1363,18 +1390,18 @@ Publicar um portal que represente o grupo de pesquisa Bioética e Promoção da 
 
 | Fase | Nome | Sprints | Marco | Resultado |
 |---|---|---|---|---|
-| 0 | Descoberta e arquitetura | S00 | M1 | Regras para agentes, ADRs, inventário de conteúdo do grupo, validações com os responsáveis iniciadas |
+| 0 | Descoberta e arquitetura | S00 | M1 | Regras para agentes, ADRs, inventário de conteúdo do grupo, validações Q1–Q12 respondidas pelo coordenador — **concluída** |
 | 1 | Fundação técnica | S01–S02 | M1 | App com CMS, banco, ambientes isolados, pipeline de migrations, auth, RBAC, auditoria, storage, backup, design base e CI |
-| 2 | Portal do grupo e integrantes | S03–S04 | M1 | Identidade do grupo, linhas, laboratório, páginas, homepage v1, integrantes, vínculos e consentimentos |
+| 2 | Portal do grupo e integrantes | S03–S04 | M1 | Identidade do grupo, linhas temáticas, páginas, homepage v1, integrantes, vínculos e consentimentos |
 | 3 | Blog acadêmico | S05 | M1 | Ensaios com fluxo editorial completo |
 | 4 | Primeira publicação | S06 | **M1** | Reauditoria, páginas legais, conteúdo inicial, autorização e lançamento |
 | 5 | Orientações e egressos | S07 | M2 | Orientações dos pesquisadores do grupo, conclusões, egressos, ex-integrantes e trajetória |
 | 6 | Produção científica e busca | S08–S09 | M2 | Catálogo do grupo, DOI, importação, deduplicação e busca global |
-| 7 | Eventos, projetos e impacto | S10 | M2 | Eventos, projetos (incl. laboratório), evidências, ODS, homepage completa |
+| 7 | Eventos, projetos e impacto | S10 | M2 | Eventos, projetos, evidências, ODS, homepage completa |
 | 8 | Consolidação do MVP completo | S11 | **M2** | Reauditoria, carga de dados acadêmicos, validação e publicação |
-| 9 | Evoluções | S12–S20 | V2/V3 | Inglês, área do integrante, ORCID/OpenAlex, indicadores e dashboards |
+| 9 | Evoluções | S12–S20 | V2/V3 | Inglês, ORCID/OpenAlex, indicadores e dashboards (área do integrante condicionada a decisão, Q5) |
 
-**Racional da sequência.** O blog (prioridade elevada) depende apenas de autenticação/RBAC (S02) e de pessoas como autores (S04). Orientações e egressos, que exigem dados não disponíveis publicamente e consentimentos de estudantes, ficam para depois da primeira publicação, dando tempo para o levantamento com os responsáveis do grupo (Q5, Q9) correr em paralelo desde a S00.
+**Racional da sequência.** O blog (prioridade elevada) depende apenas de autenticação/RBAC (S02) e de pessoas como autores (S04). Orientações e egressos, que exigem dados não disponíveis publicamente e consentimentos de estudantes, ficam para depois da primeira publicação, dando tempo para o levantamento com o coordenador (lista de integrantes, autorizações individuais e dados de orientações) correr em paralelo.
 
 ### 19.2. Cronograma estimado
 
@@ -1424,6 +1451,8 @@ gantt
 
 ### 19.4. Mudanças por sprint na versão 1.2
 
+> Registro histórico. Os itens de papéis, aviso e laboratório foram revistos na v1.3 (seção 19.5).
+
 Numeração e ordem mantidas. Ajustes:
 
 | Sprint | Mudança na v1.2 |
@@ -1441,6 +1470,23 @@ Numeração e ordem mantidas. Ajustes:
 | S10 | `projects` criada aqui (tipos pesquisa, extensão, cooperação, laboratório) |
 | S11 | Critérios do M2 revisados |
 
+### 19.5. Mudanças por sprint na versão 1.3
+
+| Sprint | Mudança na v1.3 |
+|---|---|
+| S00 | **Concluída** (22/10/2026): Q1–Q12 respondidas; ADRs 0001–0009 aceitos |
+| S01 | **Concluída** (22/10/2026): teste em ambiente limpo aprovado pelo responsável técnico; PR #7 mesclado |
+| S02 | Papéis só `admin` e `editor`; contas criadas pelo admin (sem convites em massa); sem aviso obrigatório no rodapé; tokens azul-marinho e branco |
+| S03 | Duas linhas temáticas (Bioética, Promoção da Saúde); linhas do DGP como referência histórica (`GroupProfile.dgpResearchLines`); sem página do laboratório; nome de exibição da Q2 |
+| S04 | Sem edição de perfil por integrantes; consentimento individual mantido apesar da autorização do grupo (Q4) |
+| S05 | Fluxo editorial operado por coordenador e desenvolvedor; autores sem conta; notificações opcionais |
+| S06 | Sem aviso ostensivo; `/sobre-o-portal` com nota discreta; domínio próprio opcional (Q3); arquivar o registro escrito das respostas |
+| S07 | Cadastro só por `editor`/`admin`; sem área interna |
+| S08 | Cadastro por DOI só por `editor`/`admin`; aderência a linha temática |
+| S09 | Sem mudança funcional |
+| S10 | Sem projetos `laboratory`; conteúdo "se houver" (Q11); controles de imagem da Q12 |
+| S11 | Critérios do M2 com conteúdo "se houver"; curadoria pelo coordenador |
+
 ---
 
 ## 20. Planejamento detalhado de sprints
@@ -1457,7 +1503,7 @@ Numeração e ordem mantidas. Ajustes:
 |---|---|---|
 | **Esforço de IA** | Sessões de agente; 1 sessão ≈ bloco contínuo de 1–3 h que termina com incremento testado | Complexidade da sprint; inclui retrabalho após revisão (≈ 1 sessão por sprint) |
 | **Supervisão humana** | Horas do supervisor técnico | ≈ 0,5 h de plano + 0,5–1 h de revisão por sessão + 1–3 h de homologação + decisões |
-| **Esforço do grupo** | Horas dos líderes, editor-chefe, curador e integrantes | Revisão de textos e perfis, coleta de autorizações, levantamento de orientações, redação de ensaios |
+| **Esforço do grupo** | Horas do coordenador e dos integrantes | Revisão de textos e perfis, coleta de autorizações individuais, levantamento de orientações, redação de ensaios |
 | **Calendário** | Duração esperada em semanas | Maior entre trabalho técnico e espera por terceiros |
 
 - **Regra das dependências externas:** nunca bloqueiam o **desenvolvimento** (usam-se dados públicos verificados ou fictícios, marcados como provisórios); bloqueiam apenas a **publicação** do marco correspondente.
@@ -1467,19 +1513,19 @@ Numeração e ordem mantidas. Ajustes:
 
 | Sprint | Marco | IA (sessões) | Supervisão (h) | Esforço do grupo (h) | Dependência do grupo | Bloqueia | Calendário (sem.) |
 |---|---|---|---|---|---|---|---|
-| S00 | M1 | 1–2 | 4–6 | 1–2 | Envio das validações Q1–Q12 aos responsáveis | Nada (inicia prazos) | 1 |
+| S00 | M1 | 1–2 | 4–6 | 1–2 | Q1–Q12 (respondidas em 22/10/2026) | — (concluída) | 1 |
 | S01 | M1 | 3–4 | 4–6 | 0 | Nenhuma (contas técnicas criadas pelo supervisor) | — | 1 |
-| S02 | M1 | 4–6 | 6–9 | 0–1 | Q2 identidade visual (tokens provisórios até a resposta) | Publicação M1 | 1–1,5 |
-| S03 | M1 | 3–4 | 5–7 | 2–4 | Q2 nome, Q6 laboratório, Q7 linhas e textos | Publicação M1 | 1 |
-| S04 | M1 | 4–6 | 6–9 | 3–6 | Q4 LGPD, Q5 integrantes e autorizações | Publicação M1 | 1–1,5 |
-| S05 | M1 | 4–6 | 6–9 | 4–8 | Q8 editor-chefe e política editorial; ensaios iniciais | Publicação M1 | 1–1,5 |
-| S06 | M1 | 2–4 | 8–14 | 2–4 | Q1 autorização formal, Q3 domínio e hospedagem, revisão final | **Publicação M1** | 1–2 |
+| S02 | M1 | 4–5 | 5–8 | 0–1 | Nenhuma (Q2 respondida: azul-marinho e branco) | — | 1 |
+| S03 | M1 | 3–4 | 5–7 | 2–4 | Textos do grupo e dos eixos (item em aberto da Q7) | Publicação M1 | 1 |
+| S04 | M1 | 3–5 | 5–8 | 3–6 | Controlador/canal do titular (Q4); lista de integrantes e autorizações individuais (Q5) | Publicação M1 | 1–1,5 |
+| S05 | M1 | 3–5 | 5–8 | 4–8 | Política editorial (item em aberto da Q8); ensaios iniciais | Publicação M1 | 1–1,5 |
+| S06 | M1 | 2–4 | 8–14 | 2–4 | Registro escrito das respostas; confirmação de publicação pelo coordenador; ADR de hospedagem | **Publicação M1** | 1–2 |
 | **Subtotal M1** | | **21–32** | **39–60** | **12–25** | | | **7–9,5** |
-| S07 | M2 | 4–6 | 6–10 | 6–12 | Q9 orientações; consentimentos (Q5) | Publicação M2 | 1–1,5 |
-| S08 | M2 | 4–6 | 6–9 | 2–4 | Q12 licenças de PDFs | Hospedagem de PDFs | 1–1,5 |
+| S07 | M2 | 4–6 | 6–10 | 6–12 | Dados de orientações (item em aberto da Q10); consentimentos individuais | Publicação M2 | 1–1,5 |
+| S08 | M2 | 4–6 | 6–9 | 2–4 | Licenças de PDFs de terceiros (materiais do grupo autorizados, Q12) | Hospedagem de PDFs de terceiros | 1–1,5 |
 | S09 | M2 | 3–5 | 5–8 | 3–6 | Arquivos de produção exportados pelos integrantes | Carga de produção | 1–1,5 |
-| S10 | M2 | 4–6 | 6–9 | 3–6 | Q11 comprovação de impacto, Q12 imagens, Q6 laboratório | Evidências e fotos | 1–1,5 |
-| S11 | M2 | 2–4 | 10–16 | 3–6 | Q10 curadoria; autorização do M2 | **Publicação M2** | 2 |
+| S10 | M2 | 4–6 | 6–9 | 3–6 | Fontes de evidências de impacto; autorizações de imagem individuais | Evidências e fotos com pessoas | 1–1,5 |
+| S11 | M2 | 2–4 | 10–16 | 3–6 | Confirmação do coordenador para o M2 | **Publicação M2** | 2 |
 | **Subtotal M2** | | **17–27** | **33–52** | **17–34** | | | **6–8** |
 | **Total MVP** | | **38–59** | **72–112** | **29–59** | | | **13–17,5** (+ contingência) |
 
@@ -1504,11 +1550,13 @@ Vale para todas as sprints, além do DoD específico de cada uma:
 | Campo | Valor |
 |---|---|
 | Objetivo | Preparar o repositório e o contexto para execução segura por agentes e iniciar as validações com os responsáveis do grupo |
-| Dependências | Este documento aprovado; envio das validações Q1–Q12 (não bloqueia a conclusão técnica) |
+| Dependências | Este documento aprovado; envio das validações Q1–Q12 |
 | Entregas | `AGENTS.md`, `CLAUDE.md`, `docs/PROGRESS.md`, ADR-0001 a 0006, fichas S00–S11, inventário, validações Q1–Q12, convenções de Git; revisão de escopo v1.2 |
 | Fora de escopo | Qualquer código, dependência, CI ou conta de serviço; contato com a universidade ou com os integrantes |
 
 **Critérios de aceite:** `AGENTS.md` com comandos, escopo, migrations, ambientes, testes e protocolo; uma ficha por sprint S01–S11 com objetivo, escopo, fora de escopo, critérios e roteiro de homologação; inventário com identidade do grupo, 4 linhas, líderes, composição de integrantes (contagens), egressos/ex-integrantes (contagens), parceiros, laboratório (pendente), referências institucionais e atividades conhecidas, cada item com marco; validações enviadas aos responsáveis do grupo (data registrada).
+
+**Situação (v1.3):** **concluída** em 22/10/2026. Q1–Q12 respondidas pelo coordenador (data de envio não informada; respostas relatadas em 22/10/2026); ADRs 0001–0009 aceitos.
 
 ### S01 — Setup técnico, ambientes e pipeline
 
@@ -1521,82 +1569,84 @@ Vale para todas as sprints, além do DoD específico de cada uma:
 
 **Critérios de aceite:** setup em máquina limpa pelo README; primeiro admin criado em `/admin`; PR com schema sem migration falha no CI; dois PRs usam bancos distintos e o branch é removido ao fechar; `next build` não executa migrations; homologação e previews com autenticação básica e `noindex`; `/api/graphql` retorna 404.
 
+**Situação (v1.3):** **concluída** em 22/10/2026 (evidências em `docs/PROGRESS.md`). A branch Neon de produção chama-se `production` (ADR-0009).
+
 ### S02 — Autenticação, papéis, auditoria, storage, backup e base visual
 
 | Campo | Valor |
 |---|---|
-| Objetivo | Infraestrutura transversal: RBAC (`admin`, `editor`, `researcher`), auditoria, mídia segura no R2, e-mail, observabilidade, backup testado e design system base |
-| Dependências | S01; Q2 (tokens provisórios até a resposta) |
-| Entregas | Papéis e convites, política de senha, bloqueio, limites de taxa, recuperação de senha; `audit-logs`; R2 com validação de upload; `documents`; e-mail capturado fora da produção; Sentry; CSP *report-only*; backup e restauração em homologação; Tailwind + shadcn/ui; layout público acessível; globals `Navigation`, `Footer` (com aviso de portal não oficial) e `SiteSettings` |
+| Objetivo | Infraestrutura transversal: RBAC com dois papéis (`admin` = desenvolvedor, `editor` = coordenador), auditoria, mídia segura no R2, e-mail, observabilidade, backup testado e design system base em azul-marinho e branco |
+| Dependências | S01 (concluída); S00 (concluída) |
+| Entregas | Papéis, contas criadas pelo admin (sem cadastro público nem convites em massa), política de senha, bloqueio, limites de taxa, recuperação de senha; `audit-logs`; R2 com validação de upload; `documents`; e-mail capturado fora da produção; Sentry; CSP *report-only*; backup e restauração em homologação; Tailwind + shadcn/ui com tokens azul-marinho/branco; layout público acessível; globals `Navigation`, `Footer` e `SiteSettings` |
 | Fora de escopo | `User.person` e `Media.consentRecord` (S04); `GroupProfile` e páginas (S03); CSP *enforce* e backup de produção (S06) |
 
-**Critérios de aceite:** `researcher` não acessa usuários nem auditoria; bloqueio após 5 tentativas por 15 min; e-mail de recuperação capturado e link expira em 1 h; toda criação/edição/exclusão auditada; `.exe` renomeado é rejeitado e imagem sem `alt` não é salva; backup de homologação gerado, criptografado e restaurado com tempo registrado; erro no Sentry sem dados pessoais; menu mobile operável por teclado; aviso de portal não oficial visível no rodapé.
+**Critérios de aceite:** `editor` não gerencia usuários, papéis nem configurações técnicas e lê a auditoria; visitante anônimo não acessa o admin nem a API de escrita; bloqueio após 5 tentativas por 15 min; e-mail de recuperação capturado e link expira em 1 h; toda criação/edição/exclusão auditada; `.exe` renomeado é rejeitado e imagem sem `alt` não é salva; backup de homologação gerado, criptografado e restaurado com tempo registrado; erro no Sentry sem dados pessoais; menu mobile operável por teclado; tokens azul-marinho/branco com contraste AA verificado; nenhum logotipo institucional.
 
-### S03 — Portal do grupo: identidade, linhas, laboratório e homepage v1
+### S03 — Portal do grupo: identidade, linhas temáticas e homepage v1
 
 | Campo | Valor |
 |---|---|
-| Objetivo | Versão pública navegável representando o grupo, suas linhas, laboratório e referências institucionais |
-| Dependências | S02; Q2, Q6, Q7 e revisão dos textos pelos líderes (bloqueiam a publicação, não o desenvolvimento) |
-| Entregas | Global `GroupProfile` (com `leadersText` temporário e `institutionalReferences`), `research-lines`, `pages` com blocos; global `Homepage`; rotas `/`, `/o-grupo/*`, `/linhas`, `/linhas/[slug]`; renderizador seguro do Lexical; seed de homologação com dados verificados do DGP; SEO base, JSON-LD `ResearchOrganization`/`Organization` do grupo; revalidação por tags; redirects; padrão de teste de vazamento; Lighthouse CI |
-| Fora de escopo | Pessoas e vínculos (S04); projetos (S10); blog (S05); páginas legais (S06); qualquer conteúdo do PPGPS além de referências |
+| Objetivo | Versão pública navegável representando o grupo, suas linhas temáticas (Bioética e Promoção da Saúde) e referências institucionais |
+| Dependências | S02; textos do grupo e dos eixos (item em aberto da Q7; bloqueia a publicação, não o desenvolvimento) |
+| Entregas | Global `GroupProfile` (com nome da Q2, `leadersText` temporário, `institutionalReferences` e `dgpResearchLines`), `research-lines` (2 eixos), `pages` com blocos; global `Homepage`; rotas `/`, `/o-grupo/*`, `/linhas`, `/linhas/[slug]`; renderizador seguro do Lexical; seed de homologação com dados verificados do DGP; SEO base, JSON-LD `ResearchOrganization`/`Organization` do grupo; revalidação por tags; redirects; padrão de teste de vazamento; Lighthouse CI |
+| Fora de escopo | Pessoas e vínculos (S04); projetos (S10); blog (S05); páginas legais (S06); laboratório (Q6); páginas próprias para as linhas do DGP; qualquer conteúdo do PPGPS além de referências |
 
-**Critérios de aceite:** editor altera a apresentação do grupo e a página reflete sem deploy; páginas das 4 linhas publicadas; página "Referências institucionais" exibe somente texto e links, sem logotipos; link para o espelho DGP funcional; página do laboratório só é publicada com flag de confirmação (Q6); alterar slug de linha cria 301; `sitemap.xml` lista somente páginas publicadas; rascunhos não aparecem em páginas nem na API pública; Lighthouse mobile ≥ 90 (acessibilidade e SEO) em `/` e `/o-grupo`.
+**Critérios de aceite:** editor altera a apresentação do grupo e a página reflete sem deploy; páginas das 2 linhas temáticas publicadas e as 4 linhas do DGP listadas como referência histórica, sem páginas próprias; página "Referências institucionais" exibe somente texto e links, sem logotipos; link para o espelho DGP funcional; nenhuma rota ou menção ao laboratório (Q6); alterar slug de linha cria 301; `sitemap.xml` lista somente páginas publicadas; rascunhos não aparecem em páginas nem na API pública; Lighthouse mobile ≥ 90 (acessibilidade e SEO) em `/` e `/o-grupo`.
 
 ### S04 — Integrantes, vínculos e consentimentos
 
 | Campo | Valor |
 |---|---|
 | Objetivo | Diretório de integrantes com vínculos datados e visibilidade controlada por consentimento para **todas** as pessoas |
-| Dependências | S03; Q4 e Q5 (bloqueiam a publicação dos perfis) |
+| Dependências | S03; controlador/canal do titular (Q4) e lista de integrantes com autorizações individuais (Q5) bloqueiam a publicação dos perfis |
 | Entregas | `people`, `memberships` (papel, nível de treinamento, linhas), `consent-records`; `GroupProfile.leaders` (remove `leadersText`); `users.person`; `media.consentRecord`; `/integrantes` com filtros (papel, linha, situação) e `/integrantes/[slug]` com linha do tempo; integrantes na página de cada linha; `canViewPublic`; importação idempotente por planilha; registro das operações de tratamento |
 | Fora de escopo | Egressos, conclusões e orientações (S07); publicações, projetos e eventos no perfil (S08–S10); mesclagem de pessoas (S09) |
 
-**Critérios de aceite:** ORCID com dígito verificador inválido é rejeitado; pessoa sem consentimento `public_profile` (inclusive pesquisador docente) não tem página nem aparece no diretório, na API ou no sitemap; revogar consentimento remove o perfil após revalidação; pessoa com vínculo de estudante encerrado e de pesquisadora ativo exibe a linha do tempo correta; ex-integrante aparece apenas no filtro correspondente (com consentimento); pesquisador não altera o próprio `visibility`; importação reexecutada não cria duplicatas.
+**Critérios de aceite:** ORCID com dígito verificador inválido é rejeitado; pessoa sem consentimento `public_profile` (inclusive pesquisador docente) não tem página nem aparece no diretório, na API ou no sitemap; revogar consentimento remove o perfil após revalidação; pessoa com vínculo de estudante encerrado e de pesquisadora ativo exibe a linha do tempo correta; ex-integrante aparece apenas no filtro correspondente (com consentimento); somente `editor`/`admin` criam ou alteram pessoas, vínculos e consentimentos; importação reexecutada não cria duplicatas.
 
 ### S05 — Blog acadêmico e fluxo editorial
 
 | Campo | Valor |
 |---|---|
 | Objetivo | Área editorial completa para ensaios, com revisão, aprovação, agendamento e SEO |
-| Dependências | S02 e S04; Q8 e ensaios iniciais |
+| Dependências | S02 e S04; política editorial (item em aberto da Q8) e ensaios iniciais |
 | Entregas | `essays`, autoria de ensaios, `categories`, `tags`; estados editoriais; comentários de revisão; notificações; agendamento; `/blog`, `/blog/[slug]`, categoria e tag; RSS; imagens OG; ensaios no perfil; destaques na homepage; `developmentStage` |
 | Fora de escopo | Relação ensaio → publicação (S08); busca (S09); comentários públicos |
 
-**Critérios de aceite:** pesquisador não publica diretamente; transições inválidas rejeitadas; ensaio agendado publicado após a data e presente na home e no RSS; arquivado responde 200 com aviso, fora de listagens, RSS e sitemap; selo de natureza e aviso de ausência de revisão por pares (e de não representar posição institucional) em todo ensaio; teste de XSS; Lighthouse ≥ 90 nas 4 categorias na página do ensaio.
+**Critérios de aceite:** somente `editor`/`admin` executam transições e a auditoria registra quem aprovou e publicou; transições inválidas rejeitadas; ensaio agendado publicado após a data e presente na home e no RSS; arquivado responde 200 com aviso, fora de listagens, RSS e sitemap; selo de natureza e aviso de ausência de revisão por pares (e de não representar posição institucional) em todo ensaio; teste de XSS; Lighthouse ≥ 90 nas 4 categorias na página do ensaio.
 
 ### S06 — Reauditoria, conteúdo inicial e lançamento do M1
 
 | Campo | Valor |
 |---|---|
-| Objetivo | Publicar o M1 com segurança, privacidade e qualidade reauditadas, conteúdo revisado e autorização formal dos responsáveis do grupo |
-| Dependências | S01–S05; Q1–Q8 respondidas (Q6 se houver página do laboratório); autorização formal — **bloqueantes para a publicação** |
-| Entregas | `/privacidade`, `/acessibilidade`, `/sobre-o-portal`; modo de manutenção; uptime; backup de produção; reauditoria (ASVS N1, CSP *enforce*, axe, teclado e NVDA, Lighthouse); runbooks; carga do conteúdo autorizado; guia do editor; ADR de hospedagem; domínio e HTTPS; release `v1.0.0`; relatório de qualidade do M1 |
-| Fora de escopo | Funcionalidades do M2; formulário de contato; qualquer pessoa sem autorização; marcas institucionais sem autorização |
+| Objetivo | Publicar o M1 com segurança, privacidade e qualidade reauditadas, conteúdo revisado pelo coordenador e confirmação de publicação registrada |
+| Dependências | S01–S05; itens em aberto do M1 (seção 32) e registro escrito das respostas do coordenador — **bloqueantes para a publicação** |
+| Entregas | `/privacidade`, `/acessibilidade`, `/sobre-o-portal` (com nota discreta de responsabilidade do grupo); modo de manutenção; uptime; backup de produção; reauditoria (ASVS N1, CSP *enforce*, axe, teclado e NVDA, Lighthouse); runbooks; carga do conteúdo autorizado; guia do editor; ADR de hospedagem (própria, Q3); domínio próprio se já adquirido (senão, endereço do provedor) e HTTPS; release `v1.0.0`; relatório de qualidade do M1 |
+| Fora de escopo | Funcionalidades do M2; formulário de contato; qualquer pessoa sem autorização individual; logotipos institucionais; laboratório |
 
-**Critérios de aceite:** critérios do M1 (seção 18.4) atendidos; teste automatizado comprova que nenhuma rota pública retorna e-mail privado, consentimento, auditoria ou rascunho; restauração do backup pós-carga dentro do RTO; rollback de aplicação ensaiado; autorização formal dos responsáveis do grupo registrada (e-mail ou documento); editor publica um ensaio e o curador atualiza um perfil sem ajuda técnica.
+**Critérios de aceite:** critérios do M1 (seção 18.4) atendidos; teste automatizado comprova que nenhuma rota pública retorna e-mail privado, consentimento, auditoria ou rascunho; restauração do backup pós-carga dentro do RTO; rollback de aplicação ensaiado; confirmação de publicação pelo coordenador registrada (e-mail ou documento); o coordenador publica um ensaio e atualiza um perfil sem ajuda técnica.
 
 ### S07 — Orientações, conclusões acadêmicas e egressos
 
 | Campo | Valor |
 |---|---|
 | Objetivo | Registrar e consultar orientações conduzidas por pesquisadores do grupo, registrar conclusões e derivar egressos e ex-integrantes |
-| Dependências | S04; Q5 e Q9 (bloqueiam a publicação do módulo) |
+| Dependências | S04; dados de orientações e consentimentos individuais (itens em aberto da Q10/Q5) bloqueiam a publicação do módulo |
 | Entregas | `supervisions`, `supervision-participants`, `academic-completions`, `alumni-profiles`, `career-entries`; `/integrantes/orientacoes` e `/integrantes/egressos`; seções no perfil e nas linhas; fluxo transacional de conclusão; importação de orientações concluídas por planilha |
 | Fora de escopo | Dissertação/tese como `Publication` (S08); bancas como eventos e vínculo com projetos (S10); orientações internas (V2); inferência de orientações por coautoria |
 
-**Critérios de aceite:** concluída sem ano ou sem orientador principal ativo é rejeitada; dois orientandos ou dois orientadores principais simultâneos são rejeitados; orientação sem participante do grupo é rejeitada (OR-4); concluir mestrado cria a conclusão e atualiza o vínculo na mesma transação; egressa com vínculo ativo de pesquisadora aparece com selo do papel atual; duas titulações aparecem na formação sem duplicar formação externa; após a conclusão, pesquisador não altera participantes e editor altera com justificativa auditada; em andamento sem consentimento e interrompidas não aparecem em listagens, perfis, API ou sitemap; oposição exibe "dados restritos".
+**Critérios de aceite:** concluída sem ano ou sem orientador principal ativo é rejeitada; dois orientandos ou dois orientadores principais simultâneos são rejeitados; orientação sem participante do grupo é rejeitada (OR-4); concluir mestrado cria a conclusão e atualiza o vínculo na mesma transação; egressa com vínculo ativo de pesquisadora aparece com selo do papel atual; duas titulações aparecem na formação sem duplicar formação externa; após a conclusão, participantes só são alterados por `editor`/`admin` com justificativa auditada; em andamento sem consentimento e interrompidas não aparecem em listagens, perfis, API ou sitemap; oposição exibe "dados restritos".
 
 ### S08 — Catálogo de publicações do grupo
 
 | Campo | Valor |
 |---|---|
 | Objetivo | Catálogo curado da produção do grupo com autorias, veículos, filtros, citação e cadastro por DOI |
-| Dependências | S04, S05, S07; Q12 (sem resposta, apenas links) |
+| Dependências | S04, S05, S07; PDFs de materiais do grupo autorizados (Q12); PDFs de terceiros só com licença compatível |
 | Entregas | `publications`, `authorships`, `venues`, `keywords`; `/producao` e `/producao/[slug]`; publicações no perfil e na linha; "Produção recente" na home; botão "Buscar DOI"; citação ABNT/APA; BibTeX/RIS; relações `supervisions.resultingPublication`, `academic-completions.finalWork`, `essays.resultingPublications`; ADR da biblioteca de citação |
 | Fora de escopo | Importação em lote e deduplicação assistida (S09); filtro por projeto (S10); toda a produção do PPGPS |
 
-**Critérios de aceite:** DOI válido preenche metadados; DOI existente (com ou sem prefixo) é bloqueado com link; publicação com 3 autores internos aparece nos 3 perfis e conta uma vez; publicação sem integrante como autor ou sem linha do grupo não é publicada; dissertação ligada a conclusão aparece no perfil do egresso e na orientação; ensaio ↔ publicação exibem origem e desdobramento; BibTeX aceito pelo Zotero; indisponibilidade do Crossref permite cadastro manual.
+**Critérios de aceite:** DOI válido preenche metadados; DOI existente (com ou sem prefixo) é bloqueado com link; publicação com 3 autores internos aparece nos 3 perfis e conta uma vez; publicação sem integrante como autor ou sem linha temática não é publicada; dissertação ligada a conclusão aparece no perfil do egresso e na orientação; ensaio ↔ publicação exibem origem e desdobramento; BibTeX aceito pelo Zotero; indisponibilidade do Crossref permite cadastro manual.
 
 ### S09 — Importação em lote, deduplicação e busca global
 
@@ -1609,14 +1659,14 @@ Vale para todas as sprints, além do DoD específico de cada uma:
 
 **Critérios de aceite:** reimportar o mesmo arquivo não cria registros; título igual (ignorando acentos e caixa) no mesmo ano sem DOI é sinalizado; mesclar pessoas transfere autorias, vínculos, orientações e conclusões; busca "envelhecimento" e "envelhecimênto" retorna ≥ 3 tipos; conteúdo não público nunca aparece na busca.
 
-### S10 — Eventos, projetos, laboratório e impacto social
+### S10 — Eventos, projetos e impacto social
 
 | Campo | Valor |
 |---|---|
-| Objetivo | Registrar eventos, projetos (incluindo atividades do laboratório) e evidências de impacto do grupo, completando a homepage e os indicadores simples |
-| Dependências | S04, S07, S08 (S09 precede no roadmap); Q6, Q11, Q12 |
-| Entregas | `events`, `event-participations`, `projects` (pesquisa, extensão, cooperação, laboratório), `project-members`, `fundings`, `impact-evidences`, `sdgs`; `Supervision.project`, `Publication.projects`, `EventParticipation.relatedSupervision`; `/eventos`, `/projetos`, `/impacto`; seções no perfil, na linha e no laboratório; homepage completa; indicadores do grupo com flag; JSON-LD `Event` |
-| Fora de escopo | Inscrições e certificados; indicadores administrativos e por pessoa (V3); projetos sem participação do grupo |
+| Objetivo | Registrar eventos, projetos e evidências de impacto do grupo (conforme houver conteúdo, Q11), completando a homepage e os indicadores simples |
+| Dependências | S04, S07, S08 (S09 precede no roadmap); controles de imagem (Q12) |
+| Entregas | `events`, `event-participations`, `projects` (pesquisa, extensão, cooperação), `project-members`, `fundings`, `impact-evidences`, `sdgs`; `Supervision.project`, `Publication.projects`, `EventParticipation.relatedSupervision`; `/eventos`, `/projetos`, `/impacto`; seções no perfil e na linha; homepage completa; indicadores do grupo com flag; JSON-LD `Event` |
+| Fora de escopo | Inscrições e certificados; indicadores administrativos e por pessoa (V3); projetos sem participação do grupo; laboratório e projetos `laboratory` (Q6) |
 
 **Critérios de aceite:** evento futuro passa a "realizado" sem intervenção; evidência sem fonte ou verificação não aparece; projeto exibe equipe, período, financiadores (valores só se autorizados) e ODS com justificativa; foto com pessoas identificáveis sem consentimento não é usada publicamente; indicadores com data de corte, contagem única por publicação e ocultos com a flag desligada.
 
@@ -1625,11 +1675,11 @@ Vale para todas as sprints, além do DoD específico de cada uma:
 | Campo | Valor |
 |---|---|
 | Objetivo | Reauditar, carregar e validar os dados acadêmicos e publicar o MVP completo |
-| Dependências | S07–S10; Q9–Q12 e autorização formal do M2 — **bloqueantes para a publicação** |
+| Dependências | S07–S10; itens em aberto do M2 (seção 32) e confirmação do coordenador — **bloqueantes para a publicação** |
 | Entregas | Reauditoria completa; revisão LGPD do M2; importações em lotes reversíveis; registro de consentimentos; guia atualizado e treinamento da curadoria; teste de restauração; release `v2.0.0`; relatório de qualidade do M2 |
 | Fora de escopo | Funcionalidades novas (V2) |
 
-**Critérios de aceite:** critérios do M2 (seção 18.4) atendidos; nenhum dado de estudante/egresso exibido sem consentimento ou contra oposição (teste + amostragem); relatórios de importação sem erros e duplicatas abaixo do limite acordado; autorização formal dos responsáveis registrada; curador registra uma defesa e uma publicação por DOI sem ajuda técnica.
+**Critérios de aceite:** critérios do M2 (seção 18.4) atendidos; nenhum dado de estudante/egresso exibido sem consentimento ou contra oposição (teste + amostragem); relatórios de importação sem erros e duplicatas abaixo do limite acordado; confirmação do coordenador registrada; o coordenador registra uma defesa e uma publicação por DOI sem ajuda técnica.
 
 ---
 
@@ -1640,8 +1690,8 @@ As fichas detalhadas serão criadas em `docs/sprints/` antes de cada execução,
 | Sprint | Versão | Objetivo | Dependências |
 |---|---|---|---|
 | S12 | V2 | Internacionalização (inglês) de páginas do grupo, linhas e perfis; seletor de idioma; `hreflang` | M2 |
-| S13 | V2 | Área do integrante: login de pesquisadores, painel "meus dados", conteúdo `members`, orientações internas | M2 |
-| S14 | V2 | Integração ORCID: vincular ORCID autenticado, importar obras públicas com revisão | S13 |
+| S13 | V2 | Área do integrante (login de pesquisadores, "meus dados", conteúdo `members`) — **condicionada** a decisão do coordenador e ADR, pois a Q5 restringe contas a dois usuários | M2 |
+| S14 | V2 | Integração ORCID: importar obras públicas por ORCID informado, com revisão pelos usuários administrativos | M2 |
 | S15 | V2 | Enriquecimento OpenAlex: identificadores, acesso aberto, citações, tópicos | S08, S09 |
 | S16 | V2 | Newsletter e formulário de contato com anti-spam; 2FA para admin/editor | S05 |
 | S17 | V2 | Relatórios de curadoria (perfis desatualizados, orientações vencidas, egressos sem trajetória; apoio à atualização do espelho DGP) e melhorias de busca | M2 |
@@ -1662,13 +1712,13 @@ As fichas detalhadas serão criadas em `docs/sprints/` antes de cada execução,
 | # | Funcionalidade | MoSCoW | Valor | Esforço | Dependências | Marco | Sprint |
 |---|---|---|---|---|---|---|---|
 | 1 | Setup, CI, ambientes isolados e pipeline de migrations | M | 5 | 3 | — | M1 | S01 |
-| 2 | RBAC (admin, editor, researcher), auditoria, convites, recuperação de senha | M | 5 | 3 | 1 | M1 | S02 |
+| 2 | RBAC (`admin`, `editor`), auditoria, contas criadas pelo admin, recuperação de senha | M | 5 | 2 | 1 | M1 | S02 |
 | 3 | Mídia segura no R2 | M | 4 | 2 | 1 | M1 | S02 |
-| 4 | Layout, design system base e aviso de portal não oficial | M | 5 | 2 | 1 | M1 | S02 |
+| 4 | Layout e design system base (azul-marinho e branco) | M | 5 | 2 | 1 | M1 | S02 |
 | 5 | Backup diário e restauração verificada | M | 5 | 2 | 1 | M1 | S02 |
 | 6 | Perfil do grupo (`GroupProfile`) e referências institucionais | M | 5 | 1 | 2, 4 | M1 | S03 |
-| 7 | Linhas do grupo | M | 5 | 1 | 6 | M1 | S03 |
-| 8 | Páginas do grupo (incl. laboratório) e homepage v1 | M | 5 | 2 | 6 | M1 | S03 |
+| 7 | Linhas temáticas (Bioética, Promoção da Saúde) e linhas do DGP como referência | M | 5 | 1 | 6 | M1 | S03 |
+| 8 | Páginas do grupo e homepage v1 | M | 5 | 2 | 6 | M1 | S03 |
 | 9 | SEO técnico base | M | 4 | 2 | 8 | M1 | S03 |
 | 10 | Integrantes e perfis | M | 5 | 3 | 7 | M1 | S04 |
 | 11 | Vínculos datados com o grupo e linhas de atuação | M | 5 | 2 | 10 | M1 | S04 |
@@ -1690,13 +1740,13 @@ As fichas detalhadas serão criadas em `docs/sprints/` antes de cada execução,
 | 27 | Deduplicação e mesclagem | S | 4 | 3 | 22 | M2 | S09 |
 | 28 | Busca global | M | 4 | 3 | 10, 14, 22 | M2 | S09 |
 | 29 | Eventos e participações | M | 4 | 3 | 10, 19, 22 | M2 | S10 |
-| 30 | Projetos do grupo (incl. laboratório), equipe, financiamento | M | 4 | 3 | 10 | M2 | S10 |
+| 30 | Projetos do grupo, equipe, financiamento | M | 4 | 3 | 10 | M2 | S10 |
 | 31 | Evidências de impacto e ODS | S | 4 | 2 | 30 | M2 | S10 |
 | 32 | Indicadores públicos simples do grupo | S | 3 | 2 | 19, 22, 30 | M2 | S10 |
 | 33 | Reauditoria, carga e lançamento do M2 | M | 5 | 3 | 19–32 | M2 | S11 |
 | 34 | Versão em inglês | S | 3 | 3 | M2 | V2 | S12 |
-| 35 | Área do integrante | S | 3 | 3 | M2 | V2 | S13 |
-| 36 | Integração ORCID | S | 4 | 3 | 35 | V2 | S14 |
+| 35 | Área do integrante (condicionada, Q5) | C | 3 | 3 | M2 + decisão do coordenador | V2 | S13 |
+| 36 | Integração ORCID (operada pelos administradores) | S | 4 | 3 | 22 | V2 | S14 |
 | 37 | Enriquecimento OpenAlex | C | 3 | 3 | 22 | V2 | S15 |
 | 38 | Newsletter, formulário de contato e 2FA | C | 2 | 2 | 14 | V2 | S16 |
 | 39 | Relatórios de curadoria | S | 3 | 2 | M2 | V2 | S17 |
@@ -1708,6 +1758,8 @@ As fichas detalhadas serão criadas em `docs/sprints/` antes de cada execução,
 | 45 | Integração direta com Lattes/DGP/Sucupira | W | — | — | — | — | Indisponível (sem API aberta) |
 | 46 | Hospedagem de múltiplos grupos | W | 2 | 4 | — | — | Evolução futura (seção 13.7) |
 | 47 | Cadastro de docentes, grupos e produção do PPGPS fora do grupo | W | — | — | — | — | Fora de escopo permanente |
+| 48 | Página e atividades do laboratório do grupo | W | — | — | — | — | Fora do escopo atual (Q6) |
+| 49 | Edição do próprio perfil por integrantes (RF-115) | W | — | — | — | — | Removido (Q5, Q9) |
 
 ---
 
@@ -1777,11 +1829,11 @@ As fichas detalhadas serão criadas em `docs/sprints/` antes de cada execução,
 5. O pipeline publica a `main` na **homologação** (`staging`), onde o supervisor confirma o comportamento com o conteúdo real em revisão.
 6. `docs/PROGRESS.md` atualizado com o resultado. A produção só recebe o código no lançamento do marco (S06, S11) ou em releases de correção.
 
-### 23.4. Homologação com os responsáveis do grupo (S06 e S11)
+### 23.4. Homologação com o coordenador do grupo (S06 e S11)
 
-- Roteiro guiado para os líderes (e editor-chefe/curador) em homologação: no M1, "encontre as linhas e os integrantes", "publique um ensaio", "confira o aviso de portal não oficial"; no M2, "encontre as orientações concluídas de um pesquisador", "cadastre uma publicação por DOI".
+- Roteiro guiado para o coordenador em homologação: no M1, "encontre as linhas temáticas e os integrantes", "publique um ensaio", "confira a identificação do grupo e as referências institucionais"; no M2, "encontre as orientações concluídas de um pesquisador", "cadastre uma publicação por DOI".
 - Registro de problemas (planilha ou issues do GitHub) com classificação: bloqueante, importante, melhoria.
-- Critério de saída: zero bloqueantes; importantes com plano; autorização formal registrada.
+- Critério de saída: zero bloqueantes; importantes com plano; confirmação de publicação pelo coordenador registrada.
 
 ---
 
@@ -1919,7 +1971,7 @@ O app roda como Node padrão (`next start`) com Docker. Caso a Vercel se torne i
 | Vercel Pro (1 assento) | US$ 20 [VERIFICADO], incluindo crédito de uso |
 | Neon Launch (compute com scale-to-zero, ~1–2 GB) | US$ 3–15 [ESTIMADO]; base US$ 0,106/CU-h e US$ 0,35/GB-mês [VERIFICADO] |
 | R2 (≤ 10 GB) | US$ 0–1 [ESTIMADO] |
-| Domínio `.com.br` | ≈ R$ 40/ano [ESTIMADO] (ou subdomínio institucional sem custo) |
+| Domínio próprio `.com.br` (a adquirir, Q3) | ≈ R$ 40/ano [ESTIMADO] |
 | E-mail, Sentry, uptime | US$ 0 (planos gratuitos) [ESTIMADO] |
 | **Total** | **≈ US$ 25–40/mês** [ESTIMADO] |
 
@@ -1933,7 +1985,7 @@ O app roda como Node padrão (`next start`) com Docker. Caso a Vercel se torne i
 | Sentry/uptime/e-mail pagos (se necessário) | US$ 0–40 [ESTIMADO] |
 | **Total** | **≈ US$ 40–150/mês** [ESTIMADO] |
 
-**Alternativa econômica de produção:** VPS (ex.: 2 vCPU/4 GB) com Coolify, Postgres e backups para o R2 por ≈ US$ 6–15/mês [ESTIMADO], com maior responsabilidade operacional (atualizações do sistema operacional, segurança, monitoramento). Recomendada apenas se houver alguém para operar a infraestrutura, ou se a TI da UniCesumar oferecer hospedagem.
+**Alternativa econômica de produção:** VPS (ex.: 2 vCPU/4 GB) com Coolify, Postgres e backups para o R2 por ≈ US$ 6–15/mês [ESTIMADO], com maior responsabilidade operacional (atualizações do sistema operacional, segurança, monitoramento). Recomendada apenas se houver alguém para operar a infraestrutura. Hospedagem institucional está descartada: a Q3 definiu hospedagem própria e independente do site institucional.
 
 **Observação sobre a fase gratuita em produção:** manter o Vercel Hobby em produção conflita com a restrição de uso não comercial; ainda que o portal seja acadêmico e sem fins lucrativos, recomenda-se confirmar o enquadramento ou migrar para o Pro no lançamento. A decisão é registrada em ADR na S06, antes da primeira publicação (M1). A cópia externa de backups (seção 24.5) pode acrescentar até ~US$ 1/mês acima da faixa gratuita [ESTIMADO].
 
@@ -1941,33 +1993,33 @@ O app roda como Node padrão (`next start`) com Docker. Caso a Vercel se torne i
 
 | # | Risco | Prob. | Impacto | Mitigação |
 |---|---|---|---|---|
-| R1 | Conteúdo desatualizado após o lançamento | Alta | Alto | Papéis editoriais nomeados; lembretes automáticos; selo "atualizado em"; relatórios de curadoria (V2); distribuir manutenção entre editor-chefe, curador e integrantes |
-| R2 | Dependência de um único desenvolvedor | Alta | Alto | Monólito simples; documentação para agentes (AGENTS.md, ADRs, fichas de sprint); runbooks; stack popular e portável; admin que dispensa código para conteúdo |
-| R3 | Falta de autorização (publicação pelos líderes, marcas, domínio, dados pessoais) | Média | Alto | Validações enviadas aos responsáveis do grupo na S00; aprovação conceitual não tratada como autorização; portal identificado como não oficial, sem marcas institucionais; MVP lançável com escopo de dados reduzido (somente integrantes que autorizaram) |
+| R1 | Conteúdo desatualizado após o lançamento — agravado pela concentração da manutenção em duas pessoas (Q9) | Alta | Alto | Guia do editor; painel em português com fluxos curtos; lembretes automáticos; selo "atualizado em"; relatórios de curadoria (V2); integrantes enviam dados à coordenação |
+| R2 | Dependência de poucas pessoas (um desenvolvedor e um coordenador) | Alta | Alto | Monólito simples; documentação para agentes (AGENTS.md, ADRs, fichas de sprint); runbooks; stack popular e portável; admin que dispensa código para conteúdo; credenciais em cofre com procedimento de transferência |
+| R3 | Falta de autorização individual de titulares (dados pessoais e imagem) | Média | Alto | Autorização do grupo registrada (Q4, Q12) sem substituir o registro individual; MVP lançável com escopo de dados reduzido (somente quem autorizou); sem logotipos institucionais |
 | R4 | Exposição indevida de dados pessoais | Média | Alto | Consentimento por escopo; função única de visibilidade; testes de vazamento; minimização |
 | R5 | Dados científicos duplicados ou inconsistentes | Alta | Médio | DOI único, fingerprint, fila de duplicatas, mesclagem auditada, procedência |
 | R6 | Crescimento desordenado (escopo) | Média | Médio | MoSCoW; protocolo de sprint que proíbe antecipação; novas ideias vão ao backlog com avaliação |
 | R7 | Mudanças/limites em serviços externos (Crossref, ORCID, OpenAlex) | Média | Baixo | Integrações isoladas em `src/integrations`; cache; cadastro manual sempre possível |
 | R8 | Limites dos planos gratuitos (Neon 1 GB, transformações de imagem) | Média | Médio | Monitorar uso; variantes de imagem no upload; PDFs grandes apontam para o RDU; migração planejada |
-| R9 | Problemas de autorização editorial (texto polêmico, opinião confundida com posição institucional) | Média | Alto | Fluxo com aprovação obrigatória; aviso de natureza e de que os textos não representam a UniCesumar nem o PPGPS; política editorial publicada; editor-chefe designado |
-| R17 | Portal confundido com site oficial da UniCesumar ou do PPGPS | Média | Alto | Aviso permanente de portal não oficial; identidade visual própria; referências institucionais apenas textuais; retirada imediata de menções a pedido da instituição (seção 5.4) |
+| R9 | Problemas de autorização editorial (texto polêmico, opinião confundida com posição institucional) | Média | Alto | Fluxo com aprovação obrigatória pelo coordenador ou pelo desenvolvedor; aviso de natureza do ensaio e de que os textos não representam posição institucional; política editorial publicada (item em aberto da Q8) |
+| R17 | Portal confundido com site oficial, ou uso do nome da instituição questionado (o nome de exibição contém "Unicesumar" e a Q1 não informa se a instituição exige comunicação) | Média | Alto | Decisão registrada do coordenador (Q1, Q2); `/sobre-o-portal` identifica o grupo como mantenedor; identidade visual própria; **nenhum logotipo institucional**; referências apenas textuais; retirada imediata de menções a pedido da instituição (seções 5.4 e 15.6) |
 | R10 | Indicadores mal interpretados ou sem governança | Média | Alto | Indicadores públicos só agregados com data de corte e fonte; definições documentadas (seção 26); aprovação dos líderes do grupo |
 | R11 | Atualização de versão maior do Payload/Next quebrar o projeto | Média | Médio | Versões fixadas; atualização em sprint dedicada com testes E2E completos |
 | R12 | Baixa adesão dos pesquisadores ao blog | Média | Médio | Guia de escrita curto; pauta editorial; destaque na home; ensaios curtos aceitos |
 | R13 | Imprecisão de dados transcritos das fontes | Média | Médio | Registrar fonte/data; validação por titulares antes do lançamento |
 | R14 | Migration falhar ou corromper dados em produção | Baixa | Alto | Job dedicado com trava; verificação de *drift*; *expand/contract*; ponto de restauração pré-deploy; modo de manutenção; rollback ensaiado (seção 24) |
-| R15 | Respostas e autorizações dos responsáveis do grupo atrasarem os marcos (incluindo recesso acadêmico) | Média | Médio | Validações enviadas na S00; dependências bloqueiam só a publicação; M1 com escopo enxuto; desenvolvimento do M2 segue em homologação |
+| R15 | Itens em aberto (textos, lista de integrantes, autorizações individuais, controlador/canal) atrasarem os marcos (incluindo recesso acadêmico) | Média | Médio | Q1–Q12 respondidas; complementares listadas na seção 32; dependências bloqueiam só a publicação; M1 com escopo enxuto; desenvolvimento do M2 segue em homologação |
 | R16 | Vazamento entre ambientes (dados reais em preview, e-mails enviados de homologação) | Baixa | Alto | Bancos e buckets por ambiente; previews a partir de dados fictícios; cópias sanitizadas; e-mails capturados fora da produção |
 
 ### 25.3. Sustentabilidade após a entrega
 
 | Atividade | Responsável sugerido | Esforço estimado [ESTIMADO] |
 |---|---|---|
-| Aprovação de ensaios | Editor-chefe do grupo | 1–2 h/semana |
-| Curadoria de dados (integrantes, orientações, produção) | Curador designado pelos líderes | 1–3 h/semana nos picos (ingresso, defesas, atualização do DGP) |
-| Manutenção do próprio perfil e produção | Integrantes | 1 h/trimestre |
-| Atualizações técnicas, backups, segurança | Responsável técnico (com agente) | 2–4 h/mês |
-| Revisão de governança, autorizações e indicadores | Líderes do grupo | 1 reunião/semestre |
+| Aprovação de ensaios | Coordenador e desenvolvedor (Q8) | 1–2 h/semana |
+| Curadoria de dados (integrantes, orientações, produção) | Coordenador (com apoio do desenvolvedor) | 1–3 h/semana nos picos (ingresso, defesas, atualização do DGP) |
+| Envio de dados de perfil e produção à coordenação | Integrantes | 1 h/trimestre |
+| Atualizações técnicas, backups, segurança | Desenvolvedor responsável (com agente) | 2–4 h/mês |
+| Revisão de governança, autorizações e indicadores | Coordenador | 1 reunião/semestre |
 
 ---
 
@@ -2230,14 +2282,14 @@ decisões tomadas e sugestões para a próxima sprint (sem implementá-las).
 
 | Fase | Sprints | Critério de conclusão |
 |---|---|---|
-| **0 — Descoberta** | S00 | AGENTS.md, ADRs iniciais (incluindo ambientes/migrations e escopo do grupo), fichas S01–S11, inventário de conteúdo do grupo e validações Q1–Q12 enviadas aos responsáveis; aprovação do supervisor |
-| **1 — Fundação** | S01–S02 | App com admin em ambientes isolados; CI com verificação de migrations; RBAC testado; auditoria; upload seguro no R2; e-mail; Sentry; backup e restauração testados em homologação; layout acessível com aviso de portal não oficial; setup reproduzível |
-| **2 — Portal do grupo e integrantes** | S03–S04 | Perfil do grupo, linhas, páginas (incl. laboratório quando confirmado), referências institucionais, diretório e perfis com vínculos e consentimentos em homologação; testes de vazamento e Lighthouse CI ativos |
-| **3 — Blog** | S05 | Fluxo editorial testado ponta a ponta pelo editor-chefe (ou supervisor no papel); agendamento, RSS e SEO funcionando |
-| **4 — Primeira publicação (M1)** | S06 | Critérios do M1 (seção 18.4) atendidos; relatório de qualidade do M1; runbooks e rollback ensaiados; autorização formal dos responsáveis registrada; M1 em produção há 7 dias sem incidentes graves |
+| **0 — Descoberta** | S00 | AGENTS.md, ADRs iniciais (incluindo ambientes/migrations e escopo do grupo), fichas S01–S11, inventário de conteúdo do grupo e validações Q1–Q12 enviadas; aprovação do supervisor — **atendido em 22/10/2026** |
+| **1 — Fundação** | S01–S02 | App com admin em ambientes isolados; CI com verificação de migrations; RBAC de dois papéis testado; auditoria; upload seguro no R2; e-mail; Sentry; backup e restauração testados em homologação; layout acessível em azul-marinho e branco; setup reproduzível |
+| **2 — Portal do grupo e integrantes** | S03–S04 | Perfil do grupo, linhas temáticas, páginas, referências institucionais, diretório e perfis com vínculos e consentimentos em homologação; testes de vazamento e Lighthouse CI ativos |
+| **3 — Blog** | S05 | Fluxo editorial testado ponta a ponta pelo coordenador (ou pelo desenvolvedor); agendamento, RSS e SEO funcionando |
+| **4 — Primeira publicação (M1)** | S06 | Critérios do M1 (seção 18.4) atendidos; relatório de qualidade do M1; runbooks e rollback ensaiados; confirmação de publicação pelo coordenador registrada; M1 em produção há 7 dias sem incidentes graves |
 | **5 — Orientações e egressos** | S07 | Regras OR-1 a OR-10 testadas; conclusões e egressos com múltiplas titulações funcionando; testes de visibilidade comprovando que dados não autorizados não são exibidos; formato público validado pelos líderes |
 | **6 — Produção e busca** | S08–S09 | Catálogo do grupo com filtros, DOI, importação em lote, deduplicação e busca global; produção de amostra carregada sem duplicatas |
-| **7 — Eventos, projetos e impacto** | S10 | Eventos, projetos (incl. laboratório), evidências com fonte e ODS; homepage completa; indicadores simples com data de corte revisados pelos líderes |
+| **7 — Eventos, projetos e impacto** | S10 | Eventos, projetos, evidências com fonte e ODS (conforme houver conteúdo); homepage completa; indicadores simples com data de corte revisados pelo coordenador |
 | **8 — Consolidação (M2)** | S11 | Critérios do M2 (seção 18.4) atendidos; relatório de qualidade do M2; restauração retestada; autorização registrada; M2 em produção há 7 dias sem incidentes graves |
 | **9 — Evoluções** | S12–S20 | Cada sprint V2/V3 com ficha própria, critérios atendidos e sem regressão no MVP |
 
@@ -2248,7 +2300,7 @@ decisões tomadas e sugestões para a próxima sprint (sem implementá-las).
 | Evolução | Valor | Pré-requisitos |
 |---|---|---|
 | Versão em inglês | Internacionalização (alinhada às colaborações internacionais do grupo) | Campos localizáveis (preparados desde a S01) |
-| Área do integrante | Comunicação interna, orientações em andamento, documentos do grupo | Contas de pesquisadores e consentimentos |
+| Área do integrante | Comunicação interna, orientações em andamento, documentos do grupo | Decisão do coordenador revendo a Q5, ADR, contas de pesquisadores e consentimentos |
 | Login com ORCID e sincronização | Menos digitação; dados mais confiáveis | Public API ORCID |
 | Enriquecimento OpenAlex | Acesso aberto, citações, colaborações | Base de DOIs consistente |
 | Indicadores e dashboards | Apoio à gestão do grupo | Dados curados por ≥ 1 ano |
@@ -2261,46 +2313,35 @@ decisões tomadas e sugestões para a próxima sprint (sem implementá-las).
 
 ---
 
-## 32. Validações pendentes com os responsáveis do grupo
+## 32. Validações com o coordenador do grupo (Q1–Q12)
 
-**Regras.** (1) As questões são dirigidas aos **responsáveis pelo grupo** (líderes), não à coordenação do PPGPS nem à UniCesumar; se alguma exigir consulta institucional, os próprios líderes a conduzem. (2) Nenhuma questão bloqueia o desenvolvimento (usa-se dado público verificado ou fictício, identificado como provisório). (3) A aprovação conceitual da proposta **não** responde a nenhuma delas. Detalhamento, contexto e registro de envio/respostas: `docs/content/questoes-institucionais.md`.
+**Situação (v1.3):** as Q1–Q12 foram **respondidas pelo coordenador**. As respostas foram relatadas pelo responsável técnico em 22/10/2026; a data de envio não foi informada. Elas estão registradas como decisões em `docs/content/questoes-institucionais.md` (texto integral, efeitos e itens em aberto) e no ADR-0010. As respostas não substituem autorizações individuais de titulares (Q4, Q12) nem autorizam logotipos institucionais (Q2).
 
-| # | Questão | Por que importa | Bloqueia | Necessário até |
+| # | Tema | Resposta do coordenador (resumo) | Situação | Itens em aberto |
 |---|---|---|---|---|
-| Q1 | Os responsáveis autorizam formalmente o portal como site **do grupo** (não oficial)? Quem assina as autorizações de publicação? A UniCesumar exige comunicação ou aprovação para sites de grupos que mencionem a instituição? | Legitimidade e governança | M1 | S06 |
-| Q2 | Qual nome exibir ("Bioética e Promoção da Saúde", título no DGP, ou "...Global no Envelhecimento")? O grupo tem logotipo ou identidade própria? Confirmam o uso apenas textual de UniCesumar/PPGPS/CNPq, sem logotipos, e o texto do aviso de portal não oficial? | Identidade e risco de marca | M1 | S02 (tokens provisórios) / S03 (nome) |
-| Q3 | Qual domínio (próprio do grupo ou subdomínio cedido formalmente)? A hospedagem externa (Vercel/Neon/Cloudflare), com dados possivelmente fora do Brasil, é aceitável? | Infraestrutura, LGPD e custos | M1 | S06 (idealmente antes da S01) |
-| Q4 | Quem é o controlador dos dados e qual o canal do titular? Qual termo de autorização será usado e quem o colhe? Confirmam a regra de exibição de orientações concluídas (nome do orientando com direito de oposição)? | LGPD | M1 | S04 |
-| Q5 | Quais integrantes (atuais e ex-integrantes) devem aparecer? Os responsáveis coletarão as autorizações individuais (perfil, foto, e-mail) e os ORCID/Lattes confirmados? | Conteúdo do M1 e privacidade | M1 (M2 para ex-integrantes e estudantes) | S04 |
-| Q6 | Qual é o laboratório do grupo (nome, vínculo institucional, coordenação)? Quais atividades pertencem ao grupo e quais são de terceiros (ex.: laboratórios do programa)? | Página do laboratório e projetos | M1 (se a página for publicada) / M2 | S03 |
-| Q7 | Confirmam as 4 linhas do DGP, seus textos de apresentação, objetivos e histórico do grupo, e se devem referenciar as linhas do PPGPS? | Conteúdo das páginas do grupo | M1 | S03 |
-| Q8 | Quem é o editor-chefe e qual a política editorial (temas, tom, conflitos de interesse, licença padrão)? Quem redige os ensaios iniciais? | Fluxo editorial | M1 | S05 |
-| Q9 | Quem fornece as orientações dos pesquisadores do grupo (orientador, orientando, nível, programa, datas de defesa)? Orientações em andamento, MINTER/DINTER e pós-doutorado devem aparecer? | Módulo central de orientações | M2 | S07 |
-| Q10 | Quem fará a curadoria contínua dos dados após o lançamento? | Sustentabilidade | M2 (recomendado no M1) | S06 |
-| Q11 | Os números de impacto das atividades do grupo têm documentos comprobatórios citáveis? | Regra de evidência | M2 (evidências) | S10 |
-| Q12 | As fotografias de atividades possuem autorização de imagem? Há permissão para hospedar PDFs de materiais do grupo? | Direitos de imagem e autorais | Fotos com pessoas identificáveis; PDFs | S08 (PDFs) / S10 (fotos; S04 para fotos de perfil) |
+| Q1 | Publicação | Iniciativa do grupo; sem aviso ostensivo de não oficial | Respondida com ressalvas | Exigência de comunicação à UniCesumar não abordada (risco R17) |
+| Q2 | Nome e identidade | "Grupo de Pesquisa em Bioética e Promoção da Saúde - Unicesumar"; azul-marinho e branco; sem presumir uso de logotipos | Respondida | Nome curto para títulos [PREMISSA] |
+| Q3 | Domínio e hospedagem | Hospedagem própria, independente do site institucional; domínio a adquirir | Respondida com ressalvas | Domínio; plano de produção (ADR na S06) |
+| Q4 | Dados pessoais | Publicação de informações dos integrantes autorizada pelo grupo | Respondida com ressalvas | Controlador, canal do titular, termo individual, regra de orientações concluídas |
+| Q5 | Integrantes e acesso | Site público sem login; só coordenador e desenvolvedor no admin; integrantes como registros | Respondida com ressalvas | Lista nominal; ORCID/Lattes |
+| Q6 | Laboratório | Existe, mas não deve ser incluído agora | Respondida | — |
+| Q7 | Linhas | Foco em Bioética e Promoção da Saúde; linhas do CNPq como referência histórica | Respondida com ressalvas | Textos do grupo e dos eixos |
+| Q8 | Revisão editorial | Coordenador e desenvolvedor | Respondida com ressalvas | Política editorial; ensaios iniciais |
+| Q9 | Atualização | Somente coordenador e desenvolvedor | Respondida | — |
+| Q10 | Orientações e egressos | Podem ser apresentados; geridos pelos dois usuários | Respondida com ressalvas | Fonte e escopo dos dados |
+| Q11 | Conteúdo prioritário | Nenhuma prioridade definida | Respondida | Evidência de impacto item a item |
+| Q12 | Fotografias e materiais | Autorização para materiais do grupo | Respondida com ressalvas | Autorização de imagem individual |
 
-**Bloqueiam o M1:** Q1–Q5, Q7, Q8 e Q6 (se a página do laboratório for publicada). **Bloqueiam o M2:** Q9–Q12 (e Q5 para estudantes e ex-integrantes).
+**Necessários antes da publicação do M1 (S06):**
+- registro escrito das respostas arquivado;
+- textos do grupo e dos eixos (Q7);
+- política editorial e ensaios iniciais (Q8);
+- lista de integrantes com autorizações individuais (Q4/Q5);
+- controlador e canal do titular (Q4).
 
-**Correspondência com a v1.1 (Q1–Q20):**
+**Necessários antes do M2 (S11):** fonte e escopo das orientações (Q10); autorizações de estudantes e egressos; evidências de impacto, se houver.
 
-| v1.1 | Destino na v1.2 |
-|---|---|
-| Q1 autorização | Q1 (dirigida aos líderes) |
-| Q2 marca, Q8 nome do grupo | Q2 |
-| Q3 domínio, Q18 hospedagem | Q3 |
-| Q4 LGPD | Q4 |
-| Q5 docentes, Q6 discentes/egressos, Q9 Lattes | Q5 (todos os integrantes) |
-| — | Q6 (nova: laboratório) |
-| Q19 grupos ativos | Substituída por Q7 (linhas e textos do grupo) |
-| Q12 editor-chefe | Q8 |
-| Q7 orientações, Q20 MINTER/DINTER/pós-doc | Q9 |
-| Q13 curadoria | Q10 |
-| Q14 impacto | Q11 |
-| Q16 PDFs, Q17 imagens | Q12 |
-| Q10 permanentes × colaboradores | **Removida** (classificação do programa; papéis vêm do DGP) |
-| Q11 conceito CAPES | **Removida** (o portal não exibe dados de avaliação do programa) |
-| Q15 OAI-PMH do RDU | **Removida** do MVP (orientações usam link para o repositório; automação reavaliada na V2) |
+> As perguntas originais da v1.2 e a correspondência com a v1.1 continuam em `docs/content/questoes-institucionais.md` (seção 6).
 
 ---
 
