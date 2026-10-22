@@ -29,6 +29,7 @@ Variáveis da aplicação (somente servidor): `S3_ENDPOINT`, `S3_REGION`, `S3_BU
 - `scripts/storage/r2-smoke.mjs`: escrita, leitura, URL assinada, acesso sem assinatura negado e exclusão de um objeto de 64 bytes (≈ 7 operações). Roda a cada deploy de preview e de homologação.
 - `scripts/ci/smoke-storage-app.mjs`: no preview, pelo app implantado, com a conta fictícia do seed — upload, download público, `.exe` renomeado rejeitado, documento privado negado ao visitante e servido ao admin por URL assinada, auditoria e limpeza.
 - `scripts/storage/purge-prefix.mjs`: ao fechar o PR, apaga `ppgps-preview/pr-N/` (travado para esse bucket e esse formato de prefixo).
+- `r2-maintenance.yml` (mensal e sob demanda): aplica a expiração de 7 dias **somente** no `ppgps-preview` (exige token com permissão de administração do bucket) e verifica que os 3 buckets negam acesso anônimo e que a credencial de cada ambiente não alcança os outros buckets. O `r2-smoke` também alerta, a cada deploy, se a credencial da aplicação alcançar `ppgps-backups`.
 
 Testes automatizados repetitivos usam **apenas MinIO**.
 
@@ -36,9 +37,16 @@ Testes automatizados repetitivos usam **apenas MinIO**.
 
 Faixa gratuita do R2 (mensal): 10 GB armazenados, 1 milhão de operações classe A, 10 milhões classe B, saída gratuita. **Não é garantia de custo zero**: ultrapassar gera cobrança na conta Cloudflare. Consumo previsto na S02: poucos KB e dezenas de operações por dia. Conferir mensalmente em Cloudflare → R2 → Metrics; não executar testes de carga.
 
+## Situação da auditoria (22/10/2026)
+
+- Acesso anônimo negado nos 3 buckets; token de backups isolado.
+- **Tokens de preview e staging com escopo de conta** (alcançam todos os buckets, inclusive backups): reescopar cada um ao próprio bucket.
+- Expiração do `ppgps-preview` não aplicada (token sem permissão de administração).
+
 ## Pendências manuais (supervisor)
 
-1. Regra de ciclo de vida em `ppgps-preview`: expirar objetos após 7 dias (R2 → bucket → Settings → Object lifecycle rules; gratuito).
-2. Confirmar que `r2.dev` e domínios públicos estão **desativados** nos três buckets.
-3. CORS só se for adotado upload direto do navegador (S06).
-4. Na Vercel Hobby, uploads acima de ~4,5 MB falham na plataforma (ver ADR-0011).
+1. Reescopar os tokens R2 de `preview` e `staging` (*Apply to specific buckets only*), atualizar os segredos e revogar os antigos.
+2. Regra de ciclo de vida em `ppgps-preview`: expirar objetos após 7 dias (R2 → bucket → Settings → Object lifecycle rules; gratuito).
+3. Confirmar que `r2.dev` e domínios públicos estão **desativados** nos três buckets.
+4. CORS só se for adotado upload direto do navegador (S06).
+5. Na Vercel Hobby, uploads acima de ~4,5 MB falham na plataforma (ver ADR-0011).

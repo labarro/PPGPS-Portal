@@ -6,8 +6,8 @@ Decisão: ADR-0012. Scripts: `scripts/backup/`. Workflows: `.github/workflows/ba
 
 | Item | Quando | Onde | Retenção |
 |---|---|---|---|
-| `pg_dump` de homologação criptografado com `age` | Diário (05:17 UTC) e sob demanda | R2 `ppgps-backups/staging/` (com credenciais de backup) ou artefato do GitHub enquanto elas faltarem | 7 dias |
-| Verificação de restauração em branch Neon temporário | Mensal (dia 3) e sob demanda | Branch `restore-check-<run>`, removido ao final (expira em 24 h de qualquer forma) | — |
+| `pg_dump` de homologação criptografado com `age` | Diário (05:17 UTC) e sob demanda | R2 `ppgps-backups/staging/AAAA/MM/` (credenciais exclusivas, ambiente `backups`) + artefato cifrado do GitHub | 7 dias |
+| Verificação de restauração em branch Neon temporário, **a partir do bucket** (artefato só como alternativa) | Mensal (dia 3) e sob demanda (entrada opcional `backup_base`) | Branch `restore-check-<run>`, removido ao final (expira em 24 h de qualquer forma) | — |
 | Produção | A partir da S06 | — | 30 diários + 12 mensais |
 
 ## Chaves
@@ -33,4 +33,4 @@ O runbook completo de incidente e rollback é da S06.
 
 ## Teste local
 
-Com o docker-compose ativo, o ciclo completo pode ser executado em contêiner `postgres:18-alpine` (com `apk add age jq bash coreutils`) contra um banco temporário vazio do Postgres local. Executado na S02: 25 tabelas conferidas, 0 divergências (ver `docs/PROGRESS.md`).
+Com o docker-compose ativo, o ciclo completo pode ser executado em contêiner `postgres:18-alpine` (com `apk add age jq bash coreutils`) contra um banco temporário vazio do Postgres local. Executado na S02: 25 tabelas conferidas, 0 divergências. Em homologação (22/10/2026): backup de 86 105 bytes enviado ao bucket e restaurado dele em branch temporário em **37 s**, 0 divergências (ver `docs/PROGRESS.md`).
