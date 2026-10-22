@@ -67,10 +67,13 @@ export interface Config {
   };
   blocks: {};
   collections: {
+    'research-lines': ResearchLine;
+    pages: Page;
     users: User;
     media: Media;
     documents: Document;
     'audit-logs': AuditLog;
+    redirects: Redirect;
     'payload-kv': PayloadKv;
     'payload-locked-documents': PayloadLockedDocument;
     'payload-preferences': PayloadPreference;
@@ -78,10 +81,13 @@ export interface Config {
   };
   collectionsJoins: {};
   collectionsSelect: {
+    'research-lines': ResearchLinesSelect<false> | ResearchLinesSelect<true>;
+    pages: PagesSelect<false> | PagesSelect<true>;
     users: UsersSelect<false> | UsersSelect<true>;
     media: MediaSelect<false> | MediaSelect<true>;
     documents: DocumentsSelect<false> | DocumentsSelect<true>;
     'audit-logs': AuditLogsSelect<false> | AuditLogsSelect<true>;
+    redirects: RedirectsSelect<false> | RedirectsSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
     'payload-locked-documents': PayloadLockedDocumentsSelect<false> | PayloadLockedDocumentsSelect<true>;
     'payload-preferences': PayloadPreferencesSelect<false> | PayloadPreferencesSelect<true>;
@@ -92,11 +98,15 @@ export interface Config {
   };
   fallbackLocale: ('false' | 'none' | 'null') | false | null | ('pt-BR' | 'en') | ('pt-BR' | 'en')[];
   globals: {
+    'group-profile': GroupProfile;
+    homepage: Homepage;
     navigation: Navigation;
     footer: Footer;
     'site-settings': SiteSetting;
   };
   globalsSelect: {
+    'group-profile': GroupProfileSelect<false> | GroupProfileSelect<true>;
+    homepage: HomepageSelect<false> | HomepageSelect<true>;
     navigation: NavigationSelect<false> | NavigationSelect<true>;
     footer: FooterSelect<false> | FooterSelect<true>;
     'site-settings': SiteSettingsSelect<false> | SiteSettingsSelect<true>;
@@ -128,6 +138,164 @@ export interface UserAuthOperations {
     email: string;
     password: string;
   };
+}
+/**
+ * Eixos temáticos exibidos em /linhas. Use "Publicar" para atualizar o site.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "research-lines".
+ */
+export interface ResearchLine {
+  id: number;
+  name: string;
+  /**
+   * Gerado a partir do nome. Alterar o endereço de uma linha publicada cria um redirecionamento 301 automático.
+   */
+  slug: string;
+  /**
+   * Uma ou duas frases. Usada nos cartões da página inicial, em /linhas e na busca.
+   */
+  summary: string;
+  description?: {
+    root: {
+      type: string;
+      children: {
+        type: any;
+        version: number;
+        [k: string]: unknown;
+      }[];
+      direction: ('ltr' | 'rtl') | null;
+      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+      indent: number;
+      version: number;
+    };
+    [k: string]: unknown;
+  } | null;
+  /**
+   * Opcional. Somente texto (ex.: nome de linha de um programa de pós-graduação), sem vínculo oficial.
+   */
+  relatedProgramLineText?: string | null;
+  order: number;
+  /**
+   * Linhas inativas não aparecem no site.
+   */
+  active?: boolean | null;
+  /**
+   * Marque enquanto a descrição aguardar o coordenador (Q7). O site exibe um aviso discreto.
+   */
+  provisional?: boolean | null;
+  /**
+   * Ex.: Definição do coordenador do grupo (Q7), 22/10/2026.
+   */
+  source?: string | null;
+  updatedAt: string;
+  createdAt: string;
+  _status?: ('draft' | 'published') | null;
+}
+/**
+ * Páginas livres e conteúdo complementar de "O grupo". Use "Publicar" para atualizar o site.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "pages".
+ */
+export interface Page {
+  id: number;
+  title: string;
+  /**
+   * Endereço em /o-grupo/<slug>. Os slugs historico, objetivos, referencias-institucionais, contato complementam as páginas fixas de "O grupo". Alterar o slug de uma página publicada cria um redirecionamento 301.
+   */
+  slug: string;
+  /**
+   * Usado abaixo do título, nas listagens e como descrição para buscadores.
+   */
+  summary?: string | null;
+  layout?: (RichTextBlock | CalloutBlock | LinkListBlock | CardsBlock)[] | null;
+  seo?: {
+    title?: string | null;
+    description?: string | null;
+  };
+  updatedAt: string;
+  createdAt: string;
+  _status?: ('draft' | 'published') | null;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "RichTextBlock".
+ */
+export interface RichTextBlock {
+  content: {
+    root: {
+      type: string;
+      children: {
+        type: any;
+        version: number;
+        [k: string]: unknown;
+      }[];
+      direction: ('ltr' | 'rtl') | null;
+      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+      indent: number;
+      version: number;
+    };
+    [k: string]: unknown;
+  };
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'richText';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "CalloutBlock".
+ */
+export interface CalloutBlock {
+  tone: 'info' | 'emphasis';
+  title: string;
+  text?: string | null;
+  linkLabel?: string | null;
+  /**
+   * Caminho interno (/linhas) ou endereço https://.
+   */
+  href?: string | null;
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'callout';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "LinkListBlock".
+ */
+export interface LinkListBlock {
+  title?: string | null;
+  links: {
+    label: string;
+    /**
+     * Caminho interno (/linhas) ou endereço https://.
+     */
+    href: string;
+    description?: string | null;
+    id?: string | null;
+  }[];
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'linkList';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "CardsBlock".
+ */
+export interface CardsBlock {
+  title?: string | null;
+  items: {
+    title: string;
+    text?: string | null;
+    /**
+     * Caminho interno (/linhas) ou endereço https://.
+     */
+    href?: string | null;
+    id?: string | null;
+  }[];
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'cards';
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -268,6 +436,28 @@ export interface AuditLog {
   createdAt: string;
 }
 /**
+ * Endereços antigos que levam a novos endereços. Os de linhas e páginas são criados automaticamente ao alterar o slug.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "redirects".
+ */
+export interface Redirect {
+  id: number;
+  /**
+   * Caminho interno, ex.: /linhas/nome-antigo.
+   */
+  from: string;
+  to: {
+    /**
+     * Caminho interno (/linhas/novo-nome) ou endereço https://.
+     */
+    url: string;
+  };
+  type: '301' | '302';
+  updatedAt: string;
+  createdAt: string;
+}
+/**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "payload-kv".
  */
@@ -292,6 +482,14 @@ export interface PayloadLockedDocument {
   id: number;
   document?:
     | ({
+        relationTo: 'research-lines';
+        value: number | ResearchLine;
+      } | null)
+    | ({
+        relationTo: 'pages';
+        value: number | Page;
+      } | null)
+    | ({
         relationTo: 'users';
         value: number | User;
       } | null)
@@ -302,6 +500,10 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'documents';
         value: number | Document;
+      } | null)
+    | ({
+        relationTo: 'redirects';
+        value: number | Redirect;
       } | null);
   globalSlug?: string | null;
   user: {
@@ -344,6 +546,106 @@ export interface PayloadMigration {
   batch?: number | null;
   updatedAt: string;
   createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "research-lines_select".
+ */
+export interface ResearchLinesSelect<T extends boolean = true> {
+  name?: T;
+  slug?: T;
+  summary?: T;
+  description?: T;
+  relatedProgramLineText?: T;
+  order?: T;
+  active?: T;
+  provisional?: T;
+  source?: T;
+  updatedAt?: T;
+  createdAt?: T;
+  _status?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "pages_select".
+ */
+export interface PagesSelect<T extends boolean = true> {
+  title?: T;
+  slug?: T;
+  summary?: T;
+  layout?:
+    | T
+    | {
+        richText?: T | RichTextBlockSelect<T>;
+        callout?: T | CalloutBlockSelect<T>;
+        linkList?: T | LinkListBlockSelect<T>;
+        cards?: T | CardsBlockSelect<T>;
+      };
+  seo?:
+    | T
+    | {
+        title?: T;
+        description?: T;
+      };
+  updatedAt?: T;
+  createdAt?: T;
+  _status?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "RichTextBlock_select".
+ */
+export interface RichTextBlockSelect<T extends boolean = true> {
+  content?: T;
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "CalloutBlock_select".
+ */
+export interface CalloutBlockSelect<T extends boolean = true> {
+  tone?: T;
+  title?: T;
+  text?: T;
+  linkLabel?: T;
+  href?: T;
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "LinkListBlock_select".
+ */
+export interface LinkListBlockSelect<T extends boolean = true> {
+  title?: T;
+  links?:
+    | T
+    | {
+        label?: T;
+        href?: T;
+        description?: T;
+        id?: T;
+      };
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "CardsBlock_select".
+ */
+export interface CardsBlockSelect<T extends boolean = true> {
+  title?: T;
+  items?:
+    | T
+    | {
+        title?: T;
+        text?: T;
+        href?: T;
+        id?: T;
+      };
+  id?: T;
+  blockName?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -438,6 +740,21 @@ export interface AuditLogsSelect<T extends boolean = true> {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "redirects_select".
+ */
+export interface RedirectsSelect<T extends boolean = true> {
+  from?: T;
+  to?:
+    | T
+    | {
+        url?: T;
+      };
+  type?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "payload-kv_select".
  */
 export interface PayloadKvSelect<T extends boolean = true> {
@@ -475,6 +792,199 @@ export interface PayloadMigrationsSelect<T extends boolean = true> {
   batch?: T;
   updatedAt?: T;
   createdAt?: T;
+}
+/**
+ * Identidade, apresentação, objetivos, histórico e referências do grupo. Salve como rascunho para revisar e use "Publicar" para atualizar o site.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "group-profile".
+ */
+export interface GroupProfile {
+  id: number;
+  /**
+   * Marque enquanto apresentação, objetivos ou histórico forem provisórios (aguardam o coordenador, Q7). O site exibe um aviso discreto de "texto provisório".
+   */
+  provisionalTexts?: boolean | null;
+  /**
+   * Nome de exibição definido pelo coordenador (Q2).
+   */
+  officialName: string;
+  acronym?: string | null;
+  /**
+   * Ex.: título registrado no DGP e variantes usadas por outras fontes.
+   */
+  alternativeNames?:
+    | {
+        name: string;
+        /**
+         * Ex.: Espelho do grupo no DGP/CNPq, coletado em 19/10/2026.
+         */
+        source: string;
+        id?: string | null;
+      }[]
+    | null;
+  /**
+   * Uma ou duas frases. Aparece no topo da página inicial, em "O grupo" e nos resultados de busca.
+   */
+  summary: string;
+  /**
+   * Obrigatório para publicar. Temporário: será substituído pelos perfis autorizados dos líderes na S04. Nomes de pessoas só com autorização.
+   */
+  leadersText: string;
+  description?: {
+    root: {
+      type: string;
+      children: {
+        type: any;
+        version: number;
+        [k: string]: unknown;
+      }[];
+      direction: ('ltr' | 'rtl') | null;
+      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+      indent: number;
+      version: number;
+    };
+    [k: string]: unknown;
+  } | null;
+  objectives?: {
+    root: {
+      type: string;
+      children: {
+        type: any;
+        version: number;
+        [k: string]: unknown;
+      }[];
+      direction: ('ltr' | 'rtl') | null;
+      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+      indent: number;
+      version: number;
+    };
+    [k: string]: unknown;
+  } | null;
+  history?: {
+    root: {
+      type: string;
+      children: {
+        type: any;
+        version: number;
+        [k: string]: unknown;
+      }[];
+      direction: ('ltr' | 'rtl') | null;
+      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+      indent: number;
+      version: number;
+    };
+    [k: string]: unknown;
+  } | null;
+  /**
+   * Endereço completo, iniciado por https:// ou http://.
+   */
+  dgpUrl?: string | null;
+  dgpId?: string | null;
+  certificationStatus?: ('certified' | 'not_updated' | 'in_preparation') | null;
+  certifiedAt?: string | null;
+  formationYear?: number | null;
+  predominantArea?: string | null;
+  /**
+   * Exibidas em "Histórico" como referência, sem páginas próprias e sem indicação de extinção (Q7).
+   */
+  dgpResearchLines?:
+    | {
+        name: string;
+        source: string;
+        collectedAt: string;
+        note?: string | null;
+        id?: string | null;
+      }[]
+    | null;
+  /**
+   * Somente texto e link — nenhum logotipo ou identidade visual institucional (Q2).
+   */
+  institutionalReferences?:
+    | {
+        name: string;
+        kind: 'institution' | 'program' | 'unit' | 'partner' | 'funder';
+        relationText: string;
+        /**
+         * Endereço completo, iniciado por https:// ou http://.
+         */
+        url?: string | null;
+        showInFooter?: boolean | null;
+        id?: string | null;
+      }[]
+    | null;
+  /**
+   * Somente um e-mail institucional do grupo. Nunca publique e-mail pessoal sem autorização do titular.
+   */
+  contactEmail?: string | null;
+  /**
+   * Texto discreto usado em "Sobre o portal" (S06).
+   */
+  responsibilityNote?: string | null;
+  /**
+   * Ex.: Espelho do grupo no DGP/CNPq; coordenador do grupo (Q2).
+   */
+  source?: string | null;
+  collectedAt?: string | null;
+  _status?: ('draft' | 'published') | null;
+  updatedAt?: string | null;
+  createdAt?: string | null;
+}
+/**
+ * Ordem e visibilidade das seções da página inicial. Use "Publicar" para atualizar o site.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "homepage".
+ */
+export interface Homepage {
+  id: number;
+  hero?: {
+    eyebrow?: string | null;
+    /**
+     * Opcional. Se vazia, usa a frase de propósito do Perfil do grupo.
+     */
+    purpose?: string | null;
+    actions?:
+      | {
+          /**
+           * Ex.: Conheça as linhas temáticas.
+           */
+          label: string;
+          /**
+           * Caminho interno (/blog) ou endereço https://.
+           */
+          href: string;
+          id?: string | null;
+        }[]
+      | null;
+  };
+  /**
+   * Arraste para reordenar; desmarque "Exibir" para ocultar. Seções sem conteúdo nunca aparecem.
+   */
+  sections?:
+    | {
+        kind:
+          | 'about'
+          | 'research-lines'
+          | 'editorial-highlights'
+          | 'featured-members'
+          | 'recent-publications'
+          | 'agenda'
+          | 'projects-impact'
+          | 'indicators'
+          | 'institutional-references';
+        enabled?: boolean | null;
+        /**
+         * Opcional; há um título padrão para cada seção.
+         */
+        heading?: string | null;
+        intro?: string | null;
+        id?: string | null;
+      }[]
+    | null;
+  _status?: ('draft' | 'published') | null;
+  updatedAt?: string | null;
+  createdAt?: string | null;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -567,6 +1077,92 @@ export interface SiteSetting {
   };
   updatedAt?: string | null;
   createdAt?: string | null;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "group-profile_select".
+ */
+export interface GroupProfileSelect<T extends boolean = true> {
+  provisionalTexts?: T;
+  officialName?: T;
+  acronym?: T;
+  alternativeNames?:
+    | T
+    | {
+        name?: T;
+        source?: T;
+        id?: T;
+      };
+  summary?: T;
+  leadersText?: T;
+  description?: T;
+  objectives?: T;
+  history?: T;
+  dgpUrl?: T;
+  dgpId?: T;
+  certificationStatus?: T;
+  certifiedAt?: T;
+  formationYear?: T;
+  predominantArea?: T;
+  dgpResearchLines?:
+    | T
+    | {
+        name?: T;
+        source?: T;
+        collectedAt?: T;
+        note?: T;
+        id?: T;
+      };
+  institutionalReferences?:
+    | T
+    | {
+        name?: T;
+        kind?: T;
+        relationText?: T;
+        url?: T;
+        showInFooter?: T;
+        id?: T;
+      };
+  contactEmail?: T;
+  responsibilityNote?: T;
+  source?: T;
+  collectedAt?: T;
+  _status?: T;
+  updatedAt?: T;
+  createdAt?: T;
+  globalType?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "homepage_select".
+ */
+export interface HomepageSelect<T extends boolean = true> {
+  hero?:
+    | T
+    | {
+        eyebrow?: T;
+        purpose?: T;
+        actions?:
+          | T
+          | {
+              label?: T;
+              href?: T;
+              id?: T;
+            };
+      };
+  sections?:
+    | T
+    | {
+        kind?: T;
+        enabled?: T;
+        heading?: T;
+        intro?: T;
+        id?: T;
+      };
+  _status?: T;
+  updatedAt?: T;
+  createdAt?: T;
+  globalType?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema

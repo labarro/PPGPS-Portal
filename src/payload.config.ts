@@ -1,4 +1,5 @@
 import { postgresAdapter } from '@payloadcms/db-postgres'
+import { redirectsPlugin } from '@payloadcms/plugin-redirects'
 import { lexicalEditor } from '@payloadcms/richtext-lexical'
 import { s3Storage } from '@payloadcms/storage-s3'
 import { en } from '@payloadcms/translations/languages/en'
@@ -11,9 +12,14 @@ import { fileURLToPath } from 'url'
 import { AuditLogs } from './collections/AuditLogs'
 import { Documents } from './collections/Documents'
 import { Media } from './collections/Media'
+import { Pages } from './collections/Pages'
+import { redirectsPluginConfig } from './collections/Redirects'
+import { ResearchLines } from './collections/ResearchLines'
 import { Users } from './collections/Users'
 import { sentryTestEndpoint } from './endpoints/sentry-test'
 import { Footer } from './globals/Footer'
+import { GroupProfile } from './globals/GroupProfile'
+import { Homepage } from './globals/Homepage'
 import { Navigation } from './globals/Navigation'
 import { SiteSettings } from './globals/SiteSettings'
 import { withAudit, withGlobalAudit } from './hooks/audit'
@@ -44,12 +50,13 @@ export default buildConfig({
       titleSuffix: ' — Portal Bioética e Promoção da Saúde',
     },
   },
-  collections: withAudit([Users, Media, Documents, AuditLogs]).map((collection) =>
-    collection.slug === Users.slug
-      ? { ...collection, endpoints: [sentryTestEndpoint] }
-      : collection,
+  collections: withAudit([ResearchLines, Pages, Users, Media, Documents, AuditLogs]).map(
+    (collection) =>
+      collection.slug === Users.slug
+        ? { ...collection, endpoints: [sentryTestEndpoint] }
+        : collection,
   ),
-  globals: withGlobalAudit([Navigation, Footer, SiteSettings]),
+  globals: withGlobalAudit([GroupProfile, Homepage, Navigation, Footer, SiteSettings]),
   editor: lexicalEditor(),
   email: buildEmailAdapter(),
   // Idioma da interface do painel administrativo.
@@ -105,6 +112,7 @@ export default buildConfig({
     }
   },
   plugins: [
+    redirectsPlugin(redirectsPluginConfig),
     s3Storage({
       // Habilitado quando há configuração (MinIO local, R2 em preview/homologação).
       enabled: storage !== null,
