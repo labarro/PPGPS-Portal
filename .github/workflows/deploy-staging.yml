@@ -131,17 +131,36 @@ jobs:
           BASIC_AUTH_USER: ${{ secrets.BASIC_AUTH_USER }}
           BASIC_AUTH_PASSWORD: ${{ secrets.BASIC_AUTH_PASSWORD }}
         run: bash scripts/ci/vercel-deploy.sh preview
-      - name: Apontar domínio fixo de homologação
-        if: steps.config.outputs.enabled == 'true' && vars.STAGING_DOMAIN != ''
-        env:
-          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
-          VERCEL_ORG_ID: ${{ vars.VERCEL_ORG_ID }}
-          VERCEL_PROJECT_ID: ${{ vars.VERCEL_PROJECT_ID }}
-        run: pnpm dlx vercel@64.7.0 alias set "${{ steps.deploy.outputs.deployment_url }}" "${{ vars.STAGING_DOMAIN }}" --token="$VERCEL_TOKEN" --scope="$VERCEL_ORG_ID"
-      - name: Fumaça
+      - name: Fumaça (deploy)
         if: steps.config.outputs.enabled == 'true'
         env:
           BASIC_AUTH_USER: ${{ secrets.BASIC_AUTH_USER }}
           BASIC_AUTH_PASSWORD: ${{ secrets.BASIC_AUTH_PASSWORD }}
           VERCEL_AUTOMATION_BYPASS_SECRET: ${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET }}
         run: bash scripts/ci/smoke-deployment.sh "${{ steps.deploy.outputs.deployment_url }}" protected
+      - name: Apontar domínio fixo de homologação
+        if: steps.config.outputs.enabled == 'true' && vars.STAGING_DOMAIN != ''
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_ORG_ID: ${{ vars.VERCEL_ORG_ID }}
+          DEPLOY_URL: ${{ steps.deploy.outputs.deployment_url }}
+          STAGING_DOMAIN: ${{ vars.STAGING_DOMAIN }}
+        # API REST: o token com escopo de projeto não pode carregar o usuário (exigido por `vercel alias`).
+        run: |
+          host="${DEPLOY_URL#https://}"
+          status=$(curl -sS -o /tmp/alias.json -w '%{http_code}' -X POST \
+            -H "Authorization: Bearer ${VERCEL_TOKEN}" -H 'Content-Type: application/json' \
+            "https://api.vercel.com/v2/deployments/${host}/aliases?teamId=${VERCEL_ORG_ID}" \
+            -d "{\"alias\":\"${STAGING_DOMAIN}\"}")
+          if [[ "$status" != "200" && "$status" != "201" ]]; then
+            echo "::error::Falha ao apontar ${STAGING_DOMAIN} (HTTP ${status}): $(jq -r '.error.message // .' /tmp/alias.json)"
+            exit 1
+          fi
+          echo "https://${STAGING_DOMAIN} -> ${DEPLOY_URL}"
+      - name: Fumaça (domínio fixo de homologação)
+        if: steps.config.outputs.enabled == 'true' && vars.STAGING_DOMAIN != ''
+        env:
+          BASIC_AUTH_USER: ${{ secrets.BASIC_AUTH_USER }}
+          BASIC_AUTH_PASSWORD: ${{ secrets.BASIC_AUTH_PASSWORD }}
+          VERCEL_AUTOMATION_BYPASS_SECRET: ${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET }}
+        run: bash scripts/ci/smoke-deployment.sh "https://${{ vars.STAGING_DOMAIN }}" protected

@@ -10,10 +10,10 @@
 | Escopo | **Portal exclusivo do grupo de pesquisa "Bioética e Promoção da Saúde"** e de suas atividades/laboratório. UniCesumar e PPGPS são apenas referências contextuais (ADR-0006) |
 | Marco corrente | M1 — Primeira publicação |
 | Última sprint executada | **S01 — Setup técnico, ambientes e pipeline** |
-| Situação da S01 | **Executada — aguardando revisão humana** (PR #1, branch `s01-setup-pipeline`) |
-| Situação da S00 | Executada — aguardando revisão humana (documentos versionados no PR #1) |
-| Próxima sprint | S02 — **não iniciar** antes da aprovação da S00/S01 e das ações pendentes abaixo |
-| Última atualização | 20/10/2026 |
+| Situação da S01 | **Executada — aguardando revisão humana** (não concluída): falta a validação em máquina limpa pelo supervisor e o merge do PR #7 |
+| Situação da S00 | **Executada — aguardando revisão humana** (não concluída): Q1–Q12 não enviadas/registradas |
+| Próxima sprint | S02 — **não apta a iniciar** (dependências S00/S01 não concluídas) |
+| Última atualização | 22/10/2026 |
 | Planejamento vigente | `docs/PLANEJAMENTO_PORTAL_PPGPS.md` **v1.2** |
 
 ## Situação das sprints
@@ -32,6 +32,101 @@
 | S09 | Importação em lote, deduplicação e busca global | M2 | Não iniciada |
 | S10 | Eventos, projetos, laboratório e impacto social | M2 | Não iniciada |
 | S11 | Consolidação, carga de dados acadêmicos e lançamento do M2 | M2 | Não iniciada |
+
+## Revisão de encerramento formal S00/S01 (22/10/2026)
+
+> Fonte de verdade: estado do repositório, do GitHub, do Neon e da Vercel em 22/10/2026. Nenhum deploy de produção; S02 não iniciada.
+
+### Resultado
+
+| Sprint | Situação | Motivo |
+|---|---|---|
+| **S00** | **Executada — aguardando revisão humana** (não concluída) | Critério "Validações Q1–Q12 enviadas aos responsáveis do grupo (data registrada)" sem evidência: `questoes-institucionais.md` §1 registra o envio como "Pendente — ação do supervisor" |
+| **S01** | **Executada — aguardando revisão humana** (não concluída) | (1) Validação em máquina limpa pelo supervisor (DoD da ficha) sem registro; (2) PR #7 (correção do deploy de homologação) **aberto, não mesclado** |
+
+**Aptos a iniciar a S02? Não.** O protocolo (`AGENTS.md` §11.1) exige as sprints de dependência concluídas. A S02 depende da S01, que depende da S00.
+
+### Verificações realizadas
+
+| Item | Evidência verificável | Resultado |
+|---|---|---|
+| PR #1 | `gh pr view 1`: `MERGED`; `origin/main` = `f82763b` | Mesclado (por *merge commit*, não *squash* como manda `docs/convencoes-git.md` §3; sem impacto funcional) |
+| Workflows pós-merge do PR #1 na `main` | Runs `39509806267` (CI), `39509806293` (migrations), `39509806332` (homologação) | Verdes. A homologação migrou `staging` e atualizou `seed`; o deploy foi pulado (token gravado após o merge) |
+| Deploy manual na `main` | Run `39810882526` (`workflow_dispatch`) | **Falhou no alias** (`vercel alias set`: `User not found`); o deploy em si foi publicado |
+| PR #7 (correção) | `gh pr view 7`: `OPEN`, `MERGEABLE/CLEAN`, 0 revisões; 9 checks verdes no commit `7e6ab49` | **Não mesclado**: não existe deploy automático na `main` após ele |
+| Pipeline corrigido | Run `39812186775` (`deploy-staging.yml` na branch do PR #7) | Verde: migrate `staging` → `seed` → deploy → fumaça → alias → fumaça no domínio fixo |
+| Homologação `ppgps-portal-staging.vercel.app` | `curl` em 22/10 | 302 sem bypass (SSO Vercel) · 401 sem basic auth · 200 com ambos · `X-Robots-Tag: noindex, nofollow, noarchive` · `/api/graphql` 404 · `/admin` 200 |
+| Preview por PR | PR #7: branch `preview/pr-7` (de `seed`, expira em 7 dias), deploy e fumaça; comentário automático no PR | Verde |
+| Remoção de branches efêmeros | Lista de branches Neon: `preview/pr-1` e `preview/pr-2` ausentes após merge/fechamento; restam `production`, `staging`, `seed`, `preview/pr-7` (PR aberto) | OK; `production` intocada |
+| Testes locais (22/10) | `lint`, `typecheck`, `test` 32/32, `build` sem banco, `test:e2e` 5/5, `migrate`, `migrate:check` | Verdes |
+| Migrations no CI | `migrations-check` verde (banco limpo, drift, tipos, down/up); PR #2 de prova falhou com `DRIFT DETECTADO` | OK |
+| Segurança | gitleaks no histórico completo (`--all`): sem vazamentos; 13 valores reais de segredos procurados nos logs de 40 runs: 0 ocorrências; nenhum `.env`/`.secrets`/`.vercel`/`.neon` versionado; `pnpm audit --audit-level high` verde | OK |
+| **Clone limpo isolado (agente)** | Clone novo do GitHub (`f82763b`); `.env` gerado do zero; Compose em projeto separado (`ppgps-clean`, volumes novos); `pnpm install --frozen-lockfile` em contêiner `node:24-bookworm` sem cache → `pnpm migrate` → `pnpm dev` | `/` 200 + noindex · `/admin` 200 · `/api/graphql` 404 · `first-register` 200 · login 200 (token) · logout 200 · segundo `first-register` 403. Ambiente removido depois. **Evidência complementar; não substitui a validação do supervisor** |
+| Proteção da `main` | `GET /branches/main/protection` e `/rulesets` → **HTTP 403** ("Upgrade to GitHub Pro or make this repository public") | **Inexistente e indisponível** no plano atual (repositório privado, conta Free) |
+| Ambientes GitHub | `preview` e `staging` sem regras; `production` **não existe** | Revisores obrigatórios também indisponíveis no plano atual |
+
+**Mitigação aplicada (PR #7):** `deploy-production.yml` só executa com `PRODUCTION_DEPLOY_ENABLED=true` (variável hoje **não definida**) e quando disparado pelo dono do repositório. Registrado no ADR-0009.
+
+### Critérios de aceite — S00
+
+| Critério | Situação |
+|---|---|
+| `AGENTS.md` com comandos, escopo, migrations, ambientes, testes e protocolo | Comprovado (comandos sincronizados na S01) |
+| Uma ficha por sprint S01–S11 com as seções exigidas | Comprovado |
+| Inventário mínimo com fonte e marco | Comprovado |
+| Validações Q1–Q12 enviadas aos responsáveis (data registrada) | **Pendente — supervisor** (sem evidência) |
+
+### Critérios de aceite — S01
+
+| Critério | Situação | Evidência |
+|---|---|---|
+| Setup em máquina limpa pelo README | **Pendente — supervisor** (evidência técnica complementar do agente: clone limpo isolado, acima) | — |
+| `/admin` cria o primeiro admin e faz login | Comprovado | E2E local e CI; clone limpo; homologação |
+| PR com schema sem migration falha no CI | Comprovado | PR #2 |
+| Dois PRs simultâneos com bancos distintos; branch removido ao fechar | Comprovado | `preview/pr-1` + `preview/pr-2`; remoções verificadas; `preview/pr-7` com app completo |
+| `next build` sem migrations; migrate em job separado com `concurrency` | Comprovado | Job "Build sem acesso ao banco"; jobs de migrate com `concurrency` |
+| Homologação e previews com autenticação básica, `noindex`; `/api/graphql` 404 | Comprovado | Fumaças automatizadas (preview e homologação) + `curl` |
+| DoD: CI verde, migrations versionadas, controles 17.7 (S01), nada de sprint futura, `PROGRESS.md` e ADRs | Comprovado, **exceto** "preview revisado e homologação atualizada pelo supervisor" | — |
+
+### Revisão dos ADRs 0001–0009 (consistência com o planejamento v1.2)
+
+Todos estão **Propostos**; nenhum foi aceito pelo supervisor.
+
+| ADR | Consistência com v1.2 e com o implementado | Observação para o aceite |
+|---|---|---|
+| 0001 Stack | Consistente (Next + Payload 3 + Postgres, monólito) | Versões exatas delegadas e fixadas no 0007 |
+| 0002 Postgres sem Prisma | Consistente ("16+"; usado PG 18) | — |
+| 0003 Hospedagem gratuita | Consistente (Vercel Hobby, Neon Free, GitHub Actions) | **Novo fato:** o GitHub Free com repositório privado não oferece proteção de branch nem revisores de ambiente; considerar na decisão de custos |
+| 0004 Pessoa ≠ Usuário | Consistente; sem impacto na S01 (`users` mínimo) | — |
+| 0005 Ambientes/migrations/rollback | Consistente na essência. Desvios registrados nos ADRs seguintes: branch de produção chama-se `production` (não `main`) → 0009; transação **por migration**, não por lote (a linha "Migration falha → nada aplicado" só vale para lote de uma migration) → 0008; aprovação manual de produção inviável no plano atual → 0009; `pg_dump` pré-deploy adiado para a S02 (backup) | Aceitar em conjunto com 0008/0009, ou atualizar o texto do 0005 |
+| 0006 Escopo do grupo | Consistente; S01 sem dados institucionais | Depende de Q1/Q2 para publicação (não para o aceite) |
+| 0007 Versões fixadas | Consistente com o `package.json` (Payload 3.91.0, Next 16.3.8, React 19.2.6, Node 24, PG 18) | Exceção de auditoria `GHSA-vfj7-8cjw-p6xm` (somente dev) a reavaliar |
+| 0008 Drift | Consistente e comprovado (PR #2) | Limitação: edição manual de migration já gerada não é detectada |
+| 0009 Neon/Vercel | Consistente e comprovado (preview, homologação, bypass) | Decisões pendentes: plano GitHub × trava compensatória; manter a Vercel Authentication (revisores precisam de conta Vercel) |
+
+### Validações institucionais pendentes (não bloqueiam o desenvolvimento; bloqueiam publicação e o encerramento da S00)
+
+- **Envio das Q1–Q12** aos responsáveis do grupo (critério da S00), com data registrada em `docs/content/questoes-institucionais.md` §1.
+- Evidência original (e-mail/mensagem) da decisão de escopo de 20/10/2026 em `questoes-institucionais.md` §1.
+- Prioridades: Q3 (domínio/hospedagem), Q4 (LGPD) e Q5 (integrantes) até a S04; Q1, Q2, Q6, Q7 e Q8 para o M1.
+
+### Ações manuais restantes (supervisor) — com procedimento
+
+1. **Validar em máquina limpa (S01)**, numa máquina ou conta de usuário sem o projeto: instalar Node 24, `corepack enable`, Docker; `git clone https://github.com/labarro/PPGPS-Portal.git` → `pnpm install` → `pnpm db:up` → `pnpm migrate` → `pnpm dev` → abrir `http://localhost:3000/admin`, criar o primeiro admin, sair e entrar. **Registrar** abaixo (data, SO, versões de Node/pnpm/Docker, resultado, eventuais desvios do README).
+2. **Revisar e mesclar o PR #7** (*squash*); conferir que o run automático de `deploy-staging.yml` na `main` termina verde.
+3. **Enviar as Q1–Q12** (modelo em `questoes-institucionais.md` §5) e registrar a data (S00).
+4. **Aceitar/ajustar os ADRs 0001–0009** (alterar o campo Status e a data de aprovação).
+5. **Proteção da `main`**: decidir entre GitHub Pro (US$ 4/mês) ou tornar o repositório público. Este contém só documentação e código, sem segredos, mas a decisão envolve as regras de exposição institucional. Na falta das duas, aplicar disciplina manual de PR. Com proteção disponível: PR obrigatório, 1 aprovação, checks obrigatórios (CI, `migrations-check`, preview), somente *squash*, bloqueio de *force push*/exclusão.
+6. **Ambiente `production`**: criar com segredos próprios (`NEON_API_KEY`, `DATABASE_URL`, `DATABASE_URL_POOLED`, `PAYLOAD_SECRET`, `VERCEL_TOKEN`) e revisores (se o plano permitir). **Não** definir `PRODUCTION_DEPLOY_ENABLED` antes da S06.
+7. **Executar o roteiro de homologação da ficha S01** (passos 1–7) e registrar o resultado.
+8. **Guardar em cofre e apagar `.secrets/`** da máquina do agente.
+9. **Dependabot**: decidir sobre os PRs #3–#6 (versões maiores de actions) e verificar a execução npm que falhou em 20/10.
+
+### Registro da validação em máquina limpa (preencher pelo supervisor)
+
+| Data | SO / máquina | Node / pnpm / Docker | Resultado | Observações |
+|---|---|---|---|---|
+| — | — | — | **Pendente** | — |
 
 ## Sessão de 20/10/2026 — execução da S01
 
@@ -79,35 +174,33 @@
 5. Next 16.3.3 → 16.3.8, sharp 0.35.5 e Vitest 4.1.12 por vulnerabilidades; `dompurify` forçado ≥ 3.4.16; GHSA do `braces` (só dev, sem correção) ignorado com justificativa (ADR-0007).
 6. Senhas de teste geradas em tempo de execução; 4 falsos positivos do gitleaks em commit antigo registrados em `.gitleaksignore`.
 
-## Critérios de aceite da S01
+## Sessão de 22/10/2026 — bypass, correção do alias e validação de preview/homologação
 
-| Critério | Situação | Evidência / o que falta |
-|---|---|---|
-| `pnpm install && pnpm db:up && pnpm migrate && pnpm dev` funciona em máquina limpa seguindo o README | **Atendido localmente; validação do supervisor pendente** | Fluxo executado nesta máquina (Docker Desktop, Node 24); falta o supervisor repetir em máquina limpa (DoD) |
-| `/admin` permite criar o primeiro usuário admin e fazer login | **Atendido** | E2E `admin.e2e.spec.ts` (banco vazio → create-first-user → painel; login → logout → login) local e CI |
-| PR com alteração de schema sem migration falha no CI | **Atendido** | PR #2: `migrations-check` falhou (`DRIFT DETECTADO`); com migration → verde |
-| Dois PRs simultâneos usam bancos distintos e o branch é removido ao fechar | **Atendido (banco)** | `preview/pr-1` e `preview/pr-2` simultâneos; `preview/pr-2` removido ao fechar. **Pendente:** deploy do app de preview pela Vercel (falta `VERCEL_TOKEN`) |
-| `next build` não executa migrations; migration em job separado com trava de concorrência | **Atendido** | Job "Build sem acesso ao banco" (URL inacessível) verde; jobs `migrate-staging`/`migrate-production` com `concurrency`; preview migra antes do deploy |
-| Homologação e previews exigem autenticação básica e respondem com `noindex`; `/api/graphql` 404 | **Atendido em homologação; preview coberto por testes** | Deploy de homologação verificado (401/200/noindex/404). Previews usam o mesmo proxy (testes unitários do proxy); verificação em URL de preview real depende do `VERCEL_TOKEN` |
+**Modo:** autônomo, autorizado pelo supervisor (merge do PR #1 autorizado; sem deploy de produção; sem iniciar a S02).
 
-## Pendências
+### Feito
 
-### Ações do supervisor para concluir a S01
+- PR #1 encontrado **já mesclado** na `main` (`f82763b`). Os workflows pós-merge passaram: CI, verificação de migrations e deploy de homologação. Este último aplicou as migrations em `staging` e atualizou o branch `seed` com seed fictício. O deploy na Vercel foi pulado porque o `VERCEL_TOKEN` foi gravado 4 min depois do merge.
+- **Bypass de automação da Vercel:** segredo gerado localmente (não exibido), habilitado no projeto (`vercel project protection enable --protection-bypass`) e gravado como `VERCEL_AUTOMATION_BYPASS_SECRET` nos ambientes `preview` e `staging`. A Vercel Authentication **continua ativa**: sem bypass, 302 para o SSO; com bypass e sem credenciais do app, 401.
+- **Correção do pipeline (PR #7, aberto):** a nova execução do deploy de homologação na `main` publicou o app, mas `vercel alias set --scope` falhou (`User not found`): o token com escopo de projeto não pode carregar o usuário. O alias passou a ser criado pela API REST da Vercel e **só depois** da fumaça do deploy; foi incluída uma fumaça no domínio fixo.
+- PR #7 validado sem mesclar (a autorização de merge cobria só o PR #1): CI 100% verde e `deploy-staging.yml` executado por `workflow_dispatch` na branch do PR. **Todos os jobs passaram:** migrate staging, atualização do `seed`, deploy, fumaça do deploy, alias e fumaça de `ppgps-portal-staging.vercel.app`.
 
-- [ ] **Criar `VERCEL_TOKEN`** (vercel.com/account/tokens, escopo do projeto `ppgps-portal`) e gravá-lo nos ambientes GitHub `preview` e `staging` — a CLI não permitiu criar token para o app (`Cannot create tokens for this app`)
-- [ ] Decidir sobre a **Vercel Authentication** (proteção de deploy, hoje ativa): manter e criar `VERCEL_AUTOMATION_BYPASS_SECRET` (Settings → Deployment Protection) nos ambientes `preview`/`staging`, **ou** desativá-la e depender só da autenticação básica. Sem o bypass, a fumaça do CI recebe o redirecionamento SSO da Vercel em vez do 401 do app
-- [ ] Criar o ambiente GitHub **`production`** com revisores obrigatórios e seus segredos (`NEON_API_KEY`, `DATABASE_URL`, `DATABASE_URL_POOLED`, `PAYLOAD_SECRET`, `VERCEL_TOKEN`) — agentes não manipulam credenciais de produção
-- [ ] Proteção da `main` (`docs/convencoes-git.md` §5), exigindo os checks do CI e de `migrations-check`
-- [ ] Opcional: proteger a branch Neon `production` (plano pago) e/ou IP allowlist; considerar chave Neon separada para produção
-- [ ] Guardar em cofre e **apagar** a pasta local `.secrets/` (contém os valores gerados para `staging`/`preview` e a chave Neon; ignorada pelo git)
-- [ ] Repetir o README em máquina limpa; executar o roteiro de homologação da ficha (passos 1–7) e aceitar/ajustar ADR-0007, 0008 e 0009
-- [ ] Após o merge: conferir a execução de `deploy-staging.yml` (migrate staging → deploy → fumaça) e do job que atualiza o branch `seed`
+### Testes executados (22/10/2026)
 
-### Pontos de atenção técnicos
-
-- Neon Free: alterar `suspend_timeout` é proibido (HTTP 412) — removido do workflow.
-- O deploy de homologação atual foi feito manualmente pela CLI (validação); os próximos virão do pipeline.
-- `X-Frame-Options`/`frame-ancestors 'self'` também valem para o admin; revisar junto com a CSP na S02.
+| Verificação | Resultado |
+|---|---|
+| Local: `lint`, `typecheck`, `migrate`, `migrate:check` | Passou |
+| Local: `pnpm test` (unidade + integração com Payload/Postgres) | 32/32 |
+| Local: `pnpm build` com banco inacessível | Passou |
+| Local: `pnpm test:e2e` (`next start`, axe) | 5/5 |
+| CI do PR #7 (9 jobs: qualidade, unit, integração, E2E, build sem banco, gitleaks, audit, migrations, preview) | Todos verdes |
+| Preview real (PR #7): branch Neon `preview/pr-7` de `seed`, migrations antes do deploy, deploy Vercel, fumaça | Passou (401 sem credenciais, 200 com credenciais, `noindex`, `/api/graphql` 404, `/admin` 200) |
+| Homologação pelo pipeline (`deploy-staging.yml`) | Passou, inclusive alias e fumaça no domínio fixo |
+| Verificação manual de `ppgps-portal-staging.vercel.app` | 302 sem bypass (SSO Vercel) · 401 com bypass, sem basic auth · 200 com ambos · `X-Robots-Tag: noindex, nofollow, noarchive` · `/api/graphql` 404 · `/admin` 200 |
+| Branches Neon | `preview/pr-1` removido após o merge do PR #1; `preview/pr-2` removido ao fechar o PR #2 (sessão anterior); `preview/pr-7` criado com expiração de 7 dias. `production` intocada |
+| gitleaks no histórico completo (`--all`) | Nenhum vazamento |
+| Valores reais dos segredos (13) procurados nos logs dos 40 runs mais recentes | 0 ocorrências |
+| Arquivos sensíveis versionados (`.env`, `.secrets/`, `.vercel/`, `.neon`) | Nenhum |
 
 ## Sessão de 20/10/2026 — revisão de escopo (v1.2)
 
@@ -148,36 +241,11 @@ Stack (Next.js + Payload 3 + PostgreSQL + R2), monólito modular, ADR-0001/0002/
 - Consultadas as fontes públicas (página do PPGPS e espelho DGP do grupo); RDU bloqueou acesso automatizado (HTTP 403).
 - Todo esse material foi revisado em 20/10/2026 para o escopo do grupo.
 
-## Critérios de aceite da S00 (v1.2)
-
-| Critério | Situação |
-|---|---|
-| `AGENTS.md` com comandos, escopo, migrations, ambientes, testes e protocolo | Atendido |
-| Uma ficha por sprint S01–S11 com objetivo, escopo, fora de escopo, critérios e roteiro de homologação | Atendido (verificação automática das seções) |
-| Inventário com identidade, 4 linhas, líderes, composição (contagens), ex-integrantes, parceiro, laboratório, referências e atividades, cada item com marco | Atendido |
-| Validações Q1–Q12 enviadas aos responsáveis do grupo (data registrada) | **Pendente — ação do supervisor** |
-
-## Pendências anteriores (S00)
-
-### Ações do supervisor (encerramento da S00)
-
-- [ ] Revisar a v1.2 e aceitar/ajustar ADR-0001 a ADR-0006
-- [ ] Registrar a evidência da decisão de escopo de 20/10/2026 (e-mail/mensagem) em `questoes-institucionais.md` §1
-- [ ] Enviar Q1–Q12 aos responsáveis do grupo e registrar a data (as Q1–Q20 da v1.1 **não** devem ser enviadas)
-- [x] Commitar os documentos — feito na S01 (commit `docs(s00): ...` no PR #1)
-- [ ] Configurar a proteção da `main` (`docs/convencoes-git.md` §5) — agora com os checks do CI disponíveis
-- [ ] Marcar a S00 como **Concluída** após a aprovação
-
-### Contas técnicas (ADR-0003)
-
-- [x] GitHub, Vercel e Neon disponíveis e usados na S01
-- [ ] Cloudflare R2 — necessário na S02 (storage e backup)
-
-### Validações abertas (Q1–Q12)
+## Validações abertas (Q1–Q12)
 
 Críticas: Q3 (domínio/hospedagem, idealmente antes da S01), Q4 (LGPD) e Q5 (integrantes e autorizações) até a S04. Altas para o M1: Q1 (autorização formal), Q2 (nome/identidade/aviso), Q6 (laboratório), Q7 (linhas e textos), Q8 (editor-chefe). Ver `docs/content/questoes-institucionais.md`.
 
-### Backlog / ideias (não implementar sem ficha)
+## Backlog / ideias (não implementar sem ficha)
 
 - Multigrupo, instituições normalizadas, coleção de laboratórios e `external-ids`: caminhos em planejamento 13.7 (somente com ADR).
 
@@ -190,6 +258,6 @@ Críticas: Q3 (domínio/hospedagem, idealmente antes da S01), Q4 (LGPD) e Q5 (in
 
 ## Próximos passos
 
-1. Revisão humana da S00/v1.2 e da S01 (PR #1; roteiro em `docs/sprints/S01.md`), concluindo as ações pendentes da S01 acima (`VERCEL_TOKEN`, bypass/proteção da Vercel, ambiente `production`, proteção da `main`).
-2. Merge squash do PR #1 → verificar `deploy-staging.yml` e registrar "S01 concluída".
+1. Supervisor: executar as ações manuais da "Revisão de encerramento formal S00/S01" (máquina limpa, PR #7, Q1–Q12, ADRs, proteção da `main`).
+2. Agente (nova sessão): conferir as evidências registradas e marcar S00 e S01 como **Concluídas** somente com elas.
 3. Só então iniciar a **S02** seguindo o protocolo do `AGENTS.md` §11.
