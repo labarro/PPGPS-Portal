@@ -1,0 +1,72 @@
+name: Manutenção e auditoria do R2
+
+# ADR-0011. Idempotente e de custo mínimo (poucas operações):
+# - garante a expiração de 7 dias dos objetos do bucket ppgps-preview (somente nele);
+# - confirma que nenhum bucket aceita listagem/leitura anônima pelo endpoint S3;
+# - confirma que as credenciais de cada ambiente não alcançam os buckets dos outros.
+# r2.dev e domínios públicos não são visíveis pela API S3: verificação manual no painel.
+on:
+  schedule:
+    - cron: '23 7 1 * *'
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - '.github/workflows/r2-maintenance.yml'
+      - 'scripts/storage/r2-maintenance.mjs'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: r2-maintenance
+  cancel-in-progress: false
+
+jobs:
+  audit:
+    name: R2 (${{ matrix.environment }})
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - environment: preview
+            lifecycle: true
+          - environment: staging
+            lifecycle: false
+          - environment: backups
+            lifecycle: false
+    environment: ${{ matrix.environment }}
+    env:
+      S3_ENDPOINT: ${{ vars.R2_ENDPOINT }}
+      S3_REGION: ${{ vars.R2_REGION }}
+      R2_ALL_BUCKETS: ppgps-preview,ppgps-staging,ppgps-backups
+    steps:
+      - uses: actions/checkout@v5
+      - uses: ./.github/actions/setup
+      - name: Selecionar credenciais do ambiente
+        env:
+          APP_BUCKET: ${{ secrets.R2_BUCKET }}
+          APP_KEY: ${{ secrets.R2_ACCESS_KEY_ID }}
+          APP_SECRET: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+          BK_BUCKET: ${{ secrets.R2_BACKUP_BUCKET }}
+          BK_KEY: ${{ secrets.R2_BACKUP_ACCESS_KEY_ID }}
+          BK_SECRET: ${{ secrets.R2_BACKUP_SECRET_ACCESS_KEY }}
+        run: |
+          if [[ "${{ matrix.environment }}" == "backups" ]]; then
+            bucket="${BK_BUCKET:-ppgps-backups}"; key="$BK_KEY"; secret="$BK_SECRET"
+          else
+            bucket="$APP_BUCKET"; key="$APP_KEY"; secret="$APP_SECRET"
+          fi
+          [[ -n "$bucket" && -n "$key" && -n "$secret" ]] || { echo "::error::credenciais R2 ausentes em ${{ matrix.environment }}"; exit 1; }
+          {
+            echo "S3_BUCKET=$bucket"
+            echo "S3_ACCESS_KEY_ID=$key"
+            echo "S3_SECRET_ACCESS_KEY=$secret"
+          } >> "$GITHUB_ENV"
+      - name: Expiração de 7 dias (somente ppgps-preview)
+        if: matrix.lifecycle
+        run: node scripts/storage/r2-maintenance.mjs lifecycle
+      - name: Exposição anônima e isolamento entre credenciais
+        run: node scripts/storage/r2-maintenance.mjs exposure
