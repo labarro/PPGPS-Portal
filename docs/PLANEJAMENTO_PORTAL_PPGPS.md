@@ -1053,7 +1053,7 @@ Cada coleção é criada apenas na sprint indicada (regra de não antecipação,
 
 ### 14.3. Matriz de permissões (MVP: M1 + M2)
 
-Legenda: **T** total · **P** somente próprios · **R** rascunho/sugestão sujeita a aprovação · **L** leitura · **—** sem acesso.
+Legenda: **T** total · **L** leitura · **—** sem acesso. (v1.3: sem o papel `researcher`, deixaram de existir os acessos parciais "somente próprios" e "rascunho sujeito a aprovação".)
 
 | Recurso | admin (desenvolvedor) | editor (coordenador) | visitante |
 |---|---|---|---|
@@ -1075,7 +1075,7 @@ Legenda: **T** total · **P** somente próprios · **R** rascunho/sugestão suje
 
 ### 14.4. Autorização por recurso
 
-- Implementada em funções de acesso do Payload (`read`, `create`, `update`, `delete`) e acesso por campo (ex.: `consentStatus`, `visibility` e `workflowStatus=published` só alteráveis por editor).
+- Implementada em funções de acesso do Payload (`read`, `create`, `update`, `delete`) e acesso por campo (ex.: `roles` só alterável por `admin`; campos calculados como `consentStatus` somente leitura).
 - Funções em `src/access/` são puras e testadas (`isAdmin`, `isEditor`, `isAdminOrEditor`, `isAuthenticated`, filtros públicos de visibilidade), compondo políticas por coleção. Funções por pessoa (`isOwnerPerson`, `isParticipant`) não são criadas no MVP (Q5).
 - Consultas de `read` retornam filtros (`where`) e não apenas booleanos, garantindo que listagens também respeitem o escopo.
 - A API REST pública é somente leitura com as mesmas regras; GraphQL desabilitado; rotas customizadas exigem verificação explícita de sessão e papel.
