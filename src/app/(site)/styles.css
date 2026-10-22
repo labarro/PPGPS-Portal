@@ -18,6 +18,8 @@
   --color-inverse: var(--inverse);
   --color-inverse-foreground: var(--inverse-foreground);
   --color-inverse-muted-foreground: var(--inverse-muted-foreground);
+  --color-inverse-deep: var(--inverse-deep);
+  --color-inverse-line: var(--inverse-line);
   --color-link: var(--link);
   --color-border: var(--border);
   --color-input: var(--input);
@@ -67,6 +69,12 @@
     text-underline-offset: 0.2em;
   }
 
+  h1,
+  h2,
+  h3 {
+    text-wrap: balance;
+  }
+
   @media (prefers-reduced-motion: reduce) {
     *,
     ::before,
@@ -76,5 +84,98 @@
       transition-duration: 0.01ms !important;
       scroll-behavior: auto !important;
     }
+  }
+}
+
+/*
+ * Texto editorial (rich text do Lexical; planejamento 16.1): serifada, medida de leitura de
+ * ~68 caracteres, links sublinhados, listas e citações com marcação discreta.
+ */
+@layer components {
+  .prose-portal {
+    max-width: 68ch;
+    font-family: var(--font-serif);
+    font-size: 1.125rem;
+    line-height: 1.75;
+    color: var(--foreground);
+  }
+
+  .prose-portal > * + * {
+    margin-top: 1.1em;
+  }
+
+  .prose-portal :is(h2, h3, h4, h5, h6) {
+    font-family: var(--font-serif);
+    font-weight: 600;
+    line-height: 1.25;
+    color: var(--primary);
+    margin-top: 1.8em;
+  }
+
+  .prose-portal h2 {
+    font-size: 1.6rem;
+  }
+
+  .prose-portal h3 {
+    font-size: 1.3rem;
+  }
+
+  .prose-portal :is(h4, h5, h6) {
+    font-size: 1.125rem;
+  }
+
+  .prose-portal > :first-child {
+    margin-top: 0;
+  }
+
+  .prose-portal a {
+    color: var(--link);
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 0.2em;
+  }
+
+  .prose-portal a:hover {
+    text-decoration-thickness: 2px;
+  }
+
+  .prose-portal :is(ul, ol) {
+    padding-left: 1.4em;
+  }
+
+  .prose-portal ul {
+    list-style: disc;
+  }
+
+  .prose-portal ol {
+    list-style: decimal;
+  }
+
+  .prose-portal li + li {
+    margin-top: 0.4em;
+  }
+
+  .prose-portal li::marker {
+    color: var(--primary);
+  }
+
+  .prose-portal blockquote {
+    border-left: 3px solid var(--primary);
+    padding-left: 1.1em;
+    font-style: italic;
+    color: var(--muted-foreground);
+  }
+
+  .prose-portal hr {
+    border: 0;
+    border-top: 1px solid var(--border);
+    margin: 2.2em 0;
+  }
+
+  .prose-portal code {
+    font-size: 0.9em;
+    background: var(--muted);
+    border-radius: 0.25rem;
+    padding: 0.1em 0.3em;
   }
 }

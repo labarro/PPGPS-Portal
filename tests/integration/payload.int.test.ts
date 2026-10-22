@@ -18,16 +18,37 @@ describe('Payload (integração com PostgreSQL)', () => {
     await cleanupAccounts(payload)
   })
 
-  it('inicializa com as coleções e globals da S02', () => {
+  it('inicializa com as coleções e globals da S02 e da S03', () => {
     const slugs = payload.config.collections.map((collection) => collection.slug)
-    expect(slugs).toEqual(expect.arrayContaining(['users', 'media', 'documents', 'audit-logs']))
+    expect(slugs).toEqual(
+      expect.arrayContaining([
+        'users',
+        'media',
+        'documents',
+        'audit-logs',
+        'research-lines',
+        'pages',
+        'redirects',
+      ]),
+    )
     const globals = payload.config.globals.map((global) => global.slug)
-    expect(globals).toEqual(['navigation', 'footer', 'site-settings'])
+    expect(globals).toEqual(['group-profile', 'homepage', 'navigation', 'footer', 'site-settings'])
   })
 
-  it('não antecipa coleções de sprints futuras', () => {
+  it('não antecipa coleções de sprints futuras nem coleções removidas (ADR-0006)', () => {
     const slugs = payload.config.collections.map((collection) => collection.slug)
-    for (const future of ['people', 'research-lines', 'pages', 'essays', 'publications']) {
+    for (const future of [
+      'people',
+      'memberships',
+      'consent-records',
+      'essays',
+      'publications',
+      'projects',
+      'events',
+      'programs',
+      'research-groups',
+      'laboratories',
+    ]) {
       expect(slugs).not.toContain(future)
     }
   })

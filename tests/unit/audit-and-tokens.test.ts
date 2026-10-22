@@ -126,6 +126,12 @@ describe('tokens de design (azul-marinho e branco) com contraste AA', () => {
     ['ring', 'background', 3],
     ['ring-inverse', 'inverse', 3],
     ['primary', 'background', 3],
+    // S03: faixa de abertura em azul-marinho profundo e traço de apoio.
+    ['inverse-foreground', 'inverse-deep', 4.5],
+    ['inverse-muted-foreground', 'inverse-deep', 4.5],
+    ['inverse-line', 'inverse-deep', 4.5],
+    ['ring-inverse', 'inverse-deep', 3],
+    ['link', 'secondary', 4.5],
   ]
 
   it.each(pairs)('%s sobre %s ≥ %d:1', (fg, bg, min) => {

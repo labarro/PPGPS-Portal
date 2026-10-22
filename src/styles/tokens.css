@@ -27,6 +27,9 @@
   --inverse: #0b2545;
   --inverse-foreground: #ffffff;
   --inverse-muted-foreground: #c7d2e3;
+  /* Azul-marinho profundo (faixa de abertura) e traço de apoio sobre o azul (S03) */
+  --inverse-deep: #071a33;
+  --inverse-line: #9fb8d9;
 
   /* Links, bordas e foco */
   --link: #1d4f91;

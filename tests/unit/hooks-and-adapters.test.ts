@@ -1,7 +1,7 @@
 import type { CollectionConfig, GlobalConfig, PayloadRequest } from 'payload'
 import { describe, expect, it, vi } from 'vitest'
 
-vi.mock('next/cache', () => ({ revalidatePath: vi.fn() }))
+vi.mock('next/cache', () => ({ revalidatePath: vi.fn(), revalidateTag: vi.fn() }))
 
 import {
   auditAfterChange,
