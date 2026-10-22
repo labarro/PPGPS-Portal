@@ -111,9 +111,21 @@
 
 Depois de publicados no painel, desmarcar "Contém textos provisórios" (perfil) e "Texto provisório" (cada linha).
 
+### Merge e homologação (após o PR #14)
+
+| Verificação | Resultado |
+|---|---|
+| Merge | PR #14 mesclado por *squash* (`60a5202`) com todos os checks verdes (CI com Lighthouse, verificação de migrations, preview) |
+| Workflows da `main` | CI `39866365353`, Verificação de migrations `39866365356` e Deploy de homologação `39866365355`: **sucesso** |
+| Homologação | Migration aplicada em `staging` e `seed`; `seed:content` publicou perfil, 2 linhas, página inicial e menu; deploy, fumaça (incluindo as rotas da S03) e alias `https://ppgps-portal-staging.vercel.app` OK |
+| Verificação independente (`curl`, 22/10/2026) | 401 sem autenticação básica; 200 com credenciais em `/`, `/o-grupo/*` (5 rotas), `/linhas`, `/linhas/bioetica`, `/linhas/promocao-da-saude`, `/sitemap.xml` (9 URLs), `/robots.txt`; `/laboratorio` 404; `/api/redirects` 403; `/api/graphql` 404; `X-Robots-Tag: noindex`; 0 `<img>` na home; JSON-LD presente; histórico com as 4 linhas do DGP, aviso de texto provisório e link do espelho do DGP |
+| Neon | Branches `production` (última atualização 21/10/2026, **intocada**), `staging`, `seed`; `preview/pr-14` removido ao fechar o PR |
+| Produção | Nenhum deploy; `PRODUCTION_DEPLOY_ENABLED` não definida |
+
 ### Pendências técnicas / backlog
 
 - Aceite do ADR-0013 pelo supervisor.
+- Roteiro de homologação da ficha (passos 1–9) pelo supervisor, em desktop e celular; para editar em homologação é preciso criar a conta `admin`/`editor` real (o banco `staging` não tem usuários).
 - Revisar o orçamento de JS e o desempenho mobile no runner (0,75–0,9) na S06, junto com a hospedagem (cache de CDN para HTML).
 - `unstable_cache` é API legada no Next 16: migrar para `'use cache'` em sprint dedicada.
 
