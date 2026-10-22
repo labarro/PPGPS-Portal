@@ -2,11 +2,11 @@
 
 | Campo | Valor |
 |---|---|
-| Status | Proposto |
+| Status | **Aceito** |
 | Data | 22/10/2026 |
 | Sprint | S02 |
 | Autor | Agente |
-| Aprovação | — |
+| Aprovação | Responsável técnico (supervisor), 22/10/2026 — aprovação formal expressa na finalização da S02 |
 
 ## Contexto
 

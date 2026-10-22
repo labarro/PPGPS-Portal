@@ -1,7 +1,8 @@
 name: Verificação de restauração (branch temporário)
 
 # Planejamento 24.5; ADR-0012. Mensal e sob demanda:
-# 1. obtém o último backup criptografado de homologação (artefato do workflow de backup);
+# 1. baixa o último backup criptografado de homologação do bucket `ppgps-backups`
+#    (fallback: artefato do workflow de backup, se o bucket não estiver acessível);
 # 2. cria um branch Neon TEMPORÁRIO `restore-check-<run>` e, dentro dele, um banco VAZIO;
 # 3. descriptografa (chave privada, só neste job) direto para o pg_restore;
 # 4. compara a contagem de linhas com o manifesto, registra o tempo e REMOVE o branch.
@@ -11,8 +12,11 @@ on:
     - cron: '41 6 3 * *'
   workflow_dispatch:
     inputs:
+      backup_base:
+        description: 'Nome do backup no bucket, ex.: staging-20261022T194700Z (vazio = o mais recente)'
+        required: false
       backup_run_id:
-        description: 'Run do workflow de backup (vazio = o mais recente com sucesso)'
+        description: 'Fallback: run do workflow de backup cujo artefato usar (vazio = o mais recente)'
         required: false
 
 concurrency:
@@ -43,22 +47,43 @@ jobs:
           [[ "$BACKUP_AGE_IDENTITY" == AGE-SECRET-KEY-* || "$BACKUP_AGE_IDENTITY" == *AGE-SECRET-KEY-* ]] || { echo "::error::BACKUP_AGE_IDENTITY ausente no ambiente 'backups'"; exit 1; }
 
       - uses: actions/checkout@v5
+      - uses: ./.github/actions/setup
 
-      - name: Localizar o backup
-        id: source
+      - name: Baixar o backup do bucket ppgps-backups (caminho real de recuperação)
+        id: bucket
+        continue-on-error: true
+        env:
+          BACKUP_S3_ENDPOINT: ${{ vars.R2_ENDPOINT }}
+          BACKUP_S3_REGION: ${{ vars.R2_REGION }}
+          BACKUP_S3_BUCKET: ${{ secrets.R2_BACKUP_BUCKET || 'ppgps-backups' }}
+          BACKUP_S3_ACCESS_KEY_ID: ${{ secrets.R2_BACKUP_ACCESS_KEY_ID }}
+          BACKUP_S3_SECRET_ACCESS_KEY: ${{ secrets.R2_BACKUP_SECRET_ACCESS_KEY }}
+          BACKUP_BASE: ${{ inputs.backup_base }}
+        run: |
+          [[ -n "$BACKUP_S3_ACCESS_KEY_ID" ]] || { echo "::warning::credenciais de backup ausentes"; exit 2; }
+          node scripts/backup/download.mjs staging in
+          ls -l in
+
+      - name: Alternativa — artefato criptografado do workflow de backup
+        if: steps.bucket.outcome != 'success'
         env:
           GH_TOKEN: ${{ github.token }}
           INPUT_RUN: ${{ inputs.backup_run_id }}
         run: |
+          echo "::warning::Backup obtido do artefato do GitHub, não do bucket."
           run_id="$INPUT_RUN"
           if [[ -z "$run_id" ]]; then
             run_id=$(gh run list --workflow backup.yml --status success --limit 1 --json databaseId -q '.[0].databaseId')
           fi
           [[ -n "$run_id" ]] || { echo "::error::Nenhum backup com sucesso encontrado."; exit 1; }
-          echo "run_id=$run_id" >> "$GITHUB_OUTPUT"
-          gh run download "$run_id" --name backup-staging --dir in
+          rm -rf in && gh run download "$run_id" --name backup-staging --dir in
           ls -l in
 
+      - name: Origem do backup no resumo
+        run: |
+          origin="bucket R2 ppgps-backups"
+          [[ "${{ steps.bucket.outcome }}" == "success" ]] || origin="artefato do GitHub (fallback)"
+          echo "Origem do backup restaurado: **${origin}** — $(ls in/*.dump.age | xargs -n1 basename)" >> "$GITHUB_STEP_SUMMARY"
       - name: Criar branch Neon temporário com banco vazio
         id: neon
         env:
