@@ -22,6 +22,7 @@ Não dependa do histórico de conversas anteriores; se algo não está nos arqui
 - **Planejamento de tarefas:** use a ferramenta de lista de tarefas (TodoWrite ou equivalente) para toda sprint ou tarefa com 3+ passos, marcando o progresso em tempo real.
 - **Plano antes de codar:** siga o passo 2 do protocolo (AGENTS.md §11): apresente plano curto e aguarde confirmação, a menos que o supervisor tenha autorizado execução autônoma na sessão.
 - **Escopo:** antes de criar qualquer arquivo, coleção, rota ou dependência, confirme que está listado na ficha da sprint ativa. Se não estiver, registre em `docs/PROGRESS.md` como pendência.
+- **Pull Requests:** siga a política permanente do `AGENTS.md` §11.1 (squash merge autônomo apenas com checks verdes, sem conflitos, diff revisado e migrations seguras; nunca deploy de produção).
 - **Commits e push:** siga `docs/convencoes-git.md`. Instruções da sessão prevalecem (ex.: "não faça commit"). Nunca faça `push --force`, nunca altere configuração do git, nunca pule hooks.
 - **Ações externas:** nunca envie mensagens, e-mails ou formulários à universidade, aos integrantes do grupo ou a terceiros; nunca acesse ambientes de produção.
 - **Dados institucionais:** não invente; registre fonte e data; marque divergências como provisórias (AGENTS.md §9.1).

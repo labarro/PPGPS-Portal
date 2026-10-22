@@ -1,0 +1,43 @@
+/*
+ * Design tokens do portal — ARQUIVO ÚNICO (planejamento 16.1; ficha S02).
+ * Identidade: azul-marinho (primária) e branco (Q2). Sem elementos gráficos institucionais.
+ * Contraste AA verificado automaticamente em tests/unit/design-tokens.test.ts
+ * (texto ≥ 4,5:1; componentes, bordas de campo e foco ≥ 3:1).
+ * Formato: hexadecimal de 6 dígitos (lido pelo teste de contraste).
+ */
+:root {
+  /* Superfícies e texto */
+  --background: #ffffff;
+  --foreground: #0f1b2d;
+
+  /* Azul-marinho: cor primária da identidade */
+  --primary: #0b2545;
+  --primary-hover: #13315c;
+  --primary-foreground: #ffffff;
+
+  /* Apoio */
+  --secondary: #eef2f8;
+  --secondary-foreground: #0b2545;
+  --muted: #f4f6fa;
+  --muted-foreground: #475569;
+  --accent: #e2e9f4;
+  --accent-foreground: #0b2545;
+
+  /* Superfície invertida (rodapé, faixas em azul-marinho) */
+  --inverse: #0b2545;
+  --inverse-foreground: #ffffff;
+  --inverse-muted-foreground: #c7d2e3;
+
+  /* Links, bordas e foco */
+  --link: #1d4f91;
+  --border: #d6deea;
+  --input: #64748b;
+  --ring: #1d4f91;
+  --ring-inverse: #ffffff;
+
+  /* Estados */
+  --destructive: #b42318;
+  --destructive-foreground: #ffffff;
+
+  --radius: 0.5rem;
+}

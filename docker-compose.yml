@@ -39,6 +39,18 @@ services:
       - miniodata:/data
     # Imagem distroless (sem shell/curl): sem healthcheck; `--wait` aguarda o estado "running".
 
+  mailpit:
+    # Captura local de e-mails (S02): nada sai da máquina. Interface em http://localhost:8025.
+    image: axllent/mailpit:v1.29.1@sha256:7c38788069433ba9d2d9131abac8d17da0fb18f09b689207ec7a773dcb8d6eee
+    restart: unless-stopped
+    environment:
+      MP_MAX_MESSAGES: '500'
+      MP_SMTP_AUTH_ACCEPT_ANY: '1'
+      MP_SMTP_AUTH_ALLOW_INSECURE: '1'
+    ports:
+      - '127.0.0.1:${MAILPIT_SMTP_PORT:-1025}:1025'
+      - '127.0.0.1:${MAILPIT_UI_PORT:-8025}:8025'
+
 volumes:
   pgdata:
   miniodata:

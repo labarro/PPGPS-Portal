@@ -58,6 +58,7 @@ jobs:
     steps:
       - uses: actions/checkout@v5
       - uses: ./.github/actions/setup
+      - uses: ./.github/actions/test-services
       - name: Segredo efêmero do Payload
         run: echo "PAYLOAD_SECRET=$(openssl rand -hex 32)" >> "$GITHUB_ENV"
       # O globalSetup aplica as migrations versionadas antes dos testes.
@@ -84,6 +85,7 @@ jobs:
     steps:
       - uses: actions/checkout@v5
       - uses: ./.github/actions/setup
+      - uses: ./.github/actions/test-services
       - name: Segredo efêmero do Payload
         run: echo "PAYLOAD_SECRET=$(openssl rand -hex 32)" >> "$GITHUB_ENV"
       - name: Migrations (job separado do build)

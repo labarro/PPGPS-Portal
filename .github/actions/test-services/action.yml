@@ -1,0 +1,51 @@
+name: Serviços de teste (MinIO e Mailpit)
+description: >-
+  Sobe MinIO (S3 compatível, mesma imagem do docker-compose) e Mailpit (captura de e-mail)
+  no runner e cria o bucket de teste. Testes automatizados nunca usam o R2 (custo e isolamento).
+
+runs:
+  using: composite
+  steps:
+    - name: Subir MinIO e Mailpit
+      shell: bash
+      run: |
+        # Imagem distroless sem root: /data precisa ser um volume gravável (como no docker-compose).
+        docker volume create minio-ci-data >/dev/null
+        docker run -d --name minio -p 9000:9000 -v minio-ci-data:/data \
+          -e MINIO_ROOT_USER=ciminio -e MINIO_ROOT_PASSWORD=ci-minio-secret \
+          cgr.dev/chainguard/minio@sha256:32c504bea4574d8f29d719b37bc0dad920ecf3e22b81dc5cea0bb105af2ce10f \
+          server /data
+        docker run -d --name mailpit -p 1025:1025 -p 8025:8025 \
+          -e MP_SMTP_AUTH_ACCEPT_ANY=1 -e MP_SMTP_AUTH_ALLOW_INSECURE=1 \
+          axllent/mailpit:v1.29.1@sha256:7c38788069433ba9d2d9131abac8d17da0fb18f09b689207ec7a773dcb8d6eee
+        for i in $(seq 1 30); do
+          curl -fsS http://localhost:9000/minio/health/live >/dev/null 2>&1 \
+            && curl -fsS http://localhost:8025/api/v1/info >/dev/null 2>&1 && break
+          sleep 1
+        done
+        if ! curl -fsS http://localhost:9000/minio/health/live >/dev/null 2>&1; then
+          echo "::error::MinIO não respondeu"; docker logs minio 2>&1 | tail -n 30; exit 1
+        fi
+        if ! curl -fsS http://localhost:8025/api/v1/info >/dev/null 2>&1; then
+          echo "::error::Mailpit não respondeu"; docker logs mailpit 2>&1 | tail -n 30; exit 1
+        fi
+        {
+          echo "S3_ENDPOINT=http://localhost:9000"
+          echo "S3_REGION=us-east-1"
+          echo "S3_BUCKET=ppgps-test"
+          echo "S3_BUCKET_TEST=ppgps-test"
+          echo "S3_ACCESS_KEY_ID=ciminio"
+          echo "S3_SECRET_ACCESS_KEY=ci-minio-secret"
+          echo "S3_FORCE_PATH_STYLE=true"
+          echo "SMTP_HOST=localhost"
+          echo "SMTP_PORT=1025"
+          echo "EMAIL_SMTP_IS_SANDBOX=true"
+          echo "MAILPIT_API_URL=http://localhost:8025"
+          echo "SERVER_URL=http://localhost:3000"
+        } >> "$GITHUB_ENV"
+
+    - name: Criar bucket de teste
+      shell: bash
+      run: |
+        S3_ENDPOINT=http://localhost:9000 S3_BUCKET=ppgps-test S3_ACCESS_KEY_ID=ciminio \
+          S3_SECRET_ACCESS_KEY=ci-minio-secret S3_REGION=us-east-1 pnpm storage:init

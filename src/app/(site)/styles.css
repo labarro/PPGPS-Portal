@@ -1,34 +1,80 @@
-/* Estilo mínimo e provisório (S01). Tailwind/shadcn entram na S02. */
-:root {
-  color-scheme: light;
-  font-family:
-    system-ui,
-    -apple-system,
-    'Segoe UI',
-    Roboto,
-    sans-serif;
-  color: #1a1a1a;
-  background: #ffffff;
+@import 'tailwindcss';
+@import 'tw-animate-css';
+@import '../../styles/tokens.css';
+
+/* Mapeia os tokens (arquivo único) para utilitários do Tailwind (bg-primary, text-muted-foreground…). */
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-primary: var(--primary);
+  --color-primary-hover: var(--primary-hover);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-inverse: var(--inverse);
+  --color-inverse-foreground: var(--inverse-foreground);
+  --color-inverse-muted-foreground: var(--inverse-muted-foreground);
+  --color-link: var(--link);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-ring-inverse: var(--ring-inverse);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+
+  --font-sans: var(--font-sans-face), ui-sans-serif, system-ui, sans-serif;
+  --font-serif: var(--font-serif-face), ui-serif, Georgia, 'Times New Roman', serif;
 }
 
-body {
-  margin: 0;
-}
+@layer base {
+  html {
+    color-scheme: light;
+    /* Foco e âncoras não ficam encobertos pelo cabeçalho fixo (WCAG 2.4.11). */
+    scroll-padding-top: 6rem;
+    -webkit-text-size-adjust: 100%;
+  }
 
-.placeholder {
-  max-width: 40rem;
-  margin: 0 auto;
-  padding: 4rem 1.5rem;
-  line-height: 1.6;
-}
+  body {
+    @apply bg-background text-foreground font-sans antialiased;
+  }
 
-.placeholder h1 {
-  font-size: 2rem;
-  margin: 0 0 1rem;
-}
+  *,
+  ::before,
+  ::after {
+    border-color: var(--border);
+  }
 
-.notice {
-  margin-top: 2rem;
-  font-size: 0.875rem;
-  color: #4a4a4a;
+  /* Foco visível em todo elemento interativo: 2 px, contraste ≥ 3:1 (WCAG 2.4.7/2.4.13). */
+  :focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 2px;
+  }
+
+  .surface-inverse :focus-visible {
+    outline-color: var(--ring-inverse);
+  }
+
+  a {
+    text-underline-offset: 0.2em;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    ::before,
+    ::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
 }

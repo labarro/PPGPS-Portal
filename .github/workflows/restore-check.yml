@@ -1,0 +1,101 @@
+name: Verificação de restauração (branch temporário)
+
+# Planejamento 24.5; ADR-0012. Mensal e sob demanda:
+# 1. obtém o último backup criptografado de homologação (artefato do workflow de backup);
+# 2. cria um branch Neon TEMPORÁRIO `restore-check-<run>` e, dentro dele, um banco VAZIO;
+# 3. descriptografa (chave privada, só neste job) direto para o pg_restore;
+# 4. compara a contagem de linhas com o manifesto, registra o tempo e REMOVE o branch.
+# Nunca restaura em `production`, `staging` ou `seed`.
+on:
+  schedule:
+    - cron: '41 6 3 * *'
+  workflow_dispatch:
+    inputs:
+      backup_run_id:
+        description: 'Run do workflow de backup (vazio = o mais recente com sucesso)'
+        required: false
+
+concurrency:
+  group: restore-check
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  actions: read
+
+env:
+  NEON_PROJECT_ID: ${{ vars.NEON_PROJECT_ID }}
+  RESTORE_BRANCH: restore-check-${{ github.run_id }}
+
+jobs:
+  restore:
+    name: Restaurar em branch temporário e conferir
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    environment: backups
+    steps:
+      - name: Verificar configuração
+        env:
+          NEON_API_KEY: ${{ secrets.NEON_API_KEY }}
+          BACKUP_AGE_IDENTITY: ${{ secrets.BACKUP_AGE_IDENTITY }}
+        run: |
+          [[ -n "$NEON_API_KEY" && -n "$NEON_PROJECT_ID" ]] || { echo "::error::NEON_API_KEY/NEON_PROJECT_ID ausentes"; exit 1; }
+          [[ "$BACKUP_AGE_IDENTITY" == AGE-SECRET-KEY-* || "$BACKUP_AGE_IDENTITY" == *AGE-SECRET-KEY-* ]] || { echo "::error::BACKUP_AGE_IDENTITY ausente no ambiente 'backups'"; exit 1; }
+
+      - uses: actions/checkout@v5
+
+      - name: Localizar o backup
+        id: source
+        env:
+          GH_TOKEN: ${{ github.token }}
+          INPUT_RUN: ${{ inputs.backup_run_id }}
+        run: |
+          run_id="$INPUT_RUN"
+          if [[ -z "$run_id" ]]; then
+            run_id=$(gh run list --workflow backup.yml --status success --limit 1 --json databaseId -q '.[0].databaseId')
+          fi
+          [[ -n "$run_id" ]] || { echo "::error::Nenhum backup com sucesso encontrado."; exit 1; }
+          echo "run_id=$run_id" >> "$GITHUB_OUTPUT"
+          gh run download "$run_id" --name backup-staging --dir in
+          ls -l in
+
+      - name: Criar branch Neon temporário com banco vazio
+        id: neon
+        env:
+          NEON_API_KEY: ${{ secrets.NEON_API_KEY }}
+        run: |
+          neon() { npx -y neon@8.8.0 "$@" --project-id "$NEON_PROJECT_ID" --no-analytics; }
+          expires=$(date -u --date '+1 day' +'%Y-%m-%dT%H:%M:%SZ')
+          neon branches create --name "$RESTORE_BRANCH" --parent seed --output json >/dev/null
+          # Rede de segurança: expira em 24 h mesmo se a remoção ao final falhar.
+          neon branches set-expiration "$RESTORE_BRANCH" --expires-at "$expires" >/dev/null
+          neon databases create --name restore_check --branch "$RESTORE_BRANCH" --owner-name neondb_owner --output json >/dev/null
+          url=$(neon connection-string "$RESTORE_BRANCH" --database-name restore_check | tail -n 1)
+          echo "::add-mask::$url"
+          echo "url=$url" >> "$GITHUB_OUTPUT"
+
+      - name: Restaurar e verificar (age + pg_restore 18)
+        env:
+          TARGET_DATABASE_URL: ${{ steps.neon.outputs.url }}
+          BACKUP_AGE_IDENTITY: ${{ secrets.BACKUP_AGE_IDENTITY }}
+          TARGET_BRANCH_NAME: ${{ env.RESTORE_BRANCH }}
+        run: |
+          umask 077
+          key_dir=$(mktemp -d)
+          printf '%s\n' "$BACKUP_AGE_IDENTITY" > "$key_dir/key.txt"
+          dump=$(ls in/*.dump.age); manifest=$(ls in/*.manifest.json)
+          docker run --rm -e TARGET_DATABASE_URL -e TARGET_BRANCH_NAME -e GITHUB_STEP_SUMMARY=/summary/s.md \
+            -e BACKUP_AGE_IDENTITY_FILE=/key/key.txt \
+            -v "$PWD/scripts:/scripts:ro" -v "$PWD/in:/in:ro" -v "$key_dir:/key:ro" \
+            -v "$(dirname "$GITHUB_STEP_SUMMARY"):/summary" postgres:18-alpine \
+            sh -c "apk add --no-cache age jq bash coreutils >/dev/null && bash /scripts/backup/restore.sh /in/$(basename "$dump") /in/$(basename "$manifest") && cat /summary/s.md >> /summary/$(basename "$GITHUB_STEP_SUMMARY")"
+          rm -rf "$key_dir"
+
+      - name: Remover branch temporário
+        if: always() && steps.neon.outcome != 'skipped'
+        env:
+          NEON_API_KEY: ${{ secrets.NEON_API_KEY }}
+        run: |
+          case "$RESTORE_BRANCH" in restore-check-*) ;; *) echo "::error::nome inesperado"; exit 1;; esac
+          npx -y neon@8.8.0 branches delete "$RESTORE_BRANCH" --project-id "$NEON_PROJECT_ID" --no-analytics || true
+          echo "Branch $RESTORE_BRANCH removido."

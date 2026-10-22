@@ -21,7 +21,8 @@
 | `docs/PLANEJAMENTO_PORTAL_PPGPS.md` (v1.3; nome de arquivo mantido por compatibilidade) | Plano diretor: requisitos, arquitetura, modelagem, permissões, sprints |
 | `docs/PROGRESS.md` | Estado atual, última sprint, decisões, pendências, próximos passos |
 | `docs/sprints/SXX.md` | Escopo fechado da sprint ativa (incluído, **fora de escopo**, critérios, roteiro de homologação) |
-| `docs/adr/` | Decisões arquiteturais: ADR-0001 a 0009 **aceitos** (22/10/2026); ADR-0010 (respostas Q1–Q12, papéis, identidade, laboratório, linhas) proposto, com decisões já em vigor por determinação do supervisor |
+| `docs/adr/` | Decisões arquiteturais: ADR-0001 a 0010 **aceitos** (22/10/2026); ADR-0011 (auth, auditoria, R2, e-mail, observabilidade) e ADR-0012 (backup) propostos na S02 |
+| `docs/operacao/` | Guias operacionais: armazenamento (R2/MinIO) e backup/restauração |
 | `docs/convencoes-git.md` | Branches, commits, PRs, releases e proteção da `main` |
 | `docs/content/inventario.md` | Inventário de conteúdo institucional com fonte e situação de validação |
 | `docs/content/questoes-institucionais.md` | Respostas do coordenador às Q1–Q12, efeitos e itens ainda em aberto |
@@ -70,7 +71,8 @@ Atualização de versão **maior** de Next/Payload/React só em sprint dedicada.
 | Objetivo | Comando |
 |---|---|
 | Instalar dependências | `pnpm install` |
-| Subir Postgres + MinIO locais (gera `.env` local se faltar) | `pnpm db:up` (`pnpm db:down` para parar) |
+| Subir Postgres + MinIO + Mailpit locais (gera/completa o `.env` local e cria os buckets) | `pnpm db:up` (`pnpm db:down` para parar) |
+| Criar buckets locais do MinIO (somente endpoints locais) | `pnpm storage:init` |
 | Aplicar migrations | `pnpm migrate` |
 | Criar migration | `pnpm migrate:create <nome-descritivo>` |
 | Situação das migrations | `pnpm migrate:status` |
@@ -245,6 +247,17 @@ pnpm lint && pnpm typecheck && pnpm test && pnpm test:e2e && pnpm build
 7. **Entrega**: abrir PR com resumo, checklist de critérios, evidências, pendências e riscos.
 8. **Revisão**: o supervisor revisa e homologa no preview; ajustes no mesmo PR.
 9. **Encerramento**: após o merge, registrar em `PROGRESS.md` "SXX concluída" e a próxima sprint.
+
+### 11.1. Política permanente de Pull Requests (determinação do supervisor, 22/10/2026)
+
+Com a execução de uma sprint autorizada, o agente gerencia o fluxo de Git sem pedir aprovação individual por PR: cria branches e PRs, faz commits e push, corrige falhas de CI e realiza **squash merge** quando, e somente quando:
+
+1. todos os checks obrigatórios estão verdes (CI, verificação de migrations, preview);
+2. não há conflitos com a `main`;
+3. o diff foi revisado, sem segredos, sem dados pessoais reais e sem funcionalidade fora da ficha;
+4. as migrations são aditivas (ou *expand/contract* autorizado) e passaram em banco limpo, *drift* e `down`/`up`.
+
+Nunca contornar restrições de aprovação do GitHub, nunca `push --force` na `main`, nunca habilitar `PRODUCTION_DEPLOY_ENABLED` nem fazer deploy de produção. Após o merge, validar os workflows da `main` e a homologação e registrar em `PROGRESS.md`.
 
 **Status de sprint usados em `PROGRESS.md`:** `Não iniciada` → `Em execução` → `Executada — aguardando revisão humana` → `Concluída` (após aprovação/merge) | `Bloqueada`.
 

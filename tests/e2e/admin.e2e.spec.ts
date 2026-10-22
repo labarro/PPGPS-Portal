@@ -1,7 +1,6 @@
-import { randomUUID } from 'node:crypto'
-
 import { expect, type Page, test } from '@playwright/test'
 
+import { strongTestPassword } from '../helpers/test-env'
 import {
   cleanupE2EUsers,
   countUsers,
@@ -12,7 +11,7 @@ import {
 
 const firstUser = {
   email: `primeiro${E2E_EMAIL_DOMAIN}`,
-  password: randomUUID(),
+  password: strongTestPassword(),
 }
 
 async function expectDashboard(page: Page) {
@@ -33,7 +32,7 @@ test.describe.serial('Painel administrativo', () => {
     await cleanupE2EUsers()
   })
 
-  test('permite criar o primeiro usuário em banco vazio', async ({ page }) => {
+  test('permite criar o primeiro usuário em banco vazio (vira admin)', async ({ page }) => {
     test.skip((await countUsers()) > 0, 'Banco de teste já possui usuários.')
 
     await page.goto('/admin')
@@ -59,5 +58,12 @@ test.describe.serial('Painel administrativo', () => {
     await login(page, loginUser)
     await page.goto('/admin/collections/users')
     await expect(page.getByText(loginUser.email)).toBeVisible()
+  })
+
+  test('admin vê a auditoria com o próprio login registrado', async ({ page }) => {
+    await seedLoginUser()
+    await login(page, loginUser)
+    await page.goto('/admin/collections/audit-logs')
+    await expect(page.getByText(loginUser.email).first()).toBeVisible()
   })
 })

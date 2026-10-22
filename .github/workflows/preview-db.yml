@@ -102,6 +102,17 @@ jobs:
           pnpm migrate
           pnpm migrate:status
 
+      - name: Verificação real do bucket R2 de preview (objeto de 64 bytes, removido)
+        if: steps.config.outputs.enabled == 'true' && steps.config.outputs.vercel == 'true'
+        env:
+          S3_ENDPOINT: ${{ vars.R2_ENDPOINT }}
+          S3_REGION: ${{ vars.R2_REGION }}
+          S3_BUCKET: ${{ secrets.R2_BUCKET }}
+          S3_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+          S3_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+          S3_PREFIX: pr-${{ github.event.pull_request.number }}
+        run: node scripts/storage/r2-smoke.mjs
+
       - name: Deploy de preview na Vercel
         id: deploy
         if: steps.config.outputs.enabled == 'true' && steps.config.outputs.vercel == 'true'
@@ -114,6 +125,15 @@ jobs:
           PAYLOAD_SECRET: ${{ secrets.PAYLOAD_SECRET }}
           BASIC_AUTH_USER: ${{ secrets.BASIC_AUTH_USER }}
           BASIC_AUTH_PASSWORD: ${{ secrets.BASIC_AUTH_PASSWORD }}
+          # Storage R2 do preview: prefixo exclusivo por PR (ADR-0011). Somente servidor.
+          S3_ENDPOINT: ${{ vars.R2_ENDPOINT }}
+          S3_REGION: ${{ vars.R2_REGION }}
+          S3_BUCKET: ${{ secrets.R2_BUCKET }}
+          S3_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+          S3_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+          S3_PREFIX: pr-${{ github.event.pull_request.number }}
+          SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
+          NEXT_PUBLIC_SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
         run: bash scripts/ci/vercel-deploy.sh preview
 
       - name: Fumaça do preview
@@ -123,6 +143,16 @@ jobs:
           BASIC_AUTH_PASSWORD: ${{ secrets.BASIC_AUTH_PASSWORD }}
           VERCEL_AUTOMATION_BYPASS_SECRET: ${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET }}
         run: bash scripts/ci/smoke-deployment.sh "${{ steps.deploy.outputs.deployment_url }}" protected
+
+      - name: Armazenamento pelo app implantado (R2 real, arquivos fictícios mínimos)
+        if: steps.deploy.outputs.deployment_url != ''
+        env:
+          BASIC_AUTH_USER: ${{ secrets.BASIC_AUTH_USER }}
+          BASIC_AUTH_PASSWORD: ${{ secrets.BASIC_AUTH_PASSWORD }}
+          VERCEL_AUTOMATION_BYPASS_SECRET: ${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET }}
+          SEED_ADMIN_EMAIL: ${{ secrets.SEED_ADMIN_EMAIL }}
+          SEED_ADMIN_PASSWORD: ${{ secrets.SEED_ADMIN_PASSWORD }}
+        run: node scripts/ci/smoke-storage-app.mjs "${{ steps.deploy.outputs.deployment_url }}"
 
       - name: Comentar no PR
         if: steps.config.outputs.enabled == 'true'
@@ -165,3 +195,20 @@ jobs:
           fi
           neon branches delete "$NEON_BRANCH" --project-id "$NEON_PROJECT_ID"
           echo "Branch $NEON_BRANCH removido."
+
+      - uses: actions/checkout@v5
+      - uses: ./.github/actions/setup
+      - name: Remover arquivos do PR no bucket de preview (prefixo pr-N)
+        env:
+          S3_ENDPOINT: ${{ vars.R2_ENDPOINT }}
+          S3_REGION: ${{ vars.R2_REGION }}
+          S3_BUCKET: ${{ secrets.R2_BUCKET }}
+          S3_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+          S3_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+          S3_PREFIX: pr-${{ github.event.pull_request.number }}
+        run: |
+          if [[ -z "$S3_BUCKET" || -z "$S3_ENDPOINT" ]]; then
+            echo "::warning::R2 não configurado no ambiente 'preview'; nada a remover."
+            exit 0
+          fi
+          node scripts/storage/purge-prefix.mjs

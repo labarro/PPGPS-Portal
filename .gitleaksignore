@@ -4,3 +4,6 @@
 09fa6426743b439f4bfc8720d597abc6d4c741ec:tests/e2e/admin.e2e.spec.ts:generic-api-key:13
 09fa6426743b439f4bfc8720d597abc6d4c741ec:tests/integration/payload.int.test.ts:generic-api-key:38
 09fa6426743b439f4bfc8720d597abc6d4c741ec:tests/integration/payload.int.test.ts:generic-api-key:44
+# Falso positivo revisado (S02): senha fictícia literal em E2E do commit 8f661e0 (visitante anônimo
+# tentando criar conta; requisição sempre negada), substituída por strongTestPassword() no commit 1b5e66d.
+8f661e0514f0e4618f21951ff99e24ce246ba165:tests/e2e/home.e2e.spec.ts:generic-api-key:192

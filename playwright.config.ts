@@ -43,6 +43,10 @@ export default defineConfig({
       PAYLOAD_SECRET: process.env.PAYLOAD_SECRET ?? '',
       BASIC_AUTH_USER: '',
       BASIC_AUTH_PASSWORD: '',
+      // Bucket de TESTE no MinIO (nunca R2) e sem Sentry nos E2E.
+      S3_BUCKET: process.env.S3_BUCKET ?? '',
+      S3_PREFIX: '',
+      SENTRY_DSN: '',
     },
   },
 })

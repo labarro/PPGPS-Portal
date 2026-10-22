@@ -2,7 +2,7 @@
 
 Portal acadêmico do **Grupo de Pesquisa em Bioética e Promoção da Saúde - Unicesumar** (DGP/CNPq), publicado como iniciativa do grupo, com foco em Bioética e Promoção da Saúde. Não é site oficial da UniCesumar nem do PPGPS. O nome do repositório (`PPGPS-Portal`) é apenas técnico.
 
-> Situação: **S00 e S01 concluídas** (22/10/2026); próxima sprint **S02** (ver [`docs/PROGRESS.md`](./docs/PROGRESS.md)). Planejamento **v1.3**.
+> Situação: **S00 e S01 concluídas**; **S02 executada** (autenticação, papéis, auditoria, storage R2, e-mail, Sentry, backup e base visual) — ver [`docs/PROGRESS.md`](./docs/PROGRESS.md). Planejamento **v1.3**.
 
 Stack: Next.js 16 (App Router) + Payload CMS 3 + PostgreSQL 18 (Neon nos ambientes publicados), TypeScript estrito, pnpm. Versões fixadas no [ADR-0007](./docs/adr/0007-versoes-fixadas.md).
 
@@ -10,7 +10,7 @@ Stack: Next.js 16 (App Router) + Payload CMS 3 + PostgreSQL 18 (Neon nos ambient
 
 - **Node.js 24 LTS** (`.nvmrc`) — ex.: `nvm use`
 - **pnpm 10** — `corepack enable` (usa a versão do `packageManager`) ou `npm i -g pnpm@10`
-- **Docker** com Docker Compose (Postgres e MinIO locais)
+- **Docker** com Docker Compose (Postgres, MinIO e Mailpit locais)
 
 ## Setup local (máquina limpa)
 
@@ -18,23 +18,23 @@ Stack: Next.js 16 (App Router) + Payload CMS 3 + PostgreSQL 18 (Neon nos ambient
 git clone https://github.com/labarro/PPGPS-Portal.git
 cd PPGPS-Portal
 pnpm install          # dependências + hooks do Husky
-pnpm db:up            # gera .env local (se não existir) e sobe Postgres 18 + MinIO
+pnpm db:up            # gera/completa .env local, sobe Postgres 18 + MinIO + Mailpit e cria os buckets
 pnpm migrate          # aplica as migrations versionadas
 pnpm dev              # http://localhost:3000
 ```
 
-1. Acesse <http://localhost:3000/admin> e crie o **primeiro usuário** administrador.
+1. Acesse <http://localhost:3000/admin> e crie o **primeiro usuário** (vira `admin`). Senha: ≥ 12 caracteres, não comum.
 2. Opcional: `pnpm seed` cria a conta **fictícia** `SEED_ADMIN_EMAIL` com a senha `SEED_ADMIN_PASSWORD` do `.env` (rode antes de criar o primeiro usuário se quiser usá-la).
 
 O `.env` local é gerado por `pnpm env:local` (chamado por `pnpm db:up`) a partir de `.env.example`, com senhas e `PAYLOAD_SECRET` aleatórios. Ele nunca é versionado e só aponta para os serviços do Docker — **nunca** use URLs do Neon localmente.
 
-Serviços locais: Postgres em `127.0.0.1:5432` (bancos `ppgps` e `ppgps_test`), MinIO em `127.0.0.1:9000` (console `:9001`; usado pelo storage a partir da S02). Para recriar do zero: `docker compose down -v && pnpm db:up && pnpm migrate`.
+Serviços locais: Postgres em `127.0.0.1:5432` (bancos `ppgps` e `ppgps_test`), MinIO em `127.0.0.1:9000` (console `:9001`; buckets `ppgps-local` e `ppgps-test`) e Mailpit em `127.0.0.1:1025` (SMTP) / <http://localhost:8025> (e-mails capturados, ex.: recuperação de senha). Para recriar do zero: `docker compose down -v && pnpm db:up && pnpm migrate`.
 
 ## Comandos
 
 | Objetivo | Comando |
 |---|---|
-| Subir / parar Postgres + MinIO | `pnpm db:up` / `pnpm db:down` |
+| Subir / parar Postgres + MinIO + Mailpit | `pnpm db:up` / `pnpm db:down` |
 | Gerar `.env` local | `pnpm env:local` |
 | Desenvolvimento | `pnpm dev` |
 | Aplicar migrations | `pnpm migrate` |
@@ -55,7 +55,7 @@ Verificação antes de abrir PR:
 pnpm lint && pnpm typecheck && pnpm test && pnpm test:e2e && pnpm build
 ```
 
-Os testes de integração e E2E usam o banco `ppgps_test` (`DATABASE_URL_TEST`); o E2E sobe o app na porta 3100.
+Os testes de integração e E2E usam o banco `ppgps_test` (`DATABASE_URL_TEST`), o bucket `ppgps-test` do MinIO e o Mailpit; **nunca** o R2. O E2E sobe o app na porta 3100.
 
 ## Alterando o schema
 
@@ -78,12 +78,12 @@ Migrations rodam sempre em job próprio, com `concurrency` por ambiente, **antes
 
 ### Configuração do GitHub (supervisor)
 
-Variáveis do repositório (*Settings → Secrets and variables → Actions → Variables*): `NEON_PROJECT_ID`, `VERCEL_ORG_ID`, `VERCEL_PROJECT_ID`, `STAGING_DOMAIN`.
+Variáveis do repositório (*Settings → Secrets and variables → Actions → Variables*): `NEON_PROJECT_ID`, `VERCEL_ORG_ID`, `VERCEL_PROJECT_ID`, `STAGING_DOMAIN`, `R2_ACCOUNT_ID`, `R2_ENDPOINT`, `R2_REGION`, `BACKUP_AGE_RECIPIENT` (chave pública age); opcional `EMAIL_SMTP_IS_SANDBOX`.
 
 | GitHub Environment | Segredos |
 |---|---|
-| `preview` | `NEON_API_KEY`, `PAYLOAD_SECRET`, `BASIC_AUTH_USER`, `BASIC_AUTH_PASSWORD`, `VERCEL_TOKEN`, opcionais `SEED_ADMIN_EMAIL`/`SEED_ADMIN_PASSWORD` (fictícios), `VERCEL_AUTOMATION_BYPASS_SECRET` |
-| `staging` | `DATABASE_URL` (direta), `DATABASE_URL_POOLED`, `PAYLOAD_SECRET`, `BASIC_AUTH_USER`, `BASIC_AUTH_PASSWORD`, `VERCEL_TOKEN`, opcional `VERCEL_AUTOMATION_BYPASS_SECRET` |
+| `preview` | `NEON_API_KEY`, `PAYLOAD_SECRET`, `BASIC_AUTH_USER`, `BASIC_AUTH_PASSWORD`, `VERCEL_TOKEN`, `R2_BUCKET` (`ppgps-preview`), `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`, `SEED_ADMIN_EMAIL`/`SEED_ADMIN_PASSWORD` (fictícios; senha ≥ 12), `VERCEL_AUTOMATION_BYPASS_SECRET`, opcional `SENTRY_DSN` |
+| `staging` | `DATABASE_URL` (direta), `DATABASE_URL_POOLED`, `PAYLOAD_SECRET`, `BASIC_AUTH_USER`, `BASIC_AUTH_PASSWORD`, `VERCEL_TOKEN`, `R2_BUCKET` (`ppgps-staging`), `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`, `VERCEL_AUTOMATION_BYPASS_SECRET`, opcionais `SENTRY_DSN`, `SMTP_HOST`/`SMTP_PORT`/`SMTP_USER`/`SMTP_PASSWORD` (caixa de captura) |
 | `production` (a criar; revisores obrigatórios indisponíveis no plano GitHub Free com repositório privado — ADR-0009) | `NEON_API_KEY`, `DATABASE_URL`, `DATABASE_URL_POOLED`, `PAYLOAD_SECRET`, `VERCEL_TOKEN` |
 
 Cada ambiente usa valores **distintos** de `PAYLOAD_SECRET` e de autenticação básica. Enquanto os segredos não existirem, os workflows de preview/homologação apenas emitem aviso e não fazem deploy.

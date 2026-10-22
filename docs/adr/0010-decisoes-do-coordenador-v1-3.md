@@ -2,11 +2,11 @@
 
 | Campo | Valor |
 |---|---|
-| Status | Proposto. As decisões de produto já estão em vigor por determinação do responsável técnico em 22/10/2026; falta o aceite formal desta redação |
+| Status | **Aceito** |
 | Data | 22/10/2026 |
 | Sprint | Entre S01 e S02 (planejamento v1.3) |
 | Autor | Agente (registro das decisões informadas pelo coordenador e determinadas pelo responsável técnico) |
-| Aprovação | — |
+| Aprovação | Responsável técnico (supervisor), 22/10/2026 — aprovação expressa no prompt de execução da S02 |
 
 ## Contexto
 

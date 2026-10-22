@@ -13,6 +13,8 @@ const appEnv = resolveAppEnv(process.env.APP_ENV)
 
 const nextConfig: NextConfig = {
   poweredByHeader: false,
+  // Ambiente lógico exposto ao cliente (somente o nome; nunca segredos) — usado pelo Sentry.
+  env: { NEXT_PUBLIC_APP_ENV: appEnv },
   images: {
     localPatterns: [
       {
@@ -24,7 +26,7 @@ const nextConfig: NextConfig = {
     return [
       {
         source: '/:path*',
-        headers: securityHeaders(appEnv),
+        headers: securityHeaders(appEnv, { cspReportUri: process.env.CSP_REPORT_URI || null }),
       },
     ]
   },
