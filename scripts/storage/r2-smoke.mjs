@@ -14,6 +14,7 @@ import {
   DeleteObjectCommand,
   GetObjectCommand,
   HeadObjectCommand,
+  ListObjectsV2Command,
   PutObjectCommand,
   S3Client,
 } from '@aws-sdk/client-s3'
@@ -84,6 +85,17 @@ try {
     gone = error?.$metadata?.httpStatusCode === 404 || error?.name === 'NotFound'
   }
   step('exclusão (DeleteObject + HeadObject 404)', gone)
+
+  // Isolamento (ADR-0011): a credencial da aplicação não deve alcançar o bucket de backups.
+  // Só alerta (não bloqueia o deploy): o reescopo do token é feito no painel da Cloudflare.
+  try {
+    await client.send(new ListObjectsV2Command({ Bucket: 'ppgps-backups', MaxKeys: 1 }))
+    console.log(
+      '::warning::[r2-smoke] A credencial deste ambiente ALCANÇA o bucket ppgps-backups. Restrinja o token R2 ao bucket do ambiente.',
+    )
+  } catch {
+    console.log('OK   credencial sem acesso ao bucket ppgps-backups')
+  }
 } catch (error) {
   step(
     'operação no bucket',

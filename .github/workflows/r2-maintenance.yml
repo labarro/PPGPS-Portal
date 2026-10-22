@@ -9,10 +9,6 @@ on:
   schedule:
     - cron: '23 7 1 * *'
   workflow_dispatch:
-  pull_request:
-    paths:
-      - '.github/workflows/r2-maintenance.yml'
-      - 'scripts/storage/r2-maintenance.mjs'
 
 permissions:
   contents: read
@@ -24,7 +20,6 @@ concurrency:
 jobs:
   audit:
     name: R2 (${{ matrix.environment }})
-    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
     runs-on: ubuntu-24.04
     timeout-minutes: 10
     strategy:
