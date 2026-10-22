@@ -51,7 +51,7 @@ describe('Autenticação: senha, bloqueio, limite de taxa, sessão e recuperaç�
         await expect(
           payload.login({
             collection: 'users',
-            data: { email: account.email, password: 'Errada-Senha-123' },
+            data: { email: account.email, password: strongTestPassword() },
           }),
         ).rejects.toThrow()
       }

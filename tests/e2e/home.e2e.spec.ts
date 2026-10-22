@@ -1,6 +1,8 @@
 import AxeBuilder from '@axe-core/playwright'
 import { expect, type Page, test } from '@playwright/test'
 
+import { strongTestPassword } from '../helpers/test-env'
+
 const GROUP_NAME = 'Grupo de Pesquisa em Bioética e Promoção da Saúde - Unicesumar'
 const SHORT_NAME = 'Bioética e Promoção da Saúde'
 
@@ -189,7 +191,7 @@ test.describe('API', () => {
     expect(
       (
         await request.post('/api/users', {
-          data: { email: 'x@example.com', password: 'Qualquer-Coisa-123' },
+          data: { email: 'x@example.com', password: strongTestPassword() },
         })
       ).status(),
     ).toBe(403)

@@ -265,9 +265,9 @@ export async function down({ db }: MigrateDownArgs): Promise<void> {
   DROP TABLE "footer_locales" CASCADE;
   DROP TABLE "site_settings" CASCADE;
   DROP TABLE "site_settings_locales" CASCADE;
-  ALTER TABLE "payload_locked_documents_rels" DROP CONSTRAINT "payload_locked_documents_rels_documents_fk";
+  ALTER TABLE "payload_locked_documents_rels" DROP CONSTRAINT IF EXISTS "payload_locked_documents_rels_documents_fk";
   
-  DROP INDEX "payload_locked_documents_rels_documents_id_idx";
+  DROP INDEX IF EXISTS "payload_locked_documents_rels_documents_id_idx";
   ALTER TABLE "users" DROP COLUMN "name";
   ALTER TABLE "users" DROP COLUMN "active";
   ALTER TABLE "users" DROP COLUMN "last_login_at";

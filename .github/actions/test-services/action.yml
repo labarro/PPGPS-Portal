@@ -9,7 +9,9 @@ runs:
     - name: Subir MinIO e Mailpit
       shell: bash
       run: |
-        docker run -d --name minio -p 9000:9000 \
+        # Imagem distroless sem root: /data precisa ser um volume gravável (como no docker-compose).
+        docker volume create minio-ci-data >/dev/null
+        docker run -d --name minio -p 9000:9000 -v minio-ci-data:/data \
           -e MINIO_ROOT_USER=ci -e MINIO_ROOT_PASSWORD=ci-minio-secret \
           cgr.dev/chainguard/minio@sha256:32c504bea4574d8f29d719b37bc0dad920ecf3e22b81dc5cea0bb105af2ce10f \
           server /data
@@ -21,6 +23,12 @@ runs:
             && curl -fsS http://localhost:8025/api/v1/info >/dev/null 2>&1 && break
           sleep 1
         done
+        if ! curl -fsS http://localhost:9000/minio/health/live >/dev/null 2>&1; then
+          echo "::error::MinIO não respondeu"; docker logs minio 2>&1 | tail -n 30; exit 1
+        fi
+        if ! curl -fsS http://localhost:8025/api/v1/info >/dev/null 2>&1; then
+          echo "::error::Mailpit não respondeu"; docker logs mailpit 2>&1 | tail -n 30; exit 1
+        fi
         {
           echo "S3_ENDPOINT=http://localhost:9000"
           echo "S3_REGION=us-east-1"

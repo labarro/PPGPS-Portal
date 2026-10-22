@@ -41,8 +41,25 @@ const PNG = Buffer.from(
   'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=',
   'base64',
 )
+// PDF mínimo válido (com xref), o mesmo dos testes automatizados.
 const PDF = Buffer.from(
-  '%PDF-1.4\n1 0 obj<</Type/Catalog/Pages 2 0 R>>endobj\n2 0 obj<</Type/Pages/Kids[3 0 R]/Count 1>>endobj\n3 0 obj<</Type/Page/Parent 2 0 R/MediaBox[0 0 72 72]>>endobj\ntrailer<</Root 1 0 R>>\n%%EOF\n',
+  [
+    '%PDF-1.4',
+    '1 0 obj<</Type/Catalog/Pages 2 0 R>>endobj',
+    '2 0 obj<</Type/Pages/Kids[3 0 R]/Count 1>>endobj',
+    '3 0 obj<</Type/Page/Parent 2 0 R/MediaBox[0 0 72 72]>>endobj',
+    'xref',
+    '0 4',
+    '0000000000 65535 f ',
+    '0000000009 00000 n ',
+    '0000000052 00000 n ',
+    '0000000101 00000 n ',
+    'trailer<</Size 4/Root 1 0 R>>',
+    'startxref',
+    '160',
+    '%%EOF',
+    '',
+  ].join('\n'),
   'latin1',
 )
 const EXE = Buffer.from([0x4d, 0x5a, 0x90, 0, 3, 0, 0, 0, 4, 0, 0, 0, 0xff, 0xff, 0, 0])
@@ -133,8 +150,15 @@ try {
       'application/pdf',
     ),
   })
-  const documentDoc = (await doc.json()).doc
-  check('upload de documento privado', doc.status === 201, `HTTP ${doc.status}`)
+  const docJson = await doc.json()
+  const documentDoc = docJson.doc
+  const docError =
+    docJson.errors?.[0]?.data?.errors?.[0]?.message ?? docJson.errors?.[0]?.message ?? ''
+  check(
+    'upload de documento privado',
+    doc.status === 201,
+    `HTTP ${doc.status}${docError ? ` — ${docError}` : ''}`,
+  )
   if (documentDoc) {
     created.push(`/api/documents/${documentDoc.id}`)
     const anon = await call(`/api/documents/file/${documentDoc.filename}`, {}, { auth: false })
