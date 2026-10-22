@@ -11,10 +11,11 @@
 | Marco corrente | M1 — Primeira publicação |
 | Situação da S00 | **Concluída** (22/10/2026) |
 | Situação da S01 | **Concluída** (22/10/2026) |
-| Próxima sprint | **S02 — Autenticação, papéis, auditoria, storage, backup e base visual** (`docs/sprints/S02.md`, revisada na v1.3) — **apta a iniciar**, seguindo o protocolo do `AGENTS.md` §11. Não iniciada |
+| Situação da S02 | **Executada — aguardando revisão humana** (PR #9 mesclado em `04e19fd`, 22/10/2026). Pendências externas não bloqueantes listadas abaixo |
+| Próxima sprint | S03 — **não iniciar** antes da homologação da S02 pelo supervisor |
 | Última atualização | 22/10/2026 |
 | Planejamento vigente | `docs/PLANEJAMENTO_PORTAL_PPGPS.md` **v1.3** (22/10/2026) |
-| ADRs | 0001–0009 **Aceitos**; 0010 **Proposto** (decisões em vigor por determinação do supervisor; falta aceite formal da redação) |
+| ADRs | 0001–0010 **Aceitos**; 0011 e 0012 **Propostos** (S02) |
 
 ## Situação das sprints
 
@@ -22,7 +23,7 @@
 |---|---|---|---|
 | S00 | Descoberta, regras do projeto e inventário | M1 | **Concluída** (22/10/2026) |
 | S01 | Setup técnico, ambientes e pipeline | M1 | **Concluída** (22/10/2026) |
-| S02 | Autenticação, papéis, auditoria, storage, backup e base visual | M1 | Não iniciada (apta) |
+| S02 | Autenticação, papéis, auditoria, storage, backup e base visual | M1 | **Executada — aguardando revisão humana** (PR #9) |
 | S03 | Portal do grupo: identidade, linhas temáticas e homepage v1 | M1 | Não iniciada |
 | S04 | Integrantes, vínculos e consentimentos | M1 | Não iniciada |
 | S05 | Blog acadêmico e fluxo editorial | M1 | Não iniciada |
@@ -32,6 +33,90 @@
 | S09 | Importação em lote, deduplicação e busca global | M2 | Não iniciada |
 | S10 | Eventos, projetos e impacto social | M2 | Não iniciada |
 | S11 | Consolidação, carga de dados acadêmicos e lançamento do M2 | M2 | Não iniciada |
+
+## Sessão de 22/10/2026 — execução da S02
+
+**Modo:** autônomo, autorizado expressamente pelo supervisor (execução integral da S02, política permanente de PRs — `AGENTS.md` §11.1). ADR-0010 aceito pelo supervisor no mesmo prompt. PR #8 encontrado **já mesclado** (`7b712cd`).
+
+### Incidente encontrado e corrigido
+
+O CI da `main` após o PR #8 (run `39822648395`) **falhou** no `pnpm audit`: vulnerabilidade **crítica** do Next.js (GHSA-2464-fhr4-w9xw, RCE na otimização de imagens com SVG; também GHSA-p3m5-59mp-jv5r, alta). Corrigido atualizando Next 16.3.8 → **16.4.2** (dentro da faixa suportada pelo Payload 3.91). CI da `main` verde após o merge da S02.
+
+### Feito
+
+- **Auth/RBAC:** `users.roles` (`admin`/`editor`), `active`, `name`, `lastLoginAt`; funções puras em `src/access/`; só `admin` cria/exclui contas e altera papéis/ativação (acesso por campo); editor lê/edita só a própria conta; primeiro usuário vira `admin`; proteção do último admin; contas da S01 promovidas a `admin` pela migration. Senha ≥ 12 + lista de senhas comuns/previsíveis; bloqueio 5 tentativas/15 min; limite de taxa por IP (login 10/10 min, recuperação 5/15 min); token de redefinição 1 h de uso único; sessão de 2 h; cookie HttpOnly/SameSite=Lax/Secure; conta nova recebe e-mail para definir a senha.
+- **Auditoria:** `audit-logs` imutável (API nega escrita a todos; gatilho no banco bloqueia UPDATE/TRUNCATE e DELETE de registros com menos de 2 anos); hooks transversais para create/update/delete/login/`role_change` e globals; só nomes de campos, IP truncado.
+- **Storage:** `@payloadcms/storage-s3` — MinIO local/CI; R2 `ppgps-preview` (prefixo `pr-N`, apagado ao fechar o PR) e `ppgps-staging`; bucket privado; arquivos sempre pela rota do app com verificação de acesso; documentos por URL assinada de 5 min; magic bytes, 10/25 MB, SVG/executáveis bloqueados, nomes UUID; `media` com `alt`, `caption`, `credit`, `license`, `source`, `sourceNote`, `containsIdentifiablePeople` (imagens com pessoas não são públicas até a S04); coleção `documents` com `visibility` public/members/admin.
+- **E-mail:** adaptador nodemailer + Mailpit local; captura (descarte com log mascarado) fora da produção sem SMTP; SMTP remoto fora da produção só se declarado como caixa de testes; templates pt-BR; links via `SERVER_URL`/`VERCEL_URL` (nunca `Host`).
+- **Observabilidade/segurança:** Sentry opcional (servidor, edge, cliente) com `beforeSend` removendo PII; endpoint `POST /api/users/sentry-test` (só admin) para o roteiro; CSP completa em *report-only*, COOP, `X-Permitted-Cross-Domain-Policies`.
+- **Backup:** `scripts/backup/` (`pg_dump` → `age` em fluxo; manifesto com contagens; restauração em banco vazio com conferência); `backup.yml` (diário) e `restore-check.yml` (mensal, branch Neon temporário). Par de chaves `age` gerado; pública em variável do repositório, privada no ambiente GitHub `backups` e em `.secrets/` para o cofre.
+- **Base visual:** Tailwind 4 + shadcn/ui (Button, Sheet), tokens em `src/styles/tokens.css` (azul-marinho `#0b2545` e branco; contraste AA testado em 17 pares), Inter + Source Serif 4 via `next/font`; Header com wordmark (nome completo / curto no celular), menu móvel, Footer, SkipLink, Breadcrumbs, EmptyState, 404 (com rota coringa), `error` e `global-error`; globals `navigation`, `footer`, `site-settings` (grupo técnico só para admin). Texto "portal não oficial" removido da página e do E2E.
+- **CI/CD:** MinIO + Mailpit nos jobs de integração/E2E; preview e homologação recebem storage/SMTP/Sentry por `vercel deploy --env` (somente servidor); verificação real do R2 a cada deploy; fumaça de armazenamento pelo app no preview; limpeza do prefixo do PR. Variáveis `R2_ACCOUNT_ID`, `R2_ENDPOINT`, `R2_REGION`, `BACKUP_AGE_RECIPIENT` cadastradas; ambiente `backups` criado com `BACKUP_AGE_IDENTITY` e `NEON_API_KEY`.
+- **Docs:** ADR-0010 → Aceito; ADR-0011 e ADR-0012 (Propostos); `docs/operacao/armazenamento.md` e `backup.md`; README, `.env.example`, `AGENTS.md` (§3 e nova §11.1) e `CLAUDE.md`.
+
+### Migration
+
+`20261022_180524_s02_auth_audit_storage_globals` — aditiva (expand). Migração de dados idempotente (contas sem papel → `admin`) e gatilho de imutabilidade. `down` corrigido para ser idempotente. Comprovado: banco limpo, *drift*, `down`/`up` (local e CI), aplicada em `preview/pr-9`, `seed` e `staging` (staging tinha 0 usuários/0 mídias antes).
+
+### Testes executados (22/10/2026)
+
+| Verificação | Local | CI (PR #9 e `main`) |
+|---|---|---|
+| lint / format / typecheck | Passou | Passou |
+| Unitários | 129/129; cobertura 98% linhas (`src/access`, `src/hooks`, `src/lib`) | Passou |
+| Integração (Postgres + MinIO + Mailpit) | 60/60 — RBAC por papel e anônimo, senha, bloqueio, limite de taxa, sessão, recuperação (e-mail capturado, 1 h, uso único, expirado), auditoria (inclusive imutabilidade no banco), upload/download MinIO, `.exe`→`.jpg`, SVG, >10 MB, >25 MB, campos obrigatórios, documento privado negado e URL assinada, vazamento | Passou |
+| E2E (Playwright + axe) | 16/16 — identidade, sem logotipos, SkipLink, foco visível, axe desktop/320 px/menu aberto/404, menu móvel por teclado com foco preso e Esc, 404, API anônima | Passou |
+| Build sem banco | Passou | Passou |
+| `migrations-check` | Passou | Passou |
+| gitleaks / `pnpm audit` | — | Passou (falso positivo de commit intermediário registrado em `.gitleaksignore`) |
+| R2 real — direto (`r2-smoke`) | — | preview `pr-9` e staging: escrita, leitura, URL assinada, acesso sem assinatura negado (HTTP 400), exclusão — OK |
+| R2 real — pelo app implantado (preview) | — | login (conta fictícia do seed), upload com nome UUID, download público, `.exe` rejeitado (400), documento privado 403 ao visitante, 302 para URL assinada do R2 (`X-Amz-Expires=300`), download 200, sem assinatura negado, auditoria, limpeza — OK |
+| Backup criptografado de homologação | Ciclo local (25 tabelas, 0 divergências) | Run `39838271079`: `staging-20261022T191411Z.dump.age`, 86 105 bytes, 22 s |
+| Restauração em branch temporário | — | Run `39839034470`: branch `restore-check-39839034470` criado de `seed`, banco vazio, **restauração em 45 s** (76 s com verificações), 0 tabelas divergentes, 2 migrations, 0 FKs inválidas; branch removido |
+| Homologação após o merge | `curl` independente: 401 sem basic auth, 200 com credenciais, `noindex`, CSP report-only, COOP, HSTS, nome do grupo no HTML, 0 `<img>`, 404, `/api/users` e `/api/audit-logs` 403, `forgot-password` 200, GraphQL 404 | `deploy-staging` run `39838192242` verde (migrate, seed, R2, deploy, fumaça, alias) |
+| Branches Neon após tudo | — | `production` (última atualização 21/10, **intocada**), `staging`, `seed`; `preview/pr-9` e `restore-check-*` removidos |
+
+### Critérios de aceite da S02
+
+| Critério | Situação | Evidência |
+|---|---|---|
+| Editor não cria usuários, não altera papéis/configurações técnicas e lê a auditoria; anônimo sem admin/APIs de escrita | **Atendido** | `rbac.int.test.ts`; E2E API |
+| Sem cadastro público nem `researcher`; só admin cria contas | **Atendido** | `rbac.int.test.ts`, `access.test.ts` |
+| Bloqueio de 15 min após 5 tentativas | **Atendido** | `auth.int.test.ts` |
+| E-mail de recuperação capturado em homologação e link expira em 1 h | **Parcial** | Local/CI: Mailpit captura, 1 h e expiração comprovados. Homologação: sem SMTP de captura configurado, a mensagem é **descartada** com log mascarado (comportamento seguro), não visualizável. Pendência: caixa de captura gratuita |
+| Toda criação/edição/exclusão gera auditoria com usuário, coleção, documento e data | **Atendido** | `audit.int.test.ts`; fumaça do preview |
+| `.exe` renomeado rejeitado; imagem sem alt/crédito/licença/origem não é salva | **Atendido** | integração e preview real |
+| Backup gerado, criptografado e restaurado em branch temporário, com tempo | **Atendido** (envio ao bucket pendente) | Runs `39838271079` e `39839034470` (45 s). Arquivo guardado como artefato cifrado: faltam credenciais exclusivas do `ppgps-backups` |
+| Erro forçado aparece no Sentry sem e-mail/PII | **Pendente (externo)** | Código e testes unitários do scrubbing prontos; **sem `SENTRY_DSN`** cadastrado não há evento real |
+| Menu mobile por teclado, Esc, foco visível, axe | **Atendido** | E2E |
+| Tokens AA; cabeçalho com o nome do grupo; sem logotipos (E2E) | **Atendido** | `audit-and-tokens.test.ts`; E2E; homologação |
+
+### Decisões
+
+1. Mídia servida pelo app (rota com controle de acesso); documentos por URL assinada de 5 min; bucket sempre privado (ADR-0011).
+2. Limite de taxa em memória por instância, aceito com o bloqueio por conta como controle principal.
+3. Fora da produção sem SMTP, e-mails são descartados (nunca enviados); SMTP remoto só se declarado como caixa de testes.
+4. `members` tratado como restrito enquanto não houver contas de integrantes (Q5).
+5. Imagens com pessoas identificáveis não são públicas até existir `media.consentRecord` (S04).
+6. Backup sem credenciais de bucket fica como artefato cifrado do GitHub (7 dias) — nunca em claro.
+
+### Pendências externas (supervisor)
+
+1. **Credenciais exclusivas do bucket `ppgps-backups`**: os segredos `R2_BACKUP_ACCESS_KEY_ID` e `R2_BACKUP_SECRET_ACCESS_KEY` **não foram encontrados** em nenhum ambiente (verificado: `preview`, `staging`, repositório). Criar token R2 com escopo só nesse bucket e cadastrar no ambiente GitHub **`backups`** (criado nesta sessão); opcional `R2_BACKUP_BUCKET`.
+2. **Chave privada `age`**: guardar `.secrets/backup-age-identity.txt` no cofre (com cópia selada) e apagar da máquina, junto com os demais arquivos de `.secrets/`.
+3. **Sentry**: criar projeto no plano gratuito e cadastrar `SENTRY_DSN` nos ambientes `preview`/`staging`; depois executar o passo 8 do roteiro (`POST /api/users/sentry-test` como admin).
+4. **E-mail em homologação**: se desejar visualizar e-mails, configurar caixa de captura gratuita (ex.: Mailtrap Sandbox) com `SMTP_*` no ambiente `staging` e variável `EMAIL_SMTP_IS_SANDBOX=true`. Sem isso o fluxo funciona, mas a mensagem é descartada.
+5. **R2**: regra de ciclo de vida de 7 dias no `ppgps-preview`; confirmar `r2.dev`/domínio público desativados nos 3 buckets; acompanhar métricas mensais.
+6. **Roteiro de homologação da S02** (ficha, passos 1–10), com a conta fictícia do seed no preview ou criando a conta `admin` real em homologação (o banco `staging` não tem usuários).
+7. Aceitar/ajustar ADR-0011 e ADR-0012.
+8. Dependabot abriu novos PRs de actions após o merge (atualizações *major*); decidir junto com os PRs #3–#6.
+
+### Riscos e limitações registrados
+
+- **Vercel Hobby:** uploads acima de ~4,5 MB falham na plataforma antes do app; limites de 10/25 MB valem no local/CI. Decidir na S06 (upload direto com CORS ou outra hospedagem) — ADR-0011.
+- **Custo R2:** faixa gratuita não garante custo zero; consumo da S02 ≈ dezenas de operações e < 1 MB. Testes repetitivos usam só MinIO.
+- Limite de taxa não é compartilhado entre instâncias serverless.
+- Nenhum deploy de produção; `PRODUCTION_DEPLOY_ENABLED` não definida; branch `production` do Neon intocada.
 
 ## Sessão de 22/10/2026 — aprovações, respostas Q1–Q12 e planejamento v1.3
 
@@ -139,13 +224,9 @@
 
 ### Ações manuais do supervisor
 
-1. **Aceitar (ou ajustar) o ADR-0010.** As decisões já estão em vigor por sua determinação, mas a redação está "Proposto".
-2. **Revisar e mesclar o PR desta sessão** (branch `docs-v1-3-aprovacoes`; documentação v1.3).
-3. **Pré-requisitos da S02:** criar contas e credenciais por ambiente e gravá-las nos GitHub Environments:
-   - Cloudflare R2: buckets `ppgps-preview`, `ppgps-staging`, `ppgps-backups`;
-   - Sentry;
-   - provedor de e-mail;
-   - chave `age` de backup em cofre.
+1. ~~Aceitar o ADR-0010~~ — **feito** (22/10/2026).
+2. ~~Mesclar o PR da v1.3~~ — **feito** (PR #8).
+3. Pré-requisitos da S02: R2 (`ppgps-preview`, `ppgps-staging`) **feito**; credenciais exclusivas do `ppgps-backups`, Sentry, e-mail de captura e cofre da chave `age` **pendentes** (ver "Pendências externas" da sessão da S02).
 4. **Proteção da `main`:** decidir entre GitHub Pro/Team, repositório público ou manter os controles compensatórios (ADR-0009; `convencoes-git.md` §5).
 5. **Ambiente `production`:** criar com segredos próprios quando for o momento (até a S06). **Não** definir `PRODUCTION_DEPLOY_ENABLED` antes da S06.
 6. **Guardar em cofre e apagar `.secrets/`** da máquina do agente.
@@ -387,7 +468,7 @@ Stack (Next.js + Payload 3 + PostgreSQL + R2), monólito modular, ADR-0001/0002/
 
 ## Próximos passos
 
-1. Supervisor: aceitar o ADR-0010 e mesclar o PR da v1.3.
-2. Supervisor: providenciar as contas técnicas da S02 (R2, Sentry, e-mail, chave de backup).
-3. Agente: iniciar a **S02** pelo protocolo do `AGENTS.md` §11 (plano curto → confirmação → branch `s02-...`).
+1. Supervisor: resolver as pendências externas da S02 (credenciais do bucket de backups, cofre da chave `age`, Sentry, captura de e-mail opcional, ciclo de vida do R2) e executar o roteiro de homologação da S02.
+2. Supervisor: aceitar/ajustar ADR-0011 e ADR-0012 e marcar a S02 como **Concluída**.
+3. Agente: iniciar a **S03** somente após essa homologação, pelo protocolo do `AGENTS.md` §11.
 4. Em paralelo, o coordenador fornece os itens institucionais em aberto (textos para a S03; controlador, canal do titular e autorizações para a S04).
