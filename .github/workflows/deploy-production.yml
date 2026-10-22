@@ -1,7 +1,8 @@
 name: Deploy de produção (release aprovada)
 
-# Somente por tag vX.Y.Z na main, com aprovação manual no GitHub Environment `production`
-# (revisores obrigatórios configurados pelo supervisor). Agentes nunca disparam este fluxo.
+# Somente por tag vX.Y.Z na main, disparado pelo dono do repositório com a variável
+# PRODUCTION_DEPLOY_ENABLED=true e, quando o plano permitir, aprovação manual no GitHub
+# Environment `production` (revisores obrigatórios). Agentes nunca disparam este fluxo.
 # Ordem (ADR-0005): ponto de restauração -> migrate (trava de concorrência) -> deploy -> fumaça.
 # Publicação pública só a partir da S06 (domínio, remoção de noindex, decisão de hospedagem).
 on:
@@ -30,6 +31,23 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 5
     steps:
+      # Trava independente do plano do GitHub: em repositório privado no plano Free, ambientes
+      # não aceitam revisores obrigatórios. Só o supervisor define PRODUCTION_DEPLOY_ENABLED
+      # (Settings → Variables) e só o dono do repositório pode disparar o deploy.
+      - name: Trava de produção (habilitação explícita do supervisor)
+        env:
+          ENABLED: ${{ vars.PRODUCTION_DEPLOY_ENABLED }}
+          ACTOR: ${{ github.actor }}
+          OWNER: ${{ github.repository_owner }}
+        run: |
+          if [[ "$ENABLED" != "true" ]]; then
+            echo "::error::Deploy de produção desabilitado (variável PRODUCTION_DEPLOY_ENABLED != true)."
+            exit 1
+          fi
+          if [[ "$ACTOR" != "$OWNER" ]]; then
+            echo "::error::Somente o dono do repositório ($OWNER) pode disparar o deploy de produção."
+            exit 1
+          fi
       - uses: actions/checkout@v5
         with:
           fetch-depth: 0
