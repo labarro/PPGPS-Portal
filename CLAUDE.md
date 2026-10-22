@@ -4,7 +4,7 @@
 
 ## Escopo em uma frase
 
-Portal **do grupo de pesquisa "Bioética e Promoção da Saúde"** e de suas atividades/laboratório — **não** do PPGPS nem da UniCesumar, que são apenas referências contextuais (planejamento v1.2, ADR-0006).
+Portal do **"Grupo de Pesquisa em Bioética e Promoção da Saúde - Unicesumar"**, publicado como iniciativa do grupo, com foco em Bioética e Promoção da Saúde. **Não** é portal do PPGPS nem da UniCesumar, que são apenas referências textuais (planejamento v1.3, ADR-0006, ADR-0010).
 
 ## Ordem de leitura ao iniciar qualquer sessão
 
@@ -25,8 +25,9 @@ Não dependa do histórico de conversas anteriores; se algo não está nos arqui
 - **Commits e push:** siga `docs/convencoes-git.md`. Instruções da sessão prevalecem (ex.: "não faça commit"). Nunca faça `push --force`, nunca altere configuração do git, nunca pule hooks.
 - **Ações externas:** nunca envie mensagens, e-mails ou formulários à universidade, aos integrantes do grupo ou a terceiros; nunca acesse ambientes de produção.
 - **Dados institucionais:** não invente; registre fonte e data; marque divergências como provisórias (AGENTS.md §9.1).
-- **Escopo do grupo:** não modele nem carregue docentes, grupos, linhas ou produção do PPGPS que não pertençam ao grupo; não use logotipos ou identidade visual da UniCesumar/PPGPS/CNPq; mantenha o aviso de portal não oficial.
-- **Autorização:** a aprovação conceitual do responsável pelo grupo **não** autoriza publicar o site, usar marcas ou exibir dados pessoais. Trate essas permissões como pendentes até estarem registradas em `docs/content/questoes-institucionais.md`.
+- **Escopo do grupo:** não modele nem carregue docentes, grupos, linhas ou produção do PPGPS que não pertençam ao grupo; não use logotipos ou identidade visual da UniCesumar/PPGPS/CNPq; não inclua o laboratório (Q6). Não há aviso ostensivo de portal não oficial (Q1).
+- **Acesso:** só existem os papéis `admin` (desenvolvedor) e `editor` (coordenador); não crie `researcher`, contas de integrantes ou login de visitantes (Q5).
+- **Autorização:** as respostas do coordenador (Q1–Q12, em `docs/content/questoes-institucionais.md`) valem com as limitações registradas. A autorização do grupo **não** substitui o consentimento individual de cada titular nem autoriza logotipos institucionais.
 - **Fim da sessão:** atualize `docs/PROGRESS.md` (feito, em andamento, decisões, pendências, próximos passos) e apresente um resumo com critérios atendidos e pendentes.
 
 ## Ferramentas MCP disponíveis no ambiente do supervisor
@@ -41,5 +42,5 @@ Não dependa do histórico de conversas anteriores; se algo não está nos arqui
 - Nada de Prisma, GraphQL público ou `dangerouslySetInnerHTML` com rich text.
 - Nada de migrations no `next build`; nada de `push` de schema fora do banco local.
 - Nada de dados reais de pessoas em fixtures; nenhum perfil público sem consentimento (inclusive docentes e líderes).
-- Nada de coleções `programs`/`research-groups`, papel `group_manager` ou chave de grupo nas entidades (grupo único = global `GroupProfile`).
+- Nada de coleções `programs`/`research-groups`, papéis `group_manager`/`researcher` ou chave de grupo nas entidades (grupo único = global `GroupProfile`).
 - Toda coleção nova com dados não públicos exige teste de vazamento.

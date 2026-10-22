@@ -2,11 +2,18 @@
 
 | Campo | Valor |
 |---|---|
-| Status | Proposto (aguarda aceite do supervisor; conferido para o escopo do grupo em 20/10/2026, sem mudança de decisão) |
+| Status | **Aceito** |
 | Data | 19/10/2026 |
 | Sprint | S00 |
 | Autor | Agente |
-| Aprovação | — |
+| Aprovação | Responsável técnico (supervisor), 22/10/2026 — aprovação expressa dos ADRs 0001–0009 |
+
+
+> **Notas de 22/10/2026:**
+> 1. A branch Neon de produção chama-se `production` (ADR-0009).
+> 2. As migrations rodam em transação **por migration**, não por lote (ADR-0008): uma falha em lote com várias migrations mantém as anteriores aplicadas.
+> 3. A aprovação manual de produção por ambiente GitHub é indisponível no plano Free com repositório privado; há trava compensatória (ADR-0009).
+> 4. O `pg_dump` do ponto de restauração entra com o backup da S02.
 
 ## Contexto
 

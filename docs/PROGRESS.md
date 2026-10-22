@@ -1,4 +1,4 @@
-# PROGRESS — Portal Acadêmico do grupo "Bioética e Promoção da Saúde"
+# PROGRESS — Portal do Grupo de Pesquisa em Bioética e Promoção da Saúde - Unicesumar
 
 > Memória entre sessões (planejamento 29.1 e 29.4). Atualizado ao fim de cada sessão de agente.
 > Uma sessão nova deve ler, nesta ordem: `AGENTS.md` → este arquivo → ficha da sprint ativa em `docs/sprints/`.
@@ -7,33 +7,164 @@
 
 | Campo | Valor |
 |---|---|
-| Escopo | **Portal exclusivo do grupo de pesquisa "Bioética e Promoção da Saúde"** e de suas atividades/laboratório. UniCesumar e PPGPS são apenas referências contextuais (ADR-0006) |
+| Escopo | Portal exclusivo do **"Grupo de Pesquisa em Bioética e Promoção da Saúde - Unicesumar"**, publicado como iniciativa do grupo, com foco em Bioética e Promoção da Saúde. UniCesumar e PPGPS apenas como referências textuais, sem logotipos. Laboratório fora do escopo atual (ADR-0006, ADR-0010) |
 | Marco corrente | M1 — Primeira publicação |
-| Última sprint executada | **S01 — Setup técnico, ambientes e pipeline** |
-| Situação da S01 | **Executada — aguardando revisão humana** (não concluída): falta a validação em máquina limpa pelo supervisor e o merge do PR #7 |
-| Situação da S00 | **Executada — aguardando revisão humana** (não concluída): Q1–Q12 não enviadas/registradas |
-| Próxima sprint | S02 — **não apta a iniciar** (dependências S00/S01 não concluídas) |
+| Situação da S00 | **Concluída** (22/10/2026) |
+| Situação da S01 | **Concluída** (22/10/2026) |
+| Próxima sprint | **S02 — Autenticação, papéis, auditoria, storage, backup e base visual** (`docs/sprints/S02.md`, revisada na v1.3) — **apta a iniciar**, seguindo o protocolo do `AGENTS.md` §11. Não iniciada |
 | Última atualização | 22/10/2026 |
-| Planejamento vigente | `docs/PLANEJAMENTO_PORTAL_PPGPS.md` **v1.2** |
+| Planejamento vigente | `docs/PLANEJAMENTO_PORTAL_PPGPS.md` **v1.3** (22/10/2026) |
+| ADRs | 0001–0009 **Aceitos**; 0010 **Proposto** (decisões em vigor por determinação do supervisor; falta aceite formal da redação) |
 
 ## Situação das sprints
 
 | Sprint | Nome | Marco | Situação |
 |---|---|---|---|
-| S00 | Descoberta, regras do projeto e inventário | M1 | Executada — aguardando revisão humana |
-| S01 | Setup técnico, ambientes e pipeline | M1 | Executada — aguardando revisão humana |
-| S02 | Autenticação, papéis, auditoria, storage, backup e base visual | M1 | Não iniciada |
-| S03 | Portal do grupo: identidade, linhas, laboratório e homepage v1 | M1 | Não iniciada |
+| S00 | Descoberta, regras do projeto e inventário | M1 | **Concluída** (22/10/2026) |
+| S01 | Setup técnico, ambientes e pipeline | M1 | **Concluída** (22/10/2026) |
+| S02 | Autenticação, papéis, auditoria, storage, backup e base visual | M1 | Não iniciada (apta) |
+| S03 | Portal do grupo: identidade, linhas temáticas e homepage v1 | M1 | Não iniciada |
 | S04 | Integrantes, vínculos e consentimentos | M1 | Não iniciada |
 | S05 | Blog acadêmico e fluxo editorial | M1 | Não iniciada |
 | S06 | Reauditoria, conteúdo inicial e lançamento do M1 | M1 | Não iniciada |
 | S07 | Orientações, conclusões acadêmicas e egressos | M2 | Não iniciada |
 | S08 | Catálogo de publicações do grupo | M2 | Não iniciada |
 | S09 | Importação em lote, deduplicação e busca global | M2 | Não iniciada |
-| S10 | Eventos, projetos, laboratório e impacto social | M2 | Não iniciada |
+| S10 | Eventos, projetos e impacto social | M2 | Não iniciada |
 | S11 | Consolidação, carga de dados acadêmicos e lançamento do M2 | M2 | Não iniciada |
 
-## Revisão de encerramento formal S00/S01 (22/10/2026)
+## Sessão de 22/10/2026 — aprovações, respostas Q1–Q12 e planejamento v1.3
+
+**Modo:** autônomo, documental (sem código, sem dependências, sem deploy, sem merge de PRs, S02 não iniciada). Branch `docs-v1-3-aprovacoes`.
+
+### Aprovações do responsável técnico (declaração expressa na sessão de 22/10/2026)
+
+| Item | Aprovação | Registro |
+|---|---|---|
+| Teste em ambiente limpo (S01) | **Realizado, validado e aprovado** pelo responsável técnico | Declaração do supervisor; complementa o clone limpo isolado executado pelo agente na sessão anterior (evidência técnica abaixo) |
+| PR #7 | Aprovado e mesclado | Verificado no GitHub nesta sessão (abaixo) |
+| ADR-0001 a ADR-0009 | Revisados e aprovados | Status alterado para **Aceito**, com data e aprovador |
+| Planejamento v1.2 | Aprovado como base do projeto | Base da v1.3 |
+| Escopo | Portal exclusivo do grupo, conforme decisão anterior do coordenador | Reafirma o ADR-0006 |
+
+### Verificações executadas nesta sessão (22/10/2026)
+
+> Distinção: abaixo estão **somente** verificações feitas nesta sessão. Nenhuma suíte automatizada (lint, testes, build, E2E) foi executada pelo agente nesta sessão, que foi puramente documental. Os resultados de testes citados vêm das execuções do CI e de sessões anteriores, identificados como tal.
+
+| Verificação | Evidência | Resultado |
+|---|---|---|
+| PR #7 mesclado | `origin/main` = `b49da2e` ("Merge pull request #7 from labarro/s01-ajuste-deploy-staging") | **Confirmado** |
+| CI na `main` após o merge | Run `39817265399` (commit `b49da2e`) | **Sucesso** |
+| Verificação de migrations na `main` | Run `39817265487` | **Sucesso** |
+| Deploy de homologação na `main` | Runs `39817255542` e `39817265385` (ambos `push` de `b49da2e`; um terceiro, `39817261560`, foi cancelado por concorrência), todos os jobs com sucesso: migrations em `staging`, atualização do `seed`, deploy, fumaça e alias | **Sucesso** |
+| Homologação no ar (`ppgps-portal-staging.vercel.app`, alias → `ppgps-portal-5llwoubom…`) | `curl` nesta sessão | 302 sem bypass (proteção Vercel) · 401 sem autenticação básica · 200 com ambos · `X-Robots-Tag: noindex, nofollow, noarchive` · `/api/graphql` 404 · `/admin` 200 |
+| Branches Neon | `neon branches list` | `production` (padrão, `updated_at` 21/10/2026), `staging`, `seed`. **`preview/pr-7` removido** após o merge (limpeza automática comprovada mais uma vez) |
+| Branch `production` intocada | `neon operations list`: só operações de sistema (criação, configuração inicial e ciclos de start/suspend do compute); última em 20/10/2026 | Nenhuma operação dos pipelines |
+| Trava de produção | `gh variable list` | `PRODUCTION_DEPLOY_ENABLED` **não definida** |
+| Deploy de produção | Histórico de runs | **Nenhum** `deploy-production.yml` executado |
+
+### Feito (documentação)
+
+- **ADRs:** 0001–0009 → **Aceito**; notas de atualização em 0003, 0004, 0005 e 0006 apontando para o novo **ADR-0010** (decisões do coordenador Q1–Q12 e ajustes da v1.3; *Proposto*).
+- **Planejamento v1.3:** cabeçalho, histórico e alterações; seções 1–5 (identidade, iniciativa do grupo, papéis), 6 (RF-004/115 → W, RF-114 → C, RF-003/021/106 revistos), 8 (homepage, laboratório, perfis, orientações, projetos, blog), 9–10 (sitemap sem laboratório; fluxos com dois usuários), 13 (`dgpResearchLines`, `responsibilityNote`, `User.roles` sem `researcher`, `Project` sem `laboratory`, expansão futura), 14 (matriz com dois papéis), 15 (governança), 16 (azul-marinho e branco), 17 (Q4 e Q12 sem dispensar consentimento individual), 18–21, 23, 25 (riscos R1–R3, R9, R15, R17), 30, 31 e 32 (respostas Q1–Q12). Nova seção 19.5.
+- **`docs/content/questoes-institucionais.md`:** reescrito com as respostas, os efeitos, os itens em aberto e as questões complementares sugeridas. **Datas de envio e de resposta não informadas foram registradas como "não informada"**, não inventadas.
+- **`docs/content/inventario.md`:** nome de exibição, linhas temáticas, linhas do DGP como referência histórica, laboratório fora do escopo, identidade visual, próximas ações.
+- **Fichas:** S00 e S01 marcadas como concluídas; S02 reescrita (dois papéis, tokens azul-marinho/branco, sem aviso obrigatório, pré-requisitos de contas técnicas); S03–S11 ajustadas (linhas temáticas, sem laboratório, sem `researcher`, coordenador como curador e revisor).
+- **`AGENTS.md`**, **`CLAUDE.md`**, **`README.md`**, **`docs/convencoes-git.md`** atualizados. A limitação do GitHub Free para proteção da `main` foi registrada com os controles compensatórios.
+
+### Decisões registradas (detalhe no ADR-0010)
+
+1. Publicação como iniciativa do grupo, **sem aviso ostensivo**; `/sobre-o-portal` com identificação discreta (Q1).
+2. Nome "Grupo de Pesquisa em Bioética e Promoção da Saúde - Unicesumar"; azul-marinho e branco; **sem logotipos institucionais** (Q2). Nome curto para títulos: "Bioética e Promoção da Saúde" [PREMISSA a confirmar].
+3. Hospedagem própria e independente do site institucional; domínio a adquirir (Q3).
+4. Autorização do grupo para dados (Q4) e materiais (Q12) registrada **sem dispensar** o consentimento individual e a autorização de imagem.
+5. Somente `admin` (desenvolvedor) e `editor` (coordenador); `researcher` removido; site sem login (Q5, Q8, Q9).
+6. Laboratório fora do escopo atual (Q6).
+7. Linhas temáticas Bioética e Promoção da Saúde; as 4 linhas do DGP ficam como referência histórica (Q7).
+8. Orientações e egressos confirmados, geridos pelos dois usuários (Q10); sem conteúdo prioritário (Q11).
+9. Stack e arquitetura inalteradas; todos os módulos acadêmicos preservados.
+
+## Encerramento formal das sprints S00 e S01 (22/10/2026)
+
+### S00 — **Concluída**
+
+| Critério | Situação | Evidência |
+|---|---|---|
+| `AGENTS.md` com comandos, escopo, migrations, ambientes, testes e protocolo | Atendido | `AGENTS.md` (atualizado na v1.3) |
+| Uma ficha por sprint S01–S11 com as seções exigidas | Atendido | `docs/sprints/S01.md` … `S11.md` |
+| Inventário mínimo com fonte, situação e marco | Atendido | `docs/content/inventario.md` |
+| Validações Q1–Q12 enviadas aos responsáveis (data registrada) | **Atendido com ressalva documental** | As 12 questões foram respondidas pelo coordenador, o que comprova o envio. As respostas foram relatadas pelo responsável técnico em 22/10/2026 e estão registradas em `questoes-institucionais.md` §1. A **data exata de envio e de resposta não foi informada** e não foi inventada |
+| Aprovação do supervisor (DoD da S00) | Atendido | Planejamento v1.2 e ADRs 0001–0009 aprovados em 22/10/2026 |
+
+**Ressalva não bloqueante:** arquivar o registro escrito das respostas do coordenador e anotar a referência em `questoes-institucionais.md` §1. É exigido antes da publicação do M1 (S06).
+
+### S01 — **Concluída**
+
+| Critério | Situação | Evidência |
+|---|---|---|
+| Setup em máquina limpa pelo README | Atendido | **Aprovação do responsável técnico** (22/10/2026); complemento técnico: clone limpo isolado executado pelo agente na sessão anterior (`/admin` 200, primeiro usuário, login/logout, `first-register` repetido → 403) |
+| `/admin` cria o primeiro admin e faz login | Atendido | E2E local e no CI (sessões anteriores); clone limpo; homologação `/admin` 200 (verificado nesta sessão) |
+| PR com schema sem migration falha no CI | Atendido | PR #2 (sessão de 20/10): `DRIFT DETECTADO`; verde com a migration |
+| Dois PRs com bancos distintos; branch removido ao fechar | Atendido | `preview/pr-1` + `preview/pr-2` simultâneos; remoção de `pr-1`, `pr-2` e `pr-7` comprovada (a última nesta sessão) |
+| `next build` sem migrations; migrate em job separado com `concurrency` | Atendido | Job "Build sem acesso ao banco" verde no CI da `main` (`39817265399`); jobs de migrate com `concurrency` |
+| Homologação e previews com autenticação básica, `noindex`; `/api/graphql` 404 | Atendido | Homologação verificada nesta sessão; preview verificado no PR #7 (sessão anterior) |
+| DoD: CI verde, migrations versionadas, controles 17.7, nada antecipado, PROGRESS/ADRs, homologação atualizada | Atendido | Workflows da `main` após o PR #7 verdes; ADRs aceitos |
+
+### Origem dos resultados de testes citados
+
+| Resultado | Quando/onde foi executado |
+|---|---|
+| CI completo (lint, formatação, tipos, unit, integração, E2E com axe, build sem banco, gitleaks, audit) | CI do GitHub no merge do PR #7, run `39817265399` — **verificado nesta sessão** |
+| Verificação de migrations (banco limpo, drift, tipos, down/up) | Run `39817265487` — **verificado nesta sessão** |
+| Deploy e fumaça de homologação | Runs `39817255542` e `39817265385` — **verificados nesta sessão**; `curl` independente nesta sessão |
+| Suíte local (32 testes, 5 E2E, build) e clone limpo isolado | Sessões anteriores de 22/10/2026 — **não reexecutados nesta sessão** |
+| Varredura de segredos (gitleaks no histórico completo e busca de 13 valores reais nos logs de 40 runs) | Sessão anterior de 22/10/2026 — **não reexecutada nesta sessão**; os runs posteriores passaram pelo gitleaks do CI |
+
+## Pendências
+
+### Validações institucionais em aberto (não bloqueiam o desenvolvimento; detalhe em `questoes-institucionais.md` §3 e §5)
+
+| Item | Origem | Necessário até |
+|---|---|---|
+| Registro escrito das respostas do coordenador arquivado (referência em §1) | S00/Q1–Q12 | S06 |
+| Controlador dos dados, canal do titular, termo de autorização individual, regra de orientações concluídas | Q4 | S04 (publicação dos perfis) |
+| Lista nominal de integrantes e ex-integrantes com autorizações individuais, ORCID e Lattes | Q4/Q5 | S04/S06 |
+| Textos de apresentação, objetivos e histórico do grupo e dos eixos temáticos | Q7 | S03 (publicação) |
+| Política editorial e ensaios iniciais (≥ 3) | Q8 | S05/S06 |
+| Fonte e escopo dos dados de orientações | Q10 | S07 |
+| Nome curto para títulos de página [PREMISSA "Bioética e Promoção da Saúde"] | Q2 | S03 |
+| Exigência de comunicação à UniCesumar (não abordada; risco residual R17) | Q1 | Decisão do coordenador antes da S06 |
+| Domínio próprio | Q3 | S06 (opcional; pode usar endereço do provedor) |
+| Identificação nominal do coordenador nos registros | — | S06 |
+
+### Ações manuais do supervisor
+
+1. **Aceitar (ou ajustar) o ADR-0010.** As decisões já estão em vigor por sua determinação, mas a redação está "Proposto".
+2. **Revisar e mesclar o PR desta sessão** (branch `docs-v1-3-aprovacoes`; documentação v1.3).
+3. **Pré-requisitos da S02:** criar contas e credenciais por ambiente e gravá-las nos GitHub Environments:
+   - Cloudflare R2: buckets `ppgps-preview`, `ppgps-staging`, `ppgps-backups`;
+   - Sentry;
+   - provedor de e-mail;
+   - chave `age` de backup em cofre.
+4. **Proteção da `main`:** decidir entre GitHub Pro/Team, repositório público ou manter os controles compensatórios (ADR-0009; `convencoes-git.md` §5).
+5. **Ambiente `production`:** criar com segredos próprios quando for o momento (até a S06). **Não** definir `PRODUCTION_DEPLOY_ENABLED` antes da S06.
+6. **Guardar em cofre e apagar `.secrets/`** da máquina do agente.
+7. **Dependabot:** decidir sobre os PRs #3–#6 (versões maiores de actions) e verificar a execução npm que falhou em 20/10.
+
+### Condições para executar a S02
+
+- [x] S00 e S01 **concluídas** (protocolo `AGENTS.md` §11.1)
+- [x] Ficha `docs/sprints/S02.md` revisada para a v1.3 (dois papéis, azul-marinho/branco, sem aviso obrigatório)
+- [x] Dependências do grupo da S02 resolvidas (Q1, Q2, Q5)
+- [ ] Plano curto da S02 apresentado ao supervisor e confirmado (ou autorização de execução autônoma registrada) — `AGENTS.md` §11.2
+- [ ] PR desta sessão (v1.3) mesclado, para que a S02 parta da `main` com a documentação atualizada
+- [ ] Contas técnicas R2, Sentry e e-mail. Recomendado, **não bloqueante**: sem elas, os itens correspondentes ficam pendentes e o restante da S02 segue com MinIO e captura local
+
+---
+
+> **Nota:** a seção "Revisão de encerramento formal S00/S01 (22/10/2026)" abaixo registra o estado **antes** das aprovações desta sessão e está **superada** pelo encerramento acima. Fica mantida como histórico.
+
+## [Histórico, superado] Revisão de encerramento formal S00/S01 (22/10/2026, antes das aprovações)
 
 > Fonte de verdade: estado do repositório, do GitHub, do Neon e da Vercel em 22/10/2026. Nenhum deploy de produção; S02 não iniciada.
 
@@ -126,7 +257,7 @@ Todos estão **Propostos**; nenhum foi aceito pelo supervisor.
 
 | Data | SO / máquina | Node / pnpm / Docker | Resultado | Observações |
 |---|---|---|---|---|
-| — | — | — | **Pendente** | — |
+| 22/10/2026 (aprovação declarada) | Não informado | Não informado | **Aprovado** pelo responsável técnico | Declaração expressa do supervisor na sessão de 22/10/2026 ("realizado, validado e aprovado"). Detalhes de ambiente não informados |
 
 ## Sessão de 20/10/2026 — execução da S01
 
@@ -241,23 +372,22 @@ Stack (Next.js + Payload 3 + PostgreSQL + R2), monólito modular, ADR-0001/0002/
 - Consultadas as fontes públicas (página do PPGPS e espelho DGP do grupo); RDU bloqueou acesso automatizado (HTTP 403).
 - Todo esse material foi revisado em 20/10/2026 para o escopo do grupo.
 
-## Validações abertas (Q1–Q12)
-
-Críticas: Q3 (domínio/hospedagem, idealmente antes da S01), Q4 (LGPD) e Q5 (integrantes e autorizações) até a S04. Altas para o M1: Q1 (autorização formal), Q2 (nome/identidade/aviso), Q6 (laboratório), Q7 (linhas e textos), Q8 (editor-chefe). Ver `docs/content/questoes-institucionais.md`.
-
 ## Backlog / ideias (não implementar sem ficha)
 
-- Multigrupo, instituições normalizadas, coleção de laboratórios e `external-ids`: caminhos em planejamento 13.7 (somente com ADR).
+- Multigrupo, instituições normalizadas, laboratório do grupo (Q6), contas de integrantes (Q5) e `external-ids`: caminhos em planejamento 13.7 (somente com decisão do coordenador quando aplicável, ADR e ficha).
 
 ## Limitações conhecidas
 
-- Laboratório do grupo não identificado em fonte pública (Q6).
-- Descrições das 4 linhas não transcritas (espelhos das linhas não consultados); textos a obter com os líderes (Q7).
+- Respostas Q1–Q12 registradas a partir do relato do responsável técnico; a mensagem original do coordenador ainda não está arquivada, e as datas de envio e resposta não foram informadas.
+- Laboratório do grupo: existe, mas está fora do escopo atual (Q6); nenhuma informação sobre ele foi coletada.
+- Descrições das 4 linhas do DGP não transcritas. Pela Q7 não geram páginas; os textos dos dois eixos temáticos virão do coordenador.
 - DGP atualizado no dia da coleta: recoletar antes da S04.
-- Seções técnicas preservadas do planejamento (11, 12, 22, 24, 27, 28, 29) foram revisadas apenas pontualmente; não houve mudança de conteúdo técnico.
+- Proteção da `main` e revisores de ambiente indisponíveis no plano GitHub Free com repositório privado (ADR-0009), com controles compensatórios.
+- Seções técnicas preservadas do planejamento (11, 12, 22, 24, 27, 28, 29) não mudaram na v1.3, salvo referências pontuais.
 
 ## Próximos passos
 
-1. Supervisor: executar as ações manuais da "Revisão de encerramento formal S00/S01" (máquina limpa, PR #7, Q1–Q12, ADRs, proteção da `main`).
-2. Agente (nova sessão): conferir as evidências registradas e marcar S00 e S01 como **Concluídas** somente com elas.
-3. Só então iniciar a **S02** seguindo o protocolo do `AGENTS.md` §11.
+1. Supervisor: aceitar o ADR-0010 e mesclar o PR da v1.3.
+2. Supervisor: providenciar as contas técnicas da S02 (R2, Sentry, e-mail, chave de backup).
+3. Agente: iniciar a **S02** pelo protocolo do `AGENTS.md` §11 (plano curto → confirmação → branch `s02-...`).
+4. Em paralelo, o coordenador fornece os itens institucionais em aberto (textos para a S03; controlador, canal do titular e autorizações para a S04).

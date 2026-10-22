@@ -2,11 +2,14 @@
 
 | Campo | Valor |
 |---|---|
-| Status | Proposto (aguarda aceite do supervisor) |
+| Status | **Aceito** — parcialmente superado pelo ADR-0010 (22/10/2026) |
 | Data | 19/10/2026 · revisado em 20/10/2026 (escopo do grupo, ADR-0006) |
 | Sprint | S00 |
 | Autor | Agente |
-| Aprovação | — |
+| Aprovação | Responsável técnico (supervisor), 22/10/2026 — aprovação expressa dos ADRs 0001–0009 |
+
+
+> **Nota de 22/10/2026 (ADR-0010, Q5):** papéis do MVP reduzidos a `admin` (desenvolvedor) e `editor` (coordenador); `researcher` removido. Integrantes são `Person` sem conta. `User.person` 0..1 permanece. O restante deste ADR está em vigor.
 
 ## Contexto
 

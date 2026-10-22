@@ -2,11 +2,21 @@
 
 | Campo | Valor |
 |---|---|
-| Status | Proposto (aguarda aceite do supervisor) |
+| Status | **Aceito** — parcialmente superado pelo ADR-0010 (22/10/2026) |
 | Data | 20/10/2026 |
 | Sprint | S00 (revisão de escopo; planejamento v1.2) |
 | Autor | Agente |
-| Aprovação | — |
+| Aprovação | Responsável técnico (supervisor), 22/10/2026 — aprovação expressa dos ADRs 0001–0009 |
+
+
+> **Nota de 22/10/2026 (ADR-0010):** superado parcialmente.
+> - Aviso de portal não oficial (decisão 2): deixa de ser obrigatório no rodapé (Q1); continua proibido usar logotipos sem autorização.
+> - Nome de exibição definido (Q2).
+> - Papéis (decisão 5): apenas `admin` e `editor` (Q5).
+> - Laboratório (decisões 1 e 5): fora do escopo atual (Q6).
+> - Linhas: foco em dois eixos temáticos, com as linhas do DGP como referência histórica (Q7).
+>
+> O restante, incluindo grupo único, referências institucionais textuais e consentimento por pessoa, está em vigor.
 
 ## Contexto
 

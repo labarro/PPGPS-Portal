@@ -8,23 +8,23 @@
 
 ## 1. Visão do projeto (5 linhas)
 
-1. Portal acadêmico **exclusivo do grupo de pesquisa "Bioética e Promoção da Saúde"** (DGP/CNPq) e de suas atividades/laboratório. **Não** é site oficial da UniCesumar nem do PPGPS; essas instituições são apenas referências contextuais.
-2. Organiza em **dados estruturados e relacionados** integrantes, vínculos com o grupo, linhas, orientações, egressos, publicações, eventos, projetos (incl. laboratório) e impacto, além de um **blog acadêmico** com fluxo editorial.
+1. Portal acadêmico **exclusivo do "Grupo de Pesquisa em Bioética e Promoção da Saúde - Unicesumar"** (nome de exibição definido pelo coordenador; grupo registrado no DGP/CNPq), com foco temático em **Bioética** e **Promoção da Saúde**. É publicado como **iniciativa do grupo**: não é site oficial da UniCesumar nem do PPGPS, que aparecem apenas como referências textuais, sem logotipos.
+2. Organiza em **dados estruturados e relacionados** integrantes, vínculos com o grupo, linhas temáticas, orientações, egressos, publicações, eventos, projetos e impacto, além de um **blog acadêmico** com fluxo editorial. O laboratório do grupo está **fora do escopo atual** (Q6).
 3. Arquitetura: **monólito modular** — um único app **Next.js (App Router) + Payload CMS 3 + PostgreSQL**, arquivos no **Cloudflare R2**.
-4. Entrega em marcos: **M1** (S00–S06: identidade do grupo, linhas, laboratório, integrantes autorizados, blog) e **M2** (S07–S11: orientações, egressos, produção, busca, eventos, projetos, impacto).
+4. Entrega em marcos: **M1** (S00–S06: identidade do grupo, linhas temáticas, integrantes autorizados, blog) e **M2** (S07–S11: orientações, egressos, produção, busca, eventos, projetos, impacto). Acesso administrativo restrito a duas pessoas: coordenador (`editor`) e desenvolvedor (`admin`).
 5. Executado por agente de IA em sprints de 1 semana, com **revisão humana obrigatória** ao fim de cada sprint.
 
 **Documentos de referência (leia antes de qualquer alteração):**
 
 | Documento | Papel |
 |---|---|
-| `docs/PLANEJAMENTO_PORTAL_PPGPS.md` (v1.2; nome de arquivo mantido por compatibilidade) | Plano diretor: requisitos, arquitetura, modelagem, permissões, sprints |
+| `docs/PLANEJAMENTO_PORTAL_PPGPS.md` (v1.3; nome de arquivo mantido por compatibilidade) | Plano diretor: requisitos, arquitetura, modelagem, permissões, sprints |
 | `docs/PROGRESS.md` | Estado atual, última sprint, decisões, pendências, próximos passos |
 | `docs/sprints/SXX.md` | Escopo fechado da sprint ativa (incluído, **fora de escopo**, critérios, roteiro de homologação) |
-| `docs/adr/` | Decisões arquiteturais vigentes (ADR-0001 a 0009; o ADR-0006 define o escopo do grupo; 0007–0009 da S01) |
+| `docs/adr/` | Decisões arquiteturais: ADR-0001 a 0009 **aceitos** (22/10/2026); ADR-0010 (respostas Q1–Q12, papéis, identidade, laboratório, linhas) proposto, com decisões já em vigor por determinação do supervisor |
 | `docs/convencoes-git.md` | Branches, commits, PRs, releases e proteção da `main` |
 | `docs/content/inventario.md` | Inventário de conteúdo institucional com fonte e situação de validação |
-| `docs/content/questoes-institucionais.md` | Validações Q1–Q12 pendentes com os responsáveis do grupo |
+| `docs/content/questoes-institucionais.md` | Respostas do coordenador às Q1–Q12, efeitos e itens ainda em aberto |
 
 ### 1.1. Precedência em caso de conflito
 
@@ -33,7 +33,7 @@
 3. Este `AGENTS.md`.
 4. Ficha da sprint ativa (`docs/sprints/SXX.md`) — define **o que** entra na sprint.
 5. ADRs com status **Aceito** — prevalecem sobre detalhes técnicos do planejamento quando forem posteriores a ele.
-6. Planejamento v1.2 — requisitos e visão de produto.
+6. Planejamento v1.3 — requisitos e visão de produto.
 
 Se houver conflito real entre fontes do mesmo nível ou dúvida de regra de negócio: **pare, registre a dúvida em `docs/PROGRESS.md` e pergunte ao supervisor.** Se autorizado a seguir, registre a premissa adotada.
 
@@ -125,7 +125,7 @@ pnpm lint && pnpm typecheck && pnpm test && pnpm test:e2e && pnpm build
 
 ### 4.2. Papéis do sistema (planejamento, seção 14)
 
-`admin`, `editor` (líderes e editor-chefe), `researcher` e visitante anônimo. **Não existe** `group_manager` nem `managedGroups` (removidos na v1.2). A matriz de permissões da seção 14.3 é normativa; toda mudança de papel gera auditoria `role_change`.
+`admin` (desenvolvedor responsável: acesso total, usuários, papéis, configurações técnicas) e `editor` (coordenador do grupo: todo o conteúdo acadêmico e editorial, consentimentos e importações; lê a auditoria; não gerencia usuários). Visitante anônimo só lê o que é público; **não há login de visitantes nem contas de integrantes** (Q5). **Não existem** `researcher`, `group_manager` nem `managedGroups` (ADR-0010, ADR-0006). A matriz de permissões da seção 14.3 é normativa; toda mudança de papel gera auditoria `role_change`.
 
 ---
 
@@ -136,7 +136,7 @@ pnpm lint && pnpm typecheck && pnpm test && pnpm test:e2e && pnpm build
 | Tipagem | `strict: true`; `any` proibido sem comentário justificando; `payload-types.ts` gerado e versionado |
 | Nomes | Código e identificadores em **inglês**; textos de interface e documentação em **português** |
 | Coleções | Slug em inglês kebab-case (`research-lines`); rótulos do admin em português |
-| Rotas públicas | Em português (`/o-grupo`, `/linhas`, `/integrantes`, `/producao`, `/blog`) |
+| Rotas públicas | Em português (`/o-grupo`, `/linhas` — linhas temáticas Bioética e Promoção da Saúde —, `/integrantes`, `/producao`, `/blog`); não há rota de laboratório |
 | Slugs de conteúdo | Português sem acentos; alteração gera redirect 301 |
 | Organização | Por módulo; UI genérica em `src/components/ui`; componentes do portal em `src/components/site` |
 | Erros | Erros de domínio tipados; nunca expor stack ao público; logs estruturados |
@@ -196,7 +196,7 @@ pnpm lint && pnpm typecheck && pnpm test && pnpm test:e2e && pnpm build
 
 1. **Nunca commitar segredos.** `.env` fora do git; `.env.example` sem valores; `PAYLOAD_SECRET` distinto por ambiente; gitleaks no CI.
 2. **Nunca usar dados reais de discentes** (ou de qualquer pessoa sem consentimento) em fixtures, seeds de teste, prints ou exemplos.
-3. **Respeitar consentimentos**: **nenhuma pessoa** (inclusive docentes e líderes) aparece com perfil público sem `ConsentRecord` vigente do escopo correspondente; revogação revalida o cache imediatamente. Autorias em publicações públicas exibem apenas o nome publicado.
+3. **Respeitar consentimentos**: **nenhuma pessoa** (inclusive docentes e líderes) aparece com perfil público sem `ConsentRecord` vigente do escopo correspondente; revogação revalida o cache imediatamente. Autorias em publicações públicas exibem apenas o nome publicado. A autorização do grupo informada pelo coordenador (Q4) não dispensa esse registro individual.
 4. **Minimização**: nunca coletar CPF, matrícula, data de nascimento, telefone pessoal ou endereço. E-mail público só por opção do titular.
 5. O portal **não** armazena dados clínicos nem de participantes de pesquisa.
 6. Upload: MIME real por *magic bytes*, limites de tamanho (imagem 10 MB, PDF 25 MB), nomes aleatórios, **SVG bloqueado**, `alt`/crédito/licença obrigatórios; pessoas identificáveis exigem consentimento.
@@ -214,8 +214,10 @@ pnpm lint && pnpm typecheck && pnpm test && pnpm test:e2e && pnpm build
 - O portal **referencia** documentos normativos (editais, regimento, matriz, RDU) por link; não os duplica.
 - Nada de *scraping* de Lattes, DGP ou Sucupira; transcrição manual ou importação de arquivos exportados pelo titular.
 - Números de impacto só são exibidos com fonte comprobatória (Q11). Conceito CAPES, editais e números do programa **não** são conteúdo do portal (apenas link para o site oficial).
-- **Portal não oficial:** aviso permanente no rodapé e em `/sobre-o-portal`; UniCesumar, PPGPS e CNPq somente como referência textual com link; **nenhum logotipo ou identidade visual institucional** sem autorização formal registrada (Q2).
-- **Aprovação conceitual do responsável pelo grupo não é autorização** para publicar o site, usar marcas ou divulgar dados pessoais; essas autorizações são explícitas e registradas (Q1, Q2, Q4, Q5).
+- **Identidade e referências (Q1, Q2):** portal publicado como iniciativa do grupo, com o nome "Grupo de Pesquisa em Bioética e Promoção da Saúde - Unicesumar" e identidade azul-marinho e branco. **Não há** aviso ostensivo de portal não oficial; `/sobre-o-portal` identifica discretamente o grupo como mantenedor. UniCesumar, PPGPS e CNPq aparecem somente como referência textual com link; **nenhum logotipo ou identidade visual institucional** sem autorização formal registrada (não concedida).
+- **Autorização do grupo ≠ autorização do titular:** as manifestações do coordenador sobre dados pessoais (Q4) e imagens/materiais (Q12) estão registradas, mas **não** substituem o `ConsentRecord` individual por escopo nem a autorização de imagem de pessoas identificáveis.
+- **Laboratório (Q6):** não incluir página, atividades, nome ou vínculos do laboratório do grupo, e não atribuir ao grupo laboratórios de terceiros (ex.: LIIPS), até nova manifestação do coordenador.
+- **Linhas (Q7):** foco em dois eixos temáticos; as quatro linhas do DGP são referência histórica (sem páginas e sem tratá-las como extintas).
 - Não cadastrar docentes, grupos, linhas, discentes ou produção do PPGPS que não pertençam ao grupo.
 - Agentes **não** enviam mensagens à universidade, aos integrantes do grupo nem a terceiros; contatos são feitos pelo supervisor.
 
@@ -283,8 +285,8 @@ pnpm lint && pnpm typecheck && pnpm test && pnpm test:e2e && pnpm build
 | M1 / M2 | Marcos de publicação: primeira publicação (S00–S06) / MVP completo (S07–S11) |
 | V2 / V3 | Evoluções pós-MVP (S12–S17 / S18–S20) |
 | Supervisor | Desenvolvedor responsável que aprova planos, revisa código e homologa |
-| Grupo | "Bioética e Promoção da Saúde" (DGP/CNPq), único escopo do portal; nome de exibição a confirmar (Q2) |
-| Responsáveis do grupo | Líderes registrados no DGP; aprovam conteúdo e autorizam publicações |
+| Grupo | "Grupo de Pesquisa em Bioética e Promoção da Saúde - Unicesumar" (nome de exibição, Q2; título no DGP: "Bioética e Promoção da Saúde"), único escopo do portal |
+| Coordenador do grupo | Responsável pelo grupo e pelo conteúdo; único usuário `editor`; revisa e publica com o desenvolvedor (Q8, Q9) |
 | Expand/contract | Mudança de schema em duas releases para manter compatibilidade com a versão anterior |
 | Teste de vazamento | Teste que garante que dados não públicos não aparecem em respostas públicas |
-| Q1–Q12 | Validações pendentes com os responsáveis do grupo (`docs/content/questoes-institucionais.md`) |
+| Q1–Q12 | Validações respondidas pelo coordenador (relatadas em 22/10/2026), com itens em aberto (`docs/content/questoes-institucionais.md`) |
