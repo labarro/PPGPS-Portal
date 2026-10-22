@@ -154,12 +154,13 @@ jobs:
               [ -f "$f" ] || continue
               jq -r '[.finalDisplayedUrl, .categories.performance.score, .categories.accessibility.score, .categories["best-practices"].score, .categories.seo.score, ([.audits["resource-summary"].details.items[] | select(.resourceType=="script") | .transferSize] | first)] | "| \(.[0]) | \(.[1]) | \(.[2]) | \(.[3]) | \(.[4]) | \(.[5]) |"' "$f"
             done
-          } >> "$GITHUB_STEP_SUMMARY"
+          } | tee -a "$GITHUB_STEP_SUMMARY"
       - uses: actions/upload-artifact@v4
         if: always()
         with:
           name: lighthouse-report
           path: .lighthouseci/
+          include-hidden-files: true
           retention-days: 14
 
   build:

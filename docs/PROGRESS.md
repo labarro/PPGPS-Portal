@@ -12,10 +12,11 @@
 | Situação da S00 | **Concluída** (22/10/2026) |
 | Situação da S01 | **Concluída** (22/10/2026) |
 | Situação da S02 | **Concluída** (22/10/2026). Exceções formais: validação externa do **Sentry** e do **SMTP de homologação** adiadas para a S06 por decisão do responsável técnico (não são testes aprovados) |
-| Próxima sprint | **S03 — Portal do grupo: identidade, linhas temáticas e homepage v1** — apta; **não iniciada** (aguarda o protocolo do `AGENTS.md` §11) |
+| Situação da S03 | **Executada — aguardando revisão humana** (22/10/2026; PR #14). Todos os critérios de aceite com evidência automatizada; falta a revisão de conteúdo/navegação pelo supervisor (DoD) e os textos do coordenador (Q7, bloqueiam só a publicação) |
+| Próxima sprint | **S04 — Integrantes, vínculos e consentimentos** — **não iniciada** (aguarda a revisão da S03 e o protocolo do `AGENTS.md` §11) |
 | Última atualização | 22/10/2026 |
 | Planejamento vigente | `docs/PLANEJAMENTO_PORTAL_PPGPS.md` **v1.3** (22/10/2026) |
-| ADRs | 0001–0012 **Aceitos** (0011 e 0012 aceitos pelo supervisor em 22/10/2026) |
+| ADRs | 0001–0012 **Aceitos**; **0013 Proposto** (S03: renderização, cache por tag e 301) |
 
 ## Situação das sprints
 
@@ -24,7 +25,7 @@
 | S00 | Descoberta, regras do projeto e inventário | M1 | **Concluída** (22/10/2026) |
 | S01 | Setup técnico, ambientes e pipeline | M1 | **Concluída** (22/10/2026) |
 | S02 | Autenticação, papéis, auditoria, storage, backup e base visual | M1 | **Concluída** (22/10/2026; Sentry e SMTP de homologação adiados para a S06) |
-| S03 | Portal do grupo: identidade, linhas temáticas e homepage v1 | M1 | Não iniciada (apta) |
+| S03 | Portal do grupo: identidade, linhas temáticas e homepage v1 | M1 | **Executada — aguardando revisão humana** (22/10/2026; PR #14) |
 | S04 | Integrantes, vínculos e consentimentos | M1 | Não iniciada |
 | S05 | Blog acadêmico e fluxo editorial | M1 | Não iniciada |
 | S06 | Reauditoria, conteúdo inicial e lançamento do M1 | M1 | Não iniciada |
@@ -33,6 +34,88 @@
 | S09 | Importação em lote, deduplicação e busca global | M2 | Não iniciada |
 | S10 | Eventos, projetos e impacto social | M2 | Não iniciada |
 | S11 | Consolidação, carga de dados acadêmicos e lançamento do M2 | M2 | Não iniciada |
+
+## Sessão de 22/10/2026 — execução da S03
+
+**Modo:** autônomo, autorizado expressamente pelo supervisor (execução integral da S03 e política de PRs, `AGENTS.md` §11.1). Branch `s03-portal-grupo`, PR #14. S04 não iniciada. Nenhum deploy de produção; `PRODUCTION_DEPLOY_ENABLED` não definida; branch `production` do Neon não acessada.
+
+### Feito
+
+- **Modelagem** (migration `20261022_211945_s03_group_profile_lines_pages_redirects`, aditiva; `down` idempotente):
+  - global `group-profile` com rascunho/versões, todos os campos da ficha (13.3), `leadersText` temporário obrigatório para publicar, `institutionalReferences[]` somente texto+URL, `dgpResearchLines[]` (fonte e data), `responsibilityNote?`, `source`/`collectedAt` e a flag `provisionalTexts` (aviso discreto de texto provisório no site);
+  - coleção `research-lines` ("Linhas temáticas"), rascunho/versões, slug normalizado e validado (gerado do nome), `active`, `provisional`, `order`, `relatedProgramLineText?`, `source`;
+  - coleção `pages` com blocos (texto rico, chamada, lista de links, cartões), rascunho/versões, SEO e pré-visualização; slugs `historico`, `objetivos`, `referencias-institucionais` e `contato` complementam as páginas fixas;
+  - global `homepage`: hero (chamada, frase de propósito, até 2 botões) e seções ordenáveis/ocultáveis; seções de S04–S10 existem no cadastro, mas o site só exibe as disponíveis (Apresentação, Linhas temáticas, Referências institucionais);
+  - coleção `redirects` (`@payloadcms/plugin-redirects`), somente admin/editor, origem normalizada, caminhos do sistema e destinos inseguros recusados, auditada.
+- **Acesso:** editor/admin editam; visitante lê só o publicado (`publicWhere`/`canViewPublic` únicos; linhas também precisam estar ativas); hook impede `?draft=true` e versões para visitantes; publicação auditada como `publish`.
+- **Site** (Server Components, Local API `overrideAccess: false`): `/`, `/o-grupo`, `/o-grupo/historico`, `/o-grupo/objetivos`, `/o-grupo/referencias-institucionais`, `/o-grupo/contato`, `/o-grupo/[slug]`, `/linhas`, `/linhas/[slug]`, `/sitemap.xml`, `/robots.txt`, `/next/preview` e `/next/exit-preview`. Componentes: `InstitutionalReferences` (sem logotipos), `ResearchLinesDiptych` (os dois eixos lado a lado), `GroupFacts` (ficha do registro no DGP), `DgpLines` (referência histórica, sem links), `PageHeader`, `SectionNav`, `ProvisionalNote`, `SourceNote`, blocos e renderizador Lexical próprio (`safeHref`, sem HTML bruto). Menu padrão: Início · O grupo · Linhas temáticas. Rodapé com navegação e referências marcadas para o rodapé (somente texto). Ícone do site próprio (dois círculos sobrepostos; sem marca institucional).
+- **Cache e revalidação (ADR-0013):** páginas renderizadas por requisição com dados em cache por tag; hooks revalidam tags/rotas (perfil → layout inteiro: home, `/o-grupo/*`, rodapé).
+- **301:** ao publicar um slug diferente do publicado, hooks criam o redirecionamento (e reapontam cadeias); o proxy responde 301 real consultando a tabela `redirects`.
+- **SEO:** `generateMetadata` com canônica, Open Graph e Twitter; JSON-LD `ResearchOrganization` do grupo (instituições só em `mentions`, sem `parentOrganization`/`memberOf`) e `BreadcrumbList`; sitemap só com conteúdo publicado; robots bloqueia tudo fora da produção (em produção: `/admin`, `/api`, `/next`); `noindex` mantido.
+- **Seed** `pnpm seed:content` (idempotente, nunca sobrescreve edições; bloqueado em produção), a partir do inventário §3.1–3.2 com fonte e data: nome da Q2, nomes alternativos com fonte, registro do DGP, 4 linhas do DGP, 4 referências institucionais (UniCesumar, PPGPS e DGP no rodapé; DIPE-RS só na página), 2 linhas temáticas e textos **provisórios** redigidos apenas com fatos do registro público. Liderança referida ao DGP, **sem nomes** (S04). Executado no CI (E2E, Lighthouse), no preview, no branch `seed` e em homologação.
+- **Pipelines:** novo job **Lighthouse CI** (mobile; acessibilidade e SEO ≥ 0,90 bloqueantes; JS ≤ 300 KB, 0 terceiros e CLS ≤ 0,1 bloqueantes; desempenho e LCP como aviso; relatórios só como artefato). Fumaça de deploy verifica as rotas da S03, `/api/redirects` 403, nome do grupo e ausência de "laboratório".
+- **Docs:** ADR-0013 (Proposto), README e `AGENTS.md` §3 (comandos `seed:content` e Lighthouse).
+
+### Testes executados (22/10/2026)
+
+| Verificação | Local | CI (PR #14) |
+|---|---|---|
+| lint / format / typecheck | Passou | Passou |
+| Unitários | 178/178; cobertura de linhas 89% (`src/hooks` 99%) | Passou |
+| Integração | 72/72 — acesso por papel, liderança obrigatória para publicar, slug, **vazamento** (rascunhos/inativos em listas, por id, `?draft=true`, `where[_status]`, `/versions` → 403, globals), sitemap só publicado, 301 (criação, rascunho não gera, cadeias, remoção, páginas, SQL do proxy), revalidação por tag, auditoria `publish` | Passou |
+| E2E (Playwright + axe) | 46/46 — 9 rotas sem violações sérias/críticas em 1280 px e 360 px, sem rolagem horizontal, sem logotipos, sem "laboratório", roteiro de navegação, 2 linhas, 4 linhas do DGP com fonte/data e sem links, referências/rodapé só texto, link do DGP, JSON-LD, SEO/robots/sitemap, **edição pelo editor refletida sem deploy**, **301 real**, rascunho ausente do site/sitemap/API e visível só na pré-visualização autenticada | Passou |
+| Build sem banco | Passou | Passou |
+| Migrations | `migrate`, `migrate:check` (sem drift), `migrate:down`/`migrate` local | Banco limpo, drift e down/up: passou (após tornar o `down` idempotente) |
+| Lighthouse (mobile) | `/`, `/o-grupo`, `/o-grupo/historico`, `/linhas`, `/linhas/bioetica`: acessibilidade **1,00**, SEO **1,00**, boas práticas 0,96, desempenho 0,92–0,94 | Passou (a11y/SEO ≥ 0,90; desempenho 0,75–0,9 e LCP 3,3–4,0 s no runner, apenas aviso) |
+| Preview do PR | — | Banco `preview/pr-14` com migrations e seed; deploy e fumaças OK |
+| Link do DGP | `http://dgp.cnpq.br/dgp/espelhogrupo/5367326681852422` → HTTP 200 (o https redireciona para http) | — |
+
+### Critérios de aceite da S03
+
+| Critério | Situação | Evidência |
+|---|---|---|
+| Editor altera a apresentação e a página reflete sem deploy | Atendido | E2E "alteração da apresentação publicada aparece no site sem deploy"; integração de revalidação |
+| 2 linhas temáticas publicadas e listadas; 4 linhas do DGP como referência histórica, sem páginas e sem extinção | Atendido | E2E (linhas, histórico, 404 em página de linha do DGP, ausência de termos de extinção) |
+| Referências institucionais e rodapé só com texto e links | Atendido | E2E (0 `img/svg/picture` nas referências e no rodapé) |
+| Link para o espelho do DGP funcional | Atendido | E2E (`href` oficial) + HTTP 200 |
+| Nenhuma rota, link ou texto sobre laboratório | Atendido | E2E em todas as rotas + 404 em `/laboratorio`; fumaça de deploy |
+| Alterar slug de uma linha cria 301 | Atendido | E2E (status 301 e `Location`) + integração |
+| `sitemap.xml` só com publicado | Atendido | Integração + E2E |
+| Rascunhos fora das páginas e da API pública | Atendido | Teste de vazamento (integração) + E2E |
+| Lighthouse mobile ≥ 90 (acessibilidade e SEO) em `/` e `/o-grupo` | Atendido | Local 1,00/1,00; job Lighthouse CI verde |
+| DoD: supervisor revisa conteúdo e navegação (desktop e mobile) | **Pendente — supervisor** | Roteiro da ficha, passos 1–9 |
+
+### Decisões e premissas
+
+1. Páginas públicas por requisição com dados em cache por tag, 301 no proxy e pré-visualização via Draft Mode (ADR-0013, Proposto).
+2. Textos de apresentação, objetivos, histórico e das linhas são **provisórios** (Q7), redigidos só com fatos do DGP, marcados no painel e no site ("Texto provisório, em validação pelo grupo").
+3. Liderança: texto temporário sem nomes, remetendo ao DGP (perfis só com consentimento na S04).
+4. Contato: nenhum e-mail publicado (Q1/Q4 em aberto); a página orienta para o espelho do DGP.
+5. Redação da referência ao PPGPS e natureza da parceria com a DIPE (RS) mantidas como no inventário (a confirmar).
+6. Orçamento de JS de 300 KB (o runner do CI mede ~265 KB com Next 16 + React 19 + Radix); a premissa de 150 KB do planejamento 16.8 não é atingível com a stack base — registrar para revisão na S06.
+7. `en` continua oculto; slugs de páginas em `/o-grupo/<slug>`.
+
+### Pendências de conteúdo (coordenador)
+
+| Item | Uso no portal | Origem |
+|---|---|---|
+| Texto de apresentação do grupo | `/o-grupo`, página inicial | Q7 |
+| Objetivos do grupo | `/o-grupo/objetivos` | Q7 |
+| Histórico (marcos além de formação e certificação) | `/o-grupo/historico` | Q7 |
+| Descrição das linhas Bioética e Promoção da Saúde (temas e questões) | `/linhas/*` | Q7 |
+| Frase de propósito (hero) | página inicial | Q7 |
+| Canal de contato do grupo (e-mail institucional) | `/o-grupo/contato`, rodapé | Q1/Q4 |
+| Redação da referência ao PPGPS e natureza da parceria com a DIPE (RS) | Referências institucionais | Q2/inventário I-08 |
+| Confirmação do nome curto "Bioética e Promoção da Saúde" | títulos das páginas, cabeçalho no celular | Q2 |
+| Texto de liderança definitivo (até a S04) | `/o-grupo` | Q1/Q2 |
+
+Depois de publicados no painel, desmarcar "Contém textos provisórios" (perfil) e "Texto provisório" (cada linha).
+
+### Pendências técnicas / backlog
+
+- Aceite do ADR-0013 pelo supervisor.
+- Revisar o orçamento de JS e o desempenho mobile no runner (0,75–0,9) na S06, junto com a hospedagem (cache de CDN para HTML).
+- `unstable_cache` é API legada no Next 16: migrar para `'use cache'` em sprint dedicada.
 
 ## Sessão de 22/10/2026 — auditoria final do R2 e encerramento da S02
 
@@ -324,10 +407,10 @@ O CI da `main` após o PR #8 (run `39822648395`) **falhou** no `pnpm audit`: vul
 | Registro escrito das respostas do coordenador arquivado (referência em §1) | S00/Q1–Q12 | S06 |
 | Controlador dos dados, canal do titular, termo de autorização individual, regra de orientações concluídas | Q4 | S04 (publicação dos perfis) |
 | Lista nominal de integrantes e ex-integrantes com autorizações individuais, ORCID e Lattes | Q4/Q5 | S04/S06 |
-| Textos de apresentação, objetivos e histórico do grupo e dos eixos temáticos | Q7 | S03 (publicação) |
+| Textos de apresentação, objetivos e histórico do grupo e dos eixos temáticos (hoje provisórios no portal, ver sessão da S03) | Q7 | Publicação do M1 (S06) |
 | Política editorial e ensaios iniciais (≥ 3) | Q8 | S05/S06 |
 | Fonte e escopo dos dados de orientações | Q10 | S07 |
-| Nome curto para títulos de página [PREMISSA "Bioética e Promoção da Saúde"] | Q2 | S03 |
+| Nome curto para títulos de página [PREMISSA "Bioética e Promoção da Saúde", em uso desde a S03] | Q2 | S06 |
 | Exigência de comunicação à UniCesumar (não abordada; risco residual R17) | Q1 | Decisão do coordenador antes da S06 |
 | Domínio próprio | Q3 | S06 (opcional; pode usar endereço do provedor) |
 | Identificação nominal do coordenador nos registros | — | S06 |
