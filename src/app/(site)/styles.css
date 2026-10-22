@@ -98,6 +98,7 @@
     font-size: 1.125rem;
     line-height: 1.75;
     color: var(--foreground);
+    overflow-wrap: break-word;
   }
 
   .prose-portal > * + * {

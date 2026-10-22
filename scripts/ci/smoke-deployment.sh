@@ -36,6 +36,17 @@ if [[ "$MODE" == "protected" ]]; then
 
   code=$(status -L "${auth[@]}" "$URL/admin")
   [[ "$code" == "200" ]] || fail "/admin deveria responder 200 (recebido $code)"
+
+  # S03: rotas do portal do grupo, sitemap e coleção de redirecionamentos não pública.
+  for path in /o-grupo /o-grupo/historico /o-grupo/objetivos /o-grupo/referencias-institucionais /o-grupo/contato /linhas /sitemap.xml /robots.txt; do
+    code=$(status "${auth[@]}" "$URL$path")
+    [[ "$code" == "200" ]] || fail "$path deveria responder 200 (recebido $code)"
+  done
+  code=$(status "${auth[@]}" "$URL/api/redirects")
+  [[ "$code" == "403" ]] || fail "/api/redirects deveria ser negado ao visitante (recebido $code)"
+  home=$(curl -s "${bypass[@]}" "${auth[@]}" "$URL/")
+  [[ "$home" == *"Bioética e Promoção da Saúde"* ]] || fail "Nome do grupo ausente na página inicial"
+  if grep -qiE 'laborat(ó|o)rio' <<<"$home"; then fail "Menção a laboratório na página inicial (Q6)"; fi
 else
   code=$(status "$URL/")
   [[ "$code" == "200" ]] || fail "Produção: esperado 200 e recebido $code"

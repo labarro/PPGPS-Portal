@@ -11,7 +11,10 @@ export function SourceNote({
   if (!source) return null
   const date = formatDate(collectedAt)
   return (
-    <p className="mt-10 border-t pt-4 text-sm text-muted-foreground" data-testid="source-note">
+    <p
+      className="border-t pt-4 text-sm [overflow-wrap:anywhere] text-muted-foreground"
+      data-testid="source-note"
+    >
       Fonte: {source}
       {date ? `. Dados coletados em ${date}.` : '.'}
     </p>

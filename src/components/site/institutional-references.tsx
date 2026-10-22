@@ -1,5 +1,3 @@
-import { ExternalLinkIcon } from 'lucide-react'
-
 import { referenceKindLabel, urlHost } from '@/lib/content/format'
 import type { GroupProfile } from '@/payload-types'
 import { cn } from '@/lib/utils'
@@ -78,7 +76,6 @@ export function InstitutionalReferences({
                 className="mt-auto inline-flex min-h-11 items-center gap-1.5 self-start rounded-sm pt-2 text-sm font-medium text-link underline underline-offset-4 hover:no-underline"
               >
                 {host ? `Acessar ${host}` : 'Acessar site'}
-                <ExternalLinkIcon className="size-3.5" aria-hidden="true" />
                 <span className="sr-only"> (site externo: {reference.name})</span>
               </a>
             ) : null}

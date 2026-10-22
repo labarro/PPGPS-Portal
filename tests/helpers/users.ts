@@ -47,3 +47,37 @@ export async function seedLoginUser(): Promise<void> {
 export async function cleanupE2EUsers(): Promise<void> {
   await deleteUsersDirect({ email: { like: E2E_EMAIL_DOMAIN } })
 }
+
+export const editorUser = {
+  email: `editor${E2E_EMAIL_DOMAIN}`,
+  password: strongTestPassword(),
+}
+
+/** Conta fictícia com o papel `editor` (coordenador) para os E2E de edição de conteúdo. */
+export async function seedEditorUser(): Promise<void> {
+  const payload = await payloadClient()
+  await deleteUsersDirect({ email: { equals: editorUser.email } })
+  await payload.create({
+    collection: 'users',
+    data: { ...editorUser, roles: ['editor'], active: true },
+    context: { skipSetupEmail: true },
+  })
+}
+
+/** Remove conteúdo criado pelos E2E (slugs com o prefixo informado) e seus redirecionamentos. */
+export async function cleanupE2EContent(slugPrefix: string): Promise<void> {
+  const payload = await payloadClient()
+  for (const collection of ['research-lines', 'pages'] as const) {
+    await payload.delete({
+      collection,
+      where: { slug: { like: slugPrefix } },
+      overrideAccess: true,
+      context: { skipRevalidation: true },
+    })
+  }
+  await payload.delete({
+    collection: 'redirects',
+    where: { from: { like: slugPrefix } },
+    overrideAccess: true,
+  })
+}

@@ -11,7 +11,11 @@ export type RedirectHit = { to: string; status: 301 | 302 }
 
 export type RedirectQuery = (from: string) => Promise<{ to: string; type: string } | null>
 
-export const REDIRECT_CACHE_TTL_MS = { hit: 30_000, miss: 10_000 } as const
+/**
+ * Só acertos ficam em cache: uma falta em cache faria o endereço antigo continuar sem 301
+ * logo após a troca de slug (consulta indexada e barata; somente caminhos com slug).
+ */
+export const REDIRECT_CACHE_TTL_MS = { hit: 30_000, miss: 0 } as const
 
 type CacheEntry = { value: RedirectHit | null; expires: number }
 
@@ -29,11 +33,12 @@ export function createRedirectLookup(query: RedirectQuery, now: () => number = D
       row && row.to && row.to !== from
         ? { to: row.to, status: row.type === '302' ? 302 : 301 }
         : null
-    if (cache.size > 500) cache.clear()
-    cache.set(from, {
-      value,
-      expires: now() + (value ? REDIRECT_CACHE_TTL_MS.hit : REDIRECT_CACHE_TTL_MS.miss),
-    })
+    if (value) {
+      if (cache.size > 500) cache.clear()
+      cache.set(from, { value, expires: now() + REDIRECT_CACHE_TTL_MS.hit })
+    } else {
+      cache.delete(from)
+    }
     return value
   }
 }

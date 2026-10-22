@@ -3,6 +3,7 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 
 import config from '@/payload.config'
 import { authRateLimiter } from '@/lib/security/rate-limit'
+import { DEFAULT_NAVIGATION } from '@/lib/site/chrome'
 
 import { cleanupAccounts, createAccount, INT_DOMAIN, type TestAccount } from '../helpers/fixtures'
 import { loginRest, restJson } from '../helpers/rest'
@@ -144,7 +145,8 @@ describe('RBAC — usuários, papéis e configurações', () => {
     it('edita navegação, mas não as configurações técnicas', async () => {
       const nav = await restJson('POST', '/globals/navigation', {
         token: editorToken,
-        body: { items: [{ label: 'Início', href: '/' }] },
+        // Menu padrão da S03 (estado canônico para os demais testes e o E2E local).
+        body: { items: DEFAULT_NAVIGATION },
       })
       expect(nav.status).toBe(200)
 

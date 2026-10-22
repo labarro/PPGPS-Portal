@@ -101,6 +101,8 @@ jobs:
         run: |
           pnpm migrate
           pnpm migrate:status
+          # Conteúdo institucional público verificado (S03), idempotente.
+          pnpm seed:content
 
       - name: Verificação real do bucket R2 de preview (objeto de 64 bytes, removido)
         if: steps.config.outputs.enabled == 'true' && steps.config.outputs.vercel == 'true'

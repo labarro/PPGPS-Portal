@@ -15,6 +15,8 @@ const baseURL = `http://localhost:${PORT}`
 
 export default defineConfig({
   testDir: './tests/e2e',
+  // Conteúdo institucional da S03 (seed idempotente) no banco de teste.
+  globalSetup: './tests/e2e/global-setup.ts',
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 1 : 0,
   workers: 1,
@@ -33,7 +35,8 @@ export default defineConfig({
   ],
   webServer: {
     command: process.env.E2E_SERVER_COMMAND || `pnpm exec next dev --port ${PORT}`,
-    url: baseURL,
+    // Prontidão por uma rota sem banco: não aquece o cache de dados antes do seed.
+    url: `${baseURL}/robots.txt`,
     reuseExistingServer: !process.env.CI,
     timeout: 180_000,
     env: {
@@ -47,6 +50,8 @@ export default defineConfig({
       S3_BUCKET: process.env.S3_BUCKET ?? '',
       S3_PREFIX: '',
       SENTRY_DSN: '',
+      // Cache de dados novo a cada execução (o cache em disco do Next sobrevive a reinícios).
+      DATA_CACHE_SCOPE: `e2e-${Date.now()}`,
     },
   },
 })

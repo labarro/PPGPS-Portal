@@ -24,7 +24,8 @@ pnpm dev              # http://localhost:3000
 ```
 
 1. Acesse <http://localhost:3000/admin> e crie o **primeiro usuário** (vira `admin`). Senha: ≥ 12 caracteres, não comum.
-2. Opcional: `pnpm seed` cria a conta **fictícia** `SEED_ADMIN_EMAIL` com a senha `SEED_ADMIN_PASSWORD` do `.env` (rode antes de criar o primeiro usuário se quiser usá-la).
+2. `pnpm seed:content` publica o conteúdo institucional público verificado do grupo (S03), com textos provisórios marcados; não sobrescreve edições feitas no painel.
+3. Opcional: `pnpm seed` cria a conta **fictícia** `SEED_ADMIN_EMAIL` com a senha `SEED_ADMIN_PASSWORD` do `.env` (rode antes de criar o primeiro usuário se quiser usá-la).
 
 O `.env` local é gerado por `pnpm env:local` (chamado por `pnpm db:up`) a partir de `.env.example`, com senhas e `PAYLOAD_SECRET` aleatórios. Ele nunca é versionado e só aponta para os serviços do Docker — **nunca** use URLs do Neon localmente.
 
@@ -44,6 +45,8 @@ Serviços locais: Postgres em `127.0.0.1:5432` (bancos `ppgps` e `ppgps_test`), 
 | Verificar *drift* (schema sem migration) | `pnpm migrate:check` |
 | Gerar tipos / import map do Payload | `pnpm generate:types` / `pnpm generate:importmap` |
 | Seed fictício | `pnpm seed` |
+| Conteúdo institucional público (perfil do grupo, 2 linhas temáticas, página inicial, menu; idempotente, bloqueado em produção) | `pnpm seed:content` |
+| Lighthouse CI (com o app em `http://localhost:3100`) | `pnpm dlx @lhci/cli@0.15.1 autorun` (config.: `lighthouserc.json`) |
 | Lint / formatação / tipos | `pnpm lint` / `pnpm format:check` / `pnpm typecheck` |
 | Testes unitários + integração | `pnpm test` (`test:unit`, `test:int`, `test:coverage`) |
 | E2E (Playwright + axe) | `pnpm test:e2e` (primeira vez: `pnpm exec playwright install chromium`) |

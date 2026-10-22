@@ -48,6 +48,11 @@ jobs:
         run: |
           pnpm migrate
           pnpm migrate:status
+      # Conteúdo institucional público verificado (S03): só preenche o que não existe;
+      # nunca sobrescreve edições feitas no painel de homologação.
+      - name: Conteúdo institucional (seed idempotente)
+        if: steps.config.outputs.enabled == 'true'
+        run: pnpm seed:content
 
   refresh-seed:
     name: Atualizar branch Neon seed (base dos previews)
@@ -86,6 +91,7 @@ jobs:
           export DATABASE_URL
           pnpm migrate
           pnpm migrate:status
+          pnpm seed:content
           if [[ -n "$SEED_ADMIN_EMAIL" && -n "$SEED_ADMIN_PASSWORD" ]]; then
             pnpm seed
           else

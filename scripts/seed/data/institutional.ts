@@ -33,7 +33,7 @@ export const groupProfileSeed = {
     {
       name: 'Bioética e Promoção da Saúde Global no Envelhecimento',
       source:
-        'Campo "Repercussões" do espelho do grupo no DGP/CNPq e página do PPGPS/UniCesumar, coletados em 19/10/2026',
+        'Campo “Repercussões” do espelho do grupo no DGP/CNPq e página do PPGPS/UniCesumar, coletados em 19/10/2026',
     },
   ],
   summary:
@@ -61,7 +61,7 @@ export const groupProfileSeed = {
   ),
   history: richText(
     paragraph(
-      'O grupo foi formado em 2021. No Diretório dos Grupos de Pesquisa do CNPq, sua situação é "Certificado", com data da situação em 14/04/2021.',
+      'O grupo foi formado em 2021. No Diretório dos Grupos de Pesquisa do CNPq, sua situação é “Certificado”, com data da situação em 14/04/2021.',
     ),
     paragraph(
       'O espelho do grupo no DGP registra como instituição parceira a Diretoria de Pesquisa – DIPE (RS) e quatro linhas de pesquisa, listadas abaixo como referência histórica do registro.',
@@ -129,7 +129,7 @@ export const researchLinesSeed = [
         'A Bioética é uma das duas linhas temáticas em que o grupo organiza sua atuação neste portal.',
       ),
       paragraph(
-        'No registro do grupo no Diretório dos Grupos de Pesquisa do CNPq, o tema aparece na linha "Bioética e o processo de envelhecimento", apresentada no histórico do grupo como referência.',
+        'No registro do grupo no Diretório dos Grupos de Pesquisa do CNPq, o tema aparece na linha “Bioética e o processo de envelhecimento”, apresentada no histórico do grupo como referência.',
       ),
       paragraph(
         'A descrição completa da linha, com temas de interesse e questões de pesquisa, será publicada após a validação do coordenador.',
@@ -148,7 +148,7 @@ export const researchLinesSeed = [
         'A Promoção da Saúde é uma das duas linhas temáticas em que o grupo organiza sua atuação neste portal.',
       ),
       paragraph(
-        'No registro do grupo no Diretório dos Grupos de Pesquisa do CNPq, o tema aparece nas linhas "Espaços e práticas para a promoção da saúde do idoso" e "Tecnologias na promoção da saúde no processo de envelhecimento", apresentadas no histórico do grupo como referência.',
+        'No registro do grupo no Diretório dos Grupos de Pesquisa do CNPq, o tema aparece nas linhas “Espaços e práticas para a promoção da saúde do idoso” e “Tecnologias na promoção da saúde no processo de envelhecimento”, apresentadas no histórico do grupo como referência.',
       ),
       paragraph(
         'A descrição completa da linha, com temas de interesse e questões de pesquisa, será publicada após a validação do coordenador.',

@@ -10,6 +10,7 @@ import { getPayload } from 'payload'
 
 import { DEFAULT_HERO_ACTIONS, DEFAULT_HOME_SECTIONS } from '../../src/lib/content/homepage'
 import { resolveAppEnv } from '../../src/lib/env/app-env'
+import { DEFAULT_NAVIGATION } from '../../src/lib/site/chrome'
 import type { GroupProfile, ResearchLine } from '../../src/payload-types'
 import { groupProfileSeed, researchLinesSeed } from './data/institutional'
 
@@ -91,6 +92,24 @@ async function main(): Promise<void> {
       context,
     })
     log('Página inicial publicada com as seções padrão.')
+  }
+
+  // Menu principal: só quando ainda não há itens cadastrados.
+  const navigation = await payload.findGlobal({
+    slug: 'navigation',
+    overrideAccess: true,
+    depth: 0,
+  })
+  if (navigation.items && navigation.items.length > 0) {
+    log('Menu principal já configurado; mantido.')
+  } else {
+    await payload.updateGlobal({
+      slug: 'navigation',
+      data: { items: DEFAULT_NAVIGATION },
+      overrideAccess: true,
+      context,
+    })
+    log('Menu principal preenchido (Início, O grupo, Linhas temáticas).')
   }
 
   await payload.destroy()
