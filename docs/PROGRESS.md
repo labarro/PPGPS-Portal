@@ -11,11 +11,11 @@
 | Marco corrente | M1 — Primeira publicação |
 | Situação da S00 | **Concluída** (22/10/2026) |
 | Situação da S01 | **Concluída** (22/10/2026) |
-| Situação da S02 | **Executada — aguardando revisão humana** (PR #9 mesclado em `04e19fd`, 22/10/2026). Pendências externas não bloqueantes listadas abaixo |
+| Situação da S02 | **Executada — aguardando revisão humana** (PRs #9, #10 e #11 mesclados, 22/10/2026). Falta: **reescopo dos tokens R2 de preview/staging** (achado de segurança), regra de expiração do `ppgps-preview` e roteiro de homologação do supervisor. Sentry e SMTP externo: **adiamento para a S06 proposto**, pendente de decisão |
 | Próxima sprint | S03 — **não iniciar** antes da homologação da S02 pelo supervisor |
 | Última atualização | 22/10/2026 |
 | Planejamento vigente | `docs/PLANEJAMENTO_PORTAL_PPGPS.md` **v1.3** (22/10/2026) |
-| ADRs | 0001–0010 **Aceitos**; 0011 e 0012 **Propostos** (S02) |
+| ADRs | 0001–0012 **Aceitos** (0011 e 0012 aceitos pelo supervisor em 22/10/2026) |
 
 ## Situação das sprints
 
@@ -33,6 +33,59 @@
 | S09 | Importação em lote, deduplicação e busca global | M2 | Não iniciada |
 | S10 | Eventos, projetos e impacto social | M2 | Não iniciada |
 | S11 | Consolidação, carga de dados acadêmicos e lançamento do M2 | M2 | Não iniciada |
+
+## Sessão de 22/10/2026 — finalização da S02
+
+**Modo:** autônomo, autorizado pelo supervisor (política de PRs, `AGENTS.md` §11.1). S03 não iniciada.
+
+### Confirmações do supervisor (22/10/2026)
+
+| Item | Registro |
+|---|---|
+| Segredos `R2_BACKUP_ACCESS_KEY_ID` e `R2_BACKUP_SECRET_ACCESS_KEY` no ambiente `backups` | Confirmado e **verificado** (`gh secret list --env backups`, cadastrados às 19:42–19:43 UTC; valores não exibidos) e usados com sucesso pelos workflows |
+| Chave privada `age` guardada em local seguro sob responsabilidade do supervisor | Confirmado (declaração) |
+| ADR-0011 e ADR-0012 | **Aceitos** — status atualizado com a aprovação |
+
+### Feito (PR #11, `5085325`)
+
+- `restore-check.yml` passa a baixar o backup do **bucket `ppgps-backups`** (caminho real de recuperação; `scripts/backup/download.mjs`), com o artefato do GitHub apenas como alternativa; nova entrada `backup_base`.
+- Novo `r2-maintenance.yml` + `scripts/storage/r2-maintenance.mjs` (mensal e sob demanda): garante a expiração de 7 dias **somente** no `ppgps-preview` e audita exposição anônima e isolamento entre credenciais dos três buckets.
+- `r2-smoke.mjs` emite alerta a cada deploy se a credencial da aplicação alcançar o bucket de backups.
+
+### Evidências
+
+| Verificação | Resultado |
+|---|---|
+| Backup criptografado de homologação | Run `39843046978`: `staging-20261022T194700Z.dump.age`, **86 105 bytes**, `pg_dump`+`age` em 16 s; **enviado ao bucket `ppgps-backups`** em `staging/2026/10/` (dump + manifesto de 923 bytes); retenção de 7 dias aplicada (0 expirados) |
+| Restauração real a partir do bucket | Run `39845182143`: download de `ppgps-backups` com as credenciais exclusivas; SHA-256 conferido com o manifesto; branch Neon temporário `restore-check-39845182143` (de `seed`, banco vazio `restore_check`); **restauração em 37 s** (61 s com verificações); 25 tabelas, **0 divergências**, 2 migrations, 0 FKs não validadas; branch removido |
+| Neon após os testes | Branches: `production` (`updated_at` 21/10/2026, **0 operações recentes** — intocada), `staging`, `seed`. Nenhum branch temporário remanescente |
+| Exposição anônima (run `39845589840`) | Os 3 buckets negam listagem e leitura anônimas pelo endpoint S3 (HTTP 400) |
+| Isolamento das credenciais de backup | Token de `backups` recebe **AccessDenied (403)** em `ppgps-preview` e `ppgps-staging` — **isolado** |
+| **Isolamento das credenciais da aplicação** | **FALHA:** os tokens de `preview` e de `staging` acessam os outros buckets, **inclusive `ppgps-backups`** (tokens com escopo de conta). Código de PR implantado em preview poderia ler/apagar backups |
+| Expiração de 7 dias no `ppgps-preview` | **Não aplicada:** o token do preview não tem permissão de administração do bucket (`GetBucketLifecycleConfiguration` → AccessDenied 403). Controle compensatório ativo: limpeza automática de `pr-N/` ao fechar o PR |
+| `r2.dev`/domínio público | Não verificável pela API S3: verificação manual no painel |
+| CI, migrations e homologação após o PR #11 | Verdes (preview do PR #11 também com R2 real OK) |
+
+### Revisão da integração de armazenamento, segurança e workflows
+
+- Código: buckets privados, acesso sempre pela rota do app com verificação de permissão, URL assinada de 5 min para documentos, magic bytes/limites/SVG bloqueado — cobertos por 60 testes de integração e pela fumaça real no preview (PRs #9 e #11). Sem alterações necessárias.
+- Workflows: `backup.yml` (envio ao bucket comprovado), `restore-check.yml` (agora a partir do bucket), `r2-maintenance.yml` (falha propositalmente enquanto os tokens não forem reescopados), alerta no `r2-smoke`. Credenciais só via segredos de ambiente; nenhum valor impresso (mascaramento do GitHub conferido nos logs).
+
+### Sentry e e-mail — avaliação de adiamento
+
+| Item | Situação real | Avaliação |
+|---|---|---|
+| Sentry (erro forçado sem PII) | Sem `SENTRY_DSN`: **nenhum evento real enviado**. Código, `beforeSend` e testes unitários de remoção de PII prontos; app funciona sem DSN | **Adiamento para a S06 proposto** (monitoramento e uptime são da S06). Não compromete os requisitos essenciais: a observabilidade é opcional e não há dados reais até o M1. Critério **não atendido** até teste real |
+| E-mail capturado em homologação | Sem SMTP de captura em homologação: mensagens **descartadas** com log mascarado (nada é enviado). Recuperação, expiração de 1 h e uso único comprovados com Mailpit real no local/CI | **Adiamento para a S06 proposto**, com condição: antes do M1 a produção precisa de SMTP real (senão a recuperação de senha não funciona). Impacto na homologação: o supervisor define senhas como `admin` em vez de usar o link. Critério **parcial** |
+
+Ambos só serão marcados como atendidos após teste real. O adiamento depende de decisão do supervisor.
+
+### O que falta para encerrar a S02
+
+1. **Bloqueante (segurança):** no painel da Cloudflare, restringir o token R2 do ambiente `preview` a **somente** `ppgps-preview` e o de `staging` a **somente** `ppgps-staging` (R2 → Manage API tokens → *Object Read & Write* → *Apply to specific buckets only*), atualizar os segredos `R2_ACCESS_KEY_ID`/`R2_SECRET_ACCESS_KEY` nos ambientes e revogar os tokens antigos. Depois, executar *Manutenção e auditoria do R2*: deve ficar verde (exceto lifecycle, se o item 2 for feito pelo painel).
+2. Criar no painel a regra de ciclo de vida do `ppgps-preview` (expirar objetos após 7 dias; gratuito) **ou** fornecer token com permissão de administração somente desse bucket para o workflow aplicá-la.
+3. Confirmar no painel que `r2.dev` e domínios públicos estão desativados nos 3 buckets.
+4. Executar o roteiro de homologação da S02 (DoD) e decidir sobre o adiamento de Sentry e SMTP para a S06.
 
 ## Sessão de 22/10/2026 — execução da S02
 
@@ -102,13 +155,13 @@ O CI da `main` após o PR #8 (run `39822648395`) **falhou** no `pnpm audit`: vul
 
 ### Pendências externas (supervisor)
 
-1. **Credenciais exclusivas do bucket `ppgps-backups`**: os segredos `R2_BACKUP_ACCESS_KEY_ID` e `R2_BACKUP_SECRET_ACCESS_KEY` **não foram encontrados** em nenhum ambiente (verificado: `preview`, `staging`, repositório). Criar token R2 com escopo só nesse bucket e cadastrar no ambiente GitHub **`backups`** (criado nesta sessão); opcional `R2_BACKUP_BUCKET`.
-2. **Chave privada `age`**: guardar `.secrets/backup-age-identity.txt` no cofre (com cópia selada) e apagar da máquina, junto com os demais arquivos de `.secrets/`.
+1. ~~Credenciais exclusivas do bucket `ppgps-backups`~~ — **feito** (finalização da S02; envio comprovado).
+2. ~~Chave privada `age` no cofre~~ — **feito** (declaração do supervisor).
 3. **Sentry**: criar projeto no plano gratuito e cadastrar `SENTRY_DSN` nos ambientes `preview`/`staging`; depois executar o passo 8 do roteiro (`POST /api/users/sentry-test` como admin).
 4. **E-mail em homologação**: se desejar visualizar e-mails, configurar caixa de captura gratuita (ex.: Mailtrap Sandbox) com `SMTP_*` no ambiente `staging` e variável `EMAIL_SMTP_IS_SANDBOX=true`. Sem isso o fluxo funciona, mas a mensagem é descartada.
 5. **R2**: regra de ciclo de vida de 7 dias no `ppgps-preview`; confirmar `r2.dev`/domínio público desativados nos 3 buckets; acompanhar métricas mensais.
 6. **Roteiro de homologação da S02** (ficha, passos 1–10), com a conta fictícia do seed no preview ou criando a conta `admin` real em homologação (o banco `staging` não tem usuários).
-7. Aceitar/ajustar ADR-0011 e ADR-0012.
+7. ~~Aceitar ADR-0011 e ADR-0012~~ — **feito**.
 8. Dependabot abriu novos PRs de actions após o merge (atualizações *major*); decidir junto com os PRs #3–#6.
 
 ### Riscos e limitações registrados
@@ -468,7 +521,7 @@ Stack (Next.js + Payload 3 + PostgreSQL + R2), monólito modular, ADR-0001/0002/
 
 ## Próximos passos
 
-1. Supervisor: resolver as pendências externas da S02 (credenciais do bucket de backups, cofre da chave `age`, Sentry, captura de e-mail opcional, ciclo de vida do R2) e executar o roteiro de homologação da S02.
-2. Supervisor: aceitar/ajustar ADR-0011 e ADR-0012 e marcar a S02 como **Concluída**.
+1. Supervisor: reescopar os tokens R2 de preview/staging (bloqueante), criar a regra de expiração do `ppgps-preview`, conferir `r2.dev` e executar o roteiro de homologação da S02.
+2. Supervisor: decidir o adiamento de Sentry e SMTP para a S06 e marcar a S02 como **Concluída**.
 3. Agente: iniciar a **S03** somente após essa homologação, pelo protocolo do `AGENTS.md` §11.
 4. Em paralelo, o coordenador fornece os itens institucionais em aberto (textos para a S03; controlador, canal do titular e autorizações para a S04).
