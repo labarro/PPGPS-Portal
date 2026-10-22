@@ -11,8 +11,8 @@
 | Marco corrente | M1 — Primeira publicação |
 | Situação da S00 | **Concluída** (22/10/2026) |
 | Situação da S01 | **Concluída** (22/10/2026) |
-| Situação da S02 | **Executada — aguardando revisão humana** (PRs #9, #10 e #11 mesclados, 22/10/2026). Falta: **reescopo dos tokens R2 de preview/staging** (achado de segurança), regra de expiração do `ppgps-preview` e roteiro de homologação do supervisor. Sentry e SMTP externo: **adiamento para a S06 proposto**, pendente de decisão |
-| Próxima sprint | S03 — **não iniciar** antes da homologação da S02 pelo supervisor |
+| Situação da S02 | **Concluída** (22/10/2026). Exceções formais: validação externa do **Sentry** e do **SMTP de homologação** adiadas para a S06 por decisão do responsável técnico (não são testes aprovados) |
+| Próxima sprint | **S03 — Portal do grupo: identidade, linhas temáticas e homepage v1** — apta; **não iniciada** (aguarda o protocolo do `AGENTS.md` §11) |
 | Última atualização | 22/10/2026 |
 | Planejamento vigente | `docs/PLANEJAMENTO_PORTAL_PPGPS.md` **v1.3** (22/10/2026) |
 | ADRs | 0001–0012 **Aceitos** (0011 e 0012 aceitos pelo supervisor em 22/10/2026) |
@@ -23,8 +23,8 @@
 |---|---|---|---|
 | S00 | Descoberta, regras do projeto e inventário | M1 | **Concluída** (22/10/2026) |
 | S01 | Setup técnico, ambientes e pipeline | M1 | **Concluída** (22/10/2026) |
-| S02 | Autenticação, papéis, auditoria, storage, backup e base visual | M1 | **Executada — aguardando revisão humana** (PR #9) |
-| S03 | Portal do grupo: identidade, linhas temáticas e homepage v1 | M1 | Não iniciada |
+| S02 | Autenticação, papéis, auditoria, storage, backup e base visual | M1 | **Concluída** (22/10/2026; Sentry e SMTP de homologação adiados para a S06) |
+| S03 | Portal do grupo: identidade, linhas temáticas e homepage v1 | M1 | Não iniciada (apta) |
 | S04 | Integrantes, vínculos e consentimentos | M1 | Não iniciada |
 | S05 | Blog acadêmico e fluxo editorial | M1 | Não iniciada |
 | S06 | Reauditoria, conteúdo inicial e lançamento do M1 | M1 | Não iniciada |
@@ -34,6 +34,63 @@
 | S10 | Eventos, projetos e impacto social | M2 | Não iniciada |
 | S11 | Consolidação, carga de dados acadêmicos e lançamento do M2 | M2 | Não iniciada |
 
+## Sessão de 22/10/2026 — auditoria final do R2 e encerramento da S02
+
+**Modo:** autônomo, autorizado pelo supervisor (encerramento da S02 e política de PRs). S03 não iniciada. Nenhum deploy de produção.
+
+### Ajustes manuais declarados pelo supervisor
+
+Tokens R2 de preview e staging restritos aos respectivos buckets; segredos atualizados; expiração de 7 dias no `ppgps-preview`; acesso público dos três buckets conferido no painel. Observação técnica: os segredos `R2_*` do ambiente `staging` foram atualizados às 20:24 UTC; os do `preview` mantêm a data original (17:44 UTC) — o escopo do token existente foi restringido. O efeito foi verificado abaixo.
+
+### Auditoria do R2 (run `39849533647`, versão somente leitura do `r2-maintenance.yml`)
+
+| Credencial | Próprio bucket | Outros buckets | Resultado |
+|---|---|---|---|
+| `preview` | `ppgps-preview` acessível | `ppgps-staging` e `ppgps-backups`: **AccessDenied 403** | Isolado |
+| `staging` | `ppgps-staging` acessível | `ppgps-preview` e `ppgps-backups`: **AccessDenied 403** | Isolado |
+| `backups` | `ppgps-backups` acessível | `ppgps-preview` e `ppgps-staging`: **AccessDenied 403** | Isolado |
+
+- **Acesso anônimo:** listagem e leitura negadas nos 3 buckets pelo endpoint S3 (HTTP 400).
+- **Expiração de 7 dias no `ppgps-preview`:** verificada tecnicamente sem ampliar permissões — a leitura da configuração é negada ao token de objetos (esperado, privilégio mínimo), e um objeto de sonda de 2 bytes recebeu `x-amz-expiration` de **7,0 dias** (sonda removida em seguida). Nenhuma configuração foi alterada pelo agente.
+- **`r2.dev` e domínios públicos:** não visíveis pela API S3; registrados como conferidos pelo supervisor no painel (declaração).
+- **Credenciais nos logs:** 0 sequências com formato de chave de acesso; os únicos valores hexadecimais de 64 caracteres são chaves de cache do pnpm; 67 ocorrências mascaradas (`***`).
+- A auditoria anterior (run `39845589840`, tokens com escopo de conta) está **resolvida**.
+
+### Backups após a rotação
+
+| Verificação | Resultado |
+|---|---|
+| Backup (run `39849673054`) | `staging-20261022T203217Z.dump.age`, 86 105 bytes, enviado ao `ppgps-backups/staging/2026/10/` com manifesto; retenção: 0 expirados (backups anteriores preservados) |
+| Restauração a partir do bucket (run `39849941472`) | Branch Neon temporário `restore-check-39849941472`, banco vazio; **37 s** (61 s com verificações); 0 tabelas divergentes; 2 migrations; 0 FKs não validadas; branch removido |
+| Branch `production` do Neon | Intocada (nenhuma operação dos workflows) |
+
+### Decisão do responsável técnico — Sentry e SMTP (22/10/2026)
+
+Adiada para a **S06** a validação externa do Sentry e do SMTP de homologação, considerando o orçamento de R$ 0 e a ausência de lançamento público. Condições registradas: código e testes preservados; os dois critérios constam como **adiados**, não aprovados; a ficha `docs/sprints/S06.md` passa a exigir sua resolução **antes do lançamento do M1**, salvo nova decisão expressa; nenhum serviço pago; nenhum e-mail real em testes.
+
+### Critérios de aceite da S02 — situação final
+
+| Critério | Situação |
+|---|---|
+| Editor sem gestão de usuários/papéis/configurações técnicas, lê a auditoria; anônimo sem admin/escrita | Atendido |
+| Sem cadastro público nem `researcher`; só admin cria contas | Atendido |
+| Bloqueio de 15 min após 5 tentativas | Atendido |
+| E-mail de recuperação capturado em homologação, link expira em 1 h | **Adiado para a S06** (comprovado só no local/CI com Mailpit) |
+| Auditoria de criação/edição/exclusão com usuário, coleção, documento e data | Atendido |
+| `.exe` renomeado rejeitado; imagem sem alt/crédito/licença/origem não salva | Atendido (inclusive no R2 real) |
+| Backup de homologação gerado, criptografado e restaurado em branch temporário, com tempo | Atendido (37 s, a partir do bucket, antes e depois da rotação) |
+| Erro forçado no Sentry sem dados pessoais | **Adiado para a S06** (sem evento real) |
+| Menu mobile por teclado e Esc; foco visível; axe | Atendido |
+| Tokens AA; nome do grupo no cabeçalho; sem logotipos (E2E) | Atendido |
+| Segregação de buckets e credenciais (requisito do prompt de execução) | Atendido (auditoria acima) |
+
+**Encerramento:** S02 **Concluída** em 22/10/2026 por autorização expressa do responsável técnico, com as exceções acima. Recomenda-se que o supervisor execute, quando possível, o roteiro manual de homologação da ficha (passos 1–7, 9–10), não reportado nesta sessão.
+
+### Pendências transferidas para a S06
+
+1. Sentry real (evento sem PII).
+2. SMTP de produção e captura em homologação (recuperação com link de 1 h).
+3. Limite de ~4,5 MB por upload na Vercel Hobby (junto com o ADR de hospedagem).
 ## Sessão de 22/10/2026 — finalização da S02
 
 **Modo:** autônomo, autorizado pelo supervisor (política de PRs, `AGENTS.md` §11.1). S03 não iniciada.
@@ -521,7 +578,7 @@ Stack (Next.js + Payload 3 + PostgreSQL + R2), monólito modular, ADR-0001/0002/
 
 ## Próximos passos
 
-1. Supervisor: reescopar os tokens R2 de preview/staging (bloqueante), criar a regra de expiração do `ppgps-preview`, conferir `r2.dev` e executar o roteiro de homologação da S02.
-2. Supervisor: decidir o adiamento de Sentry e SMTP para a S06 e marcar a S02 como **Concluída**.
-3. Agente: iniciar a **S03** somente após essa homologação, pelo protocolo do `AGENTS.md` §11.
+1. Agente: iniciar a **S03** somente com nova instrução do supervisor, pelo protocolo do `AGENTS.md` §11.
+2. Supervisor (recomendado): executar o roteiro manual de homologação da S02.
+3. S06: resolver as pendências transferidas (Sentry, SMTP, limite de upload) antes do M1.
 4. Em paralelo, o coordenador fornece os itens institucionais em aberto (textos para a S03; controlador, canal do titular e autorizações para a S04).
