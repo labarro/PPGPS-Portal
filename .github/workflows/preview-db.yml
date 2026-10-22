@@ -156,7 +156,7 @@ jobs:
 
       - name: Comentar no PR
         if: steps.config.outputs.enabled == 'true'
-        uses: actions/github-script@v8
+        uses: actions/github-script@v9
         env:
           DEPLOY_URL: ${{ steps.deploy.outputs.deployment_url }}
           BRANCH_ID: ${{ steps.neon.outputs.branch_id }}
