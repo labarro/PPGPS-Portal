@@ -40,6 +40,26 @@ describe('securityHeaders', () => {
     }
   })
 
+  it('envia CSP completa em modo report-only (S02), sem bloquear', () => {
+    const local = asMap('local')['Content-Security-Policy-Report-Only'] ?? ''
+    expect(local).toContain("default-src 'self'")
+    expect(local).toContain("object-src 'none'")
+    expect(local).toContain("frame-ancestors 'self'")
+    expect(local).not.toContain('upgrade-insecure-requests')
+    expect(asMap('staging')['Content-Security-Policy-Report-Only']).toContain(
+      'upgrade-insecure-requests',
+    )
+    const withReport = Object.fromEntries(
+      securityHeaders('preview', { cspReportUri: 'https://relatorios.example.com/csp' }).map(
+        ({ key, value }) => [key, value],
+      ),
+    )
+    expect(withReport['Content-Security-Policy-Report-Only']).toContain(
+      'report-uri https://relatorios.example.com/csp',
+    )
+    expect(asMap('production')['Cross-Origin-Opener-Policy']).toBe('same-origin')
+  })
+
   it('aplica noindex fora da produção e não na produção', () => {
     expect(asMap('preview')['X-Robots-Tag']).toBe(NOINDEX_VALUE)
     expect(asMap('staging')['X-Robots-Tag']).toBe(NOINDEX_VALUE)
