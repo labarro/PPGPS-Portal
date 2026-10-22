@@ -37,16 +37,16 @@ Testes automatizados repetitivos usam **apenas MinIO**.
 
 Faixa gratuita do R2 (mensal): 10 GB armazenados, 1 milhão de operações classe A, 10 milhões classe B, saída gratuita. **Não é garantia de custo zero**: ultrapassar gera cobrança na conta Cloudflare. Consumo previsto na S02: poucos KB e dezenas de operações por dia. Conferir mensalmente em Cloudflare → R2 → Metrics; não executar testes de carga.
 
-## Situação da auditoria (22/10/2026)
+## Situação da auditoria (22/10/2026, run `39849533647`)
 
-- Acesso anônimo negado nos 3 buckets; token de backups isolado.
-- **Tokens de preview e staging com escopo de conta** (alcançam todos os buckets, inclusive backups): reescopar cada um ao próprio bucket.
-- Expiração do `ppgps-preview` não aplicada (token sem permissão de administração).
+- Cada token (preview, staging, backups) acessa somente o próprio bucket; os demais respondem AccessDenied (403).
+- Acesso anônimo negado nos 3 buckets.
+- Expiração de 7 dias no `ppgps-preview` confirmada por sonda (`x-amz-expiration` = 7,0 dias); configurada no painel pelo supervisor. Os tokens são restritos a objetos (privilégio mínimo) e não leem a configuração de ciclo de vida — esperado.
+- `r2.dev`/domínios públicos: conferidos no painel pelo supervisor (não visíveis pela API S3).
 
-## Pendências manuais (supervisor)
+## Manutenção (supervisor)
 
-1. Reescopar os tokens R2 de `preview` e `staging` (*Apply to specific buckets only*), atualizar os segredos e revogar os antigos.
-2. Regra de ciclo de vida em `ppgps-preview`: expirar objetos após 7 dias (R2 → bucket → Settings → Object lifecycle rules; gratuito).
-3. Confirmar que `r2.dev` e domínios públicos estão **desativados** nos três buckets.
-4. CORS só se for adotado upload direto do navegador (S06).
-5. Na Vercel Hobby, uploads acima de ~4,5 MB falham na plataforma (ver ADR-0011).
+1. Ao criar ou rotacionar tokens R2, usar sempre *Object Read & Write* com *Apply to specific buckets only* e rodar "Manutenção e auditoria do R2" em seguida.
+2. Conferir mensalmente as métricas do R2 (faixa gratuita).
+3. CORS só se for adotado upload direto do navegador (S06).
+4. Na Vercel Hobby, uploads acima de ~4,5 MB falham na plataforma (ver ADR-0011; decisão na S06).
