@@ -67,6 +67,10 @@ jobs:
           } >> "$GITHUB_ENV"
       - name: Expiração de 7 dias (somente ppgps-preview)
         if: matrix.lifecycle
+        # Exige token com permissão de administração do bucket; sem ela, fica registrado e a
+        # auditoria de exposição continua.
+        continue-on-error: true
         run: node scripts/storage/r2-maintenance.mjs lifecycle
       - name: Exposição anônima e isolamento entre credenciais
+        if: always()
         run: node scripts/storage/r2-maintenance.mjs exposure
