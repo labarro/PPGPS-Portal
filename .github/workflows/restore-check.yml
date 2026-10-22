@@ -46,7 +46,7 @@ jobs:
           [[ -n "$NEON_API_KEY" && -n "$NEON_PROJECT_ID" ]] || { echo "::error::NEON_API_KEY/NEON_PROJECT_ID ausentes"; exit 1; }
           [[ "$BACKUP_AGE_IDENTITY" == AGE-SECRET-KEY-* || "$BACKUP_AGE_IDENTITY" == *AGE-SECRET-KEY-* ]] || { echo "::error::BACKUP_AGE_IDENTITY ausente no ambiente 'backups'"; exit 1; }
 
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
       - uses: ./.github/actions/setup
 
       - name: Baixar o backup do bucket ppgps-backups (caminho real de recuperação)

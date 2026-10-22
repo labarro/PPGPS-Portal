@@ -38,7 +38,7 @@ jobs:
       S3_REGION: ${{ vars.R2_REGION }}
       R2_ALL_BUCKETS: ppgps-preview,ppgps-staging,ppgps-backups
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
       - uses: ./.github/actions/setup
       - name: Selecionar credenciais do ambiente
         env:
