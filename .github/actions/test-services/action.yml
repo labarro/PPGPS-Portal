@@ -12,7 +12,7 @@ runs:
         # Imagem distroless sem root: /data precisa ser um volume gravável (como no docker-compose).
         docker volume create minio-ci-data >/dev/null
         docker run -d --name minio -p 9000:9000 -v minio-ci-data:/data \
-          -e MINIO_ROOT_USER=ci -e MINIO_ROOT_PASSWORD=ci-minio-secret \
+          -e MINIO_ROOT_USER=ciminio -e MINIO_ROOT_PASSWORD=ci-minio-secret \
           cgr.dev/chainguard/minio@sha256:32c504bea4574d8f29d719b37bc0dad920ecf3e22b81dc5cea0bb105af2ce10f \
           server /data
         docker run -d --name mailpit -p 1025:1025 -p 8025:8025 \
@@ -34,7 +34,7 @@ runs:
           echo "S3_REGION=us-east-1"
           echo "S3_BUCKET=ppgps-test"
           echo "S3_BUCKET_TEST=ppgps-test"
-          echo "S3_ACCESS_KEY_ID=ci"
+          echo "S3_ACCESS_KEY_ID=ciminio"
           echo "S3_SECRET_ACCESS_KEY=ci-minio-secret"
           echo "S3_FORCE_PATH_STYLE=true"
           echo "SMTP_HOST=localhost"
@@ -47,5 +47,5 @@ runs:
     - name: Criar bucket de teste
       shell: bash
       run: |
-        S3_ENDPOINT=http://localhost:9000 S3_BUCKET=ppgps-test S3_ACCESS_KEY_ID=ci \
+        S3_ENDPOINT=http://localhost:9000 S3_BUCKET=ppgps-test S3_ACCESS_KEY_ID=ciminio \
           S3_SECRET_ACCESS_KEY=ci-minio-secret S3_REGION=us-east-1 pnpm storage:init
