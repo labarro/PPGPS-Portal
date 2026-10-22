@@ -69,6 +69,8 @@ export interface Config {
   collections: {
     users: User;
     media: Media;
+    documents: Document;
+    'audit-logs': AuditLog;
     'payload-kv': PayloadKv;
     'payload-locked-documents': PayloadLockedDocument;
     'payload-preferences': PayloadPreference;
@@ -78,6 +80,8 @@ export interface Config {
   collectionsSelect: {
     users: UsersSelect<false> | UsersSelect<true>;
     media: MediaSelect<false> | MediaSelect<true>;
+    documents: DocumentsSelect<false> | DocumentsSelect<true>;
+    'audit-logs': AuditLogsSelect<false> | AuditLogsSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
     'payload-locked-documents': PayloadLockedDocumentsSelect<false> | PayloadLockedDocumentsSelect<true>;
     'payload-preferences': PayloadPreferencesSelect<false> | PayloadPreferencesSelect<true>;
@@ -87,8 +91,16 @@ export interface Config {
     defaultIDType: number;
   };
   fallbackLocale: ('false' | 'none' | 'null') | false | null | ('pt-BR' | 'en') | ('pt-BR' | 'en')[];
-  globals: {};
-  globalsSelect: {};
+  globals: {
+    navigation: Navigation;
+    footer: Footer;
+    'site-settings': SiteSetting;
+  };
+  globalsSelect: {
+    navigation: NavigationSelect<false> | NavigationSelect<true>;
+    footer: FooterSelect<false> | FooterSelect<true>;
+    'site-settings': SiteSettingsSelect<false> | SiteSettingsSelect<true>;
+  };
   locale: 'pt-BR' | 'en';
   widgets: {
     collections: CollectionsWidget;
@@ -123,6 +135,19 @@ export interface UserAuthOperations {
  */
 export interface User {
   id: number;
+  /**
+   * Usado apenas na saudação dos e-mails do sistema.
+   */
+  name?: string | null;
+  /**
+   * Somente o administrador altera papéis. Toda mudança gera registro "role_change" na auditoria.
+   */
+  roles: ('admin' | 'editor')[];
+  /**
+   * Contas desativadas não entram no painel nem têm permissões.
+   */
+  active?: boolean | null;
+  lastLoginAt?: string | null;
   updatedAt: string;
   createdAt: string;
   email: string;
@@ -149,6 +174,33 @@ export interface User {
  */
 export interface Media {
   id: number;
+  /**
+   * Descreva a imagem para quem usa leitor de tela (obrigatório).
+   */
+  alt: string;
+  caption?: string | null;
+  credit: string;
+  license:
+    | 'group-authorized'
+    | 'all-rights-reserved'
+    | 'cc-by'
+    | 'cc-by-sa'
+    | 'cc-by-nc'
+    | 'cc-by-nc-sa'
+    | 'cc-by-nd'
+    | 'cc-by-nc-nd'
+    | 'cc0';
+  source: 'group-archive' | 'portal-production' | 'member-provided' | 'third-party' | 'public-domain';
+  /**
+   * Ex.: evento, data, quem forneceu ou URL da fonte.
+   */
+  sourceNote?: string | null;
+  /**
+   * Marque se alguém pode ser reconhecido. Nesse caso a imagem não é exibida publicamente até haver autorização individual registrada (S04).
+   */
+  containsIdentifiablePeople: boolean;
+  prefix?: string | null;
+  _objectKey?: string | null;
   updatedAt: string;
   createdAt: string;
   url?: string | null;
@@ -160,6 +212,60 @@ export interface Media {
   height?: number | null;
   focalX?: number | null;
   focalY?: number | null;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "documents".
+ */
+export interface Document {
+  id: number;
+  title: string;
+  type: 'group-document' | 'report' | 'authorization' | 'evidence' | 'other';
+  /**
+   * Documentos não públicos só são baixados por admin/editor, via link temporário.
+   */
+  visibility: 'public' | 'members' | 'admin';
+  license:
+    | 'group-authorized'
+    | 'all-rights-reserved'
+    | 'cc-by'
+    | 'cc-by-sa'
+    | 'cc-by-nc'
+    | 'cc-by-nc-sa'
+    | 'cc-by-nd'
+    | 'cc-by-nc-nd'
+    | 'cc0';
+  source?: string | null;
+  prefix?: string | null;
+  _objectKey?: string | null;
+  updatedAt: string;
+  createdAt: string;
+  url?: string | null;
+  thumbnailURL?: string | null;
+  filename?: string | null;
+  mimeType?: string | null;
+  filesize?: number | null;
+  width?: number | null;
+  height?: number | null;
+}
+/**
+ * Registros somente leitura de criação, edição, exclusão, login e mudança de papel.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "audit-logs".
+ */
+export interface AuditLog {
+  id: number;
+  at: string;
+  action: 'create' | 'update' | 'delete' | 'login' | 'role_change' | 'publish' | 'unpublish' | 'export';
+  targetCollection: string;
+  documentId?: string | null;
+  userId?: string | null;
+  userEmail?: string | null;
+  diffSummary?: string | null;
+  ip?: string | null;
+  updatedAt: string;
+  createdAt: string;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -192,6 +298,10 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'media';
         value: number | Media;
+      } | null)
+    | ({
+        relationTo: 'documents';
+        value: number | Document;
       } | null);
   globalSlug?: string | null;
   user: {
@@ -240,6 +350,10 @@ export interface PayloadMigration {
  * via the `definition` "users_select".
  */
 export interface UsersSelect<T extends boolean = true> {
+  name?: T;
+  roles?: T;
+  active?: T;
+  lastLoginAt?: T;
   updatedAt?: T;
   createdAt?: T;
   email?: T;
@@ -263,6 +377,15 @@ export interface UsersSelect<T extends boolean = true> {
  * via the `definition` "media_select".
  */
 export interface MediaSelect<T extends boolean = true> {
+  alt?: T;
+  caption?: T;
+  credit?: T;
+  license?: T;
+  source?: T;
+  sourceNote?: T;
+  containsIdentifiablePeople?: T;
+  prefix?: T;
+  _objectKey?: T;
   updatedAt?: T;
   createdAt?: T;
   url?: T;
@@ -274,6 +397,44 @@ export interface MediaSelect<T extends boolean = true> {
   height?: T;
   focalX?: T;
   focalY?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "documents_select".
+ */
+export interface DocumentsSelect<T extends boolean = true> {
+  title?: T;
+  type?: T;
+  visibility?: T;
+  license?: T;
+  source?: T;
+  prefix?: T;
+  _objectKey?: T;
+  updatedAt?: T;
+  createdAt?: T;
+  url?: T;
+  thumbnailURL?: T;
+  filename?: T;
+  mimeType?: T;
+  filesize?: T;
+  width?: T;
+  height?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "audit-logs_select".
+ */
+export interface AuditLogsSelect<T extends boolean = true> {
+  at?: T;
+  action?: T;
+  targetCollection?: T;
+  documentId?: T;
+  userId?: T;
+  userEmail?: T;
+  diffSummary?: T;
+  ip?: T;
+  updatedAt?: T;
+  createdAt?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -314,6 +475,156 @@ export interface PayloadMigrationsSelect<T extends boolean = true> {
   batch?: T;
   updatedAt?: T;
   createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "navigation".
+ */
+export interface Navigation {
+  id: number;
+  /**
+   * Inclua apenas páginas que já existem. O menu aparece no cabeçalho e no menu do celular.
+   */
+  items?:
+    | {
+        /**
+         * Texto curto exibido no menu.
+         */
+        label: string;
+        /**
+         * Caminho interno (/blog) ou endereço https://.
+         */
+        href: string;
+        id?: string | null;
+      }[]
+    | null;
+  updatedAt?: string | null;
+  createdAt?: string | null;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "footer".
+ */
+export interface Footer {
+  id: number;
+  about?: string | null;
+  /**
+   * Use um e-mail institucional do grupo, nunca um e-mail pessoal.
+   */
+  contactEmail?: string | null;
+  links?:
+    | {
+        /**
+         * Ex.: Espelho do grupo no DGP/CNPq.
+         */
+        label: string;
+        /**
+         * Caminho interno (/blog) ou endereço https://.
+         */
+        href: string;
+        id?: string | null;
+      }[]
+    | null;
+  /**
+   * Privacidade, acessibilidade e "Sobre o portal" (páginas criadas na S06).
+   */
+  legalLinks?:
+    | {
+        /**
+         * Ex.: Privacidade.
+         */
+        label: string;
+        /**
+         * Caminho interno (/blog) ou endereço https://.
+         */
+        href: string;
+        id?: string | null;
+      }[]
+    | null;
+  updatedAt?: string | null;
+  createdAt?: string | null;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "site-settings".
+ */
+export interface SiteSetting {
+  id: number;
+  /**
+   * Nome definido pelo coordenador (Q2).
+   */
+  siteName: string;
+  /**
+   * Usado em títulos de página e no cabeçalho em telas pequenas.
+   */
+  shortName: string;
+  defaultDescription?: string | null;
+  technical?: {
+    /**
+     * Reservado para indicadores (M2/V3).
+     */
+    showIndicators?: boolean | null;
+  };
+  updatedAt?: string | null;
+  createdAt?: string | null;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "navigation_select".
+ */
+export interface NavigationSelect<T extends boolean = true> {
+  items?:
+    | T
+    | {
+        label?: T;
+        href?: T;
+        id?: T;
+      };
+  updatedAt?: T;
+  createdAt?: T;
+  globalType?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "footer_select".
+ */
+export interface FooterSelect<T extends boolean = true> {
+  about?: T;
+  contactEmail?: T;
+  links?:
+    | T
+    | {
+        label?: T;
+        href?: T;
+        id?: T;
+      };
+  legalLinks?:
+    | T
+    | {
+        label?: T;
+        href?: T;
+        id?: T;
+      };
+  updatedAt?: T;
+  createdAt?: T;
+  globalType?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "site-settings_select".
+ */
+export interface SiteSettingsSelect<T extends boolean = true> {
+  siteName?: T;
+  shortName?: T;
+  defaultDescription?: T;
+  technical?:
+    | T
+    | {
+        showIndicators?: T;
+      };
+  updatedAt?: T;
+  createdAt?: T;
+  globalType?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
