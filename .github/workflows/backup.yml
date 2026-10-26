@@ -78,7 +78,7 @@ jobs:
         if: steps.config.outputs.enabled == 'true'
       - uses: ./.github/actions/setup
         if: steps.config.outputs.enabled == 'true'
-      - uses: actions/download-artifact@v5
+      - uses: actions/download-artifact@v8
         if: steps.config.outputs.enabled == 'true'
         with:
           name: backup-staging
