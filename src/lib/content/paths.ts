@@ -5,6 +5,9 @@
 export const GROUP_BASE_PATH = '/o-grupo'
 export const LINES_BASE_PATH = '/linhas'
 export const MEMBERS_BASE_PATH = '/integrantes'
+export const BLOG_BASE_PATH = '/blog'
+export const BLOG_RSS_PATH = '/blog/rss.xml'
+export const BLOG_ATOM_PATH = '/blog/atom.xml'
 
 /** Slugs reservados em /integrantes (rotas futuras de orientações e egressos, S07). */
 export const RESERVED_PERSON_SLUGS: readonly string[] = ['orientacoes', 'egressos']
@@ -32,11 +35,29 @@ export const pagePath = (slug: string): string => `${GROUP_BASE_PATH}/${slug}`
 
 export const personPath = (slug: string): string => `${MEMBERS_BASE_PATH}/${slug}`
 
-export type ContentCollection = 'research-lines' | 'pages' | 'people'
+/** S05: ensaios e taxonomia do blog. */
+export const essayPath = (slug: string): string => `${BLOG_BASE_PATH}/${slug}`
+export const categoryPath = (slug: string): string => `${BLOG_BASE_PATH}/categoria/${slug}`
+export const tagPath = (slug: string): string => `${BLOG_BASE_PATH}/tag/${slug}`
+
+export type ContentCollection =
+  'research-lines' | 'pages' | 'people' | 'essays' | 'categories' | 'tags'
 
 export function pathForDocument(collection: ContentCollection, slug: string): string {
-  if (collection === 'people') return personPath(slug)
-  return collection === 'research-lines' ? researchLinePath(slug) : pagePath(slug)
+  switch (collection) {
+    case 'people':
+      return personPath(slug)
+    case 'research-lines':
+      return researchLinePath(slug)
+    case 'essays':
+      return essayPath(slug)
+    case 'categories':
+      return categoryPath(slug)
+    case 'tags':
+      return tagPath(slug)
+    default:
+      return pagePath(slug)
+  }
 }
 
 /**
@@ -58,7 +79,10 @@ export function normalizePath(path: string): string {
 
 /** Caminhos elegíveis a redirecionamento (somente conteúdo com slug editável). */
 export function isRedirectCandidate(path: string): boolean {
-  return /^\/(linhas|o-grupo|integrantes)\/[^/]+\/?$/i.test(path)
+  return (
+    /^\/(linhas|o-grupo|integrantes|blog)\/[^/]+\/?$/i.test(path) ||
+    /^\/blog\/(categoria|tag)\/[^/]+\/?$/i.test(path)
+  )
 }
 
 /** URL externa de referência: http(s) somente (o espelho do DGP só responde em http). */

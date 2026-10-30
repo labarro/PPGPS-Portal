@@ -9,8 +9,12 @@ import type { Where } from 'payload'
  * - S04: pessoa visível somente com `visibility = public`, sem arquivamento e com consentimento
  *   `public_profile` vigente (inclusive docentes e líderes). Vínculos seguem a pessoa.
  *   Foto exige também o escopo `photo`; e-mail, o escopo `email`.
+ * - S05: ensaio visível somente na versão principal publicada, em estado público do fluxo
+ *   editorial (agendado, publicado ou arquivado) e com `publishedAt` já alcançado — um ensaio
+ *   agendado aparece exatamente na data, sem depender do job. Arquivados continuam acessíveis
+ *   pela URL (com aviso), mas ficam fora de listagens, RSS e sitemap (`isEssayListed`).
  */
-export type PublicCollection = 'research-lines' | 'pages' | 'people' | 'memberships'
+export type PublicCollection = 'research-lines' | 'pages' | 'people' | 'memberships' | 'essays'
 
 type VisibilityDoc = {
   _status?: 'draft' | 'published' | null
@@ -48,6 +52,7 @@ export const canShowEmail = (person: PersonVisibility | null | undefined): boole
 
 export function canViewPublic(collection: PublicCollection, doc: VisibilityDoc | null | undefined) {
   if (!doc) return false
+  if (collection === 'essays') return canViewEssayPublic(doc as EssayVisibility)
   if (collection === 'people') return canViewPersonPublic(doc)
   if (collection === 'memberships') {
     return typeof doc.person === 'object' && canViewPersonPublic(doc.person as PersonVisibility)
@@ -66,6 +71,7 @@ const PERSON_PUBLIC: Where[] = [
 
 /** Mesmo critério de `canViewPublic`, como filtro de consulta (usado pelo `read` das coleções). */
 export function publicWhere(collection: PublicCollection): Where {
+  if (collection === 'essays') return essayPublicWhere()
   if (collection === 'people') return { and: PERSON_PUBLIC }
   if (collection === 'memberships') {
     return {
@@ -104,3 +110,88 @@ export const PERSON_ADMIN_FIELDS = [
 export const MEMBERSHIP_ADMIN_FIELDS = ['endReason', 'source', 'sourceUrl', 'collectedAt'] as const
 
 export const MEDIA_ADMIN_FIELDS = ['consentRecord', 'publicConsent'] as const
+
+// ---------------------------------------------------------------------------------------------
+// S05 — ensaios
+// ---------------------------------------------------------------------------------------------
+
+/** Estados do fluxo que podem estar na versão principal publicada. */
+export const ESSAY_PUBLIC_STATES = ['scheduled', 'published', 'archived'] as const
+/** Estados que entram em listagens, RSS e sitemap (arquivados ficam só na URL). */
+export const ESSAY_LISTED_STATES = ['scheduled', 'published'] as const
+
+export type EssayVisibility = {
+  _status?: string | null
+  workflowStatus?: string | null
+  publishedAt?: string | null
+  archivedAt?: string | null
+}
+
+const reached = (value: string | null | undefined, now: Date) => {
+  if (!value) return false
+  const time = new Date(value).getTime()
+  return Number.isFinite(time) && time <= now.getTime()
+}
+
+export function canViewEssayPublic(
+  doc: EssayVisibility | null | undefined,
+  now: Date = new Date(),
+): boolean {
+  return (
+    !!doc &&
+    doc._status === 'published' &&
+    (ESSAY_PUBLIC_STATES as readonly string[]).includes(doc.workflowStatus ?? '') &&
+    reached(doc.publishedAt, now)
+  )
+}
+
+export function isEssayListed(
+  doc: EssayVisibility | null | undefined,
+  now: Date = new Date(),
+): boolean {
+  return (
+    canViewEssayPublic(doc, now) &&
+    !doc?.archivedAt &&
+    (ESSAY_LISTED_STATES as readonly string[]).includes(doc?.workflowStatus ?? '')
+  )
+}
+
+/** Mesmo critério de `canViewEssayPublic` como filtro (avaliado a cada consulta). */
+export function essayPublicWhere(now: Date = new Date()): Where {
+  return {
+    and: [
+      { _status: { equals: 'published' } },
+      { workflowStatus: { in: [...ESSAY_PUBLIC_STATES] } },
+      { publishedAt: { less_than_equal: now.toISOString() } },
+    ],
+  }
+}
+
+/** Mesmo critério de `isEssayListed` como filtro. */
+export function essayListedWhere(now: Date = new Date()): Where {
+  return {
+    and: [
+      { _status: { equals: 'published' } },
+      { workflowStatus: { in: [...ESSAY_LISTED_STATES] } },
+      { publishedAt: { less_than_equal: now.toISOString() } },
+      { archivedAt: { exists: false } },
+    ],
+  }
+}
+
+/**
+ * Campos internos dos ensaios: nunca saem em respostas públicas (acesso por campo) — revisão,
+ * checklist, agenda e quem submeteu/aprovou/publicou ficam restritos a admin/editor.
+ */
+export const ESSAY_ADMIN_FIELDS = [
+  'scheduledAt',
+  'submittedBy',
+  'submittedAt',
+  'approvedBy',
+  'approvedAt',
+  'publishedBy',
+  'archivedBy',
+  'reviewHistory',
+  'checklist',
+  'internalNotes',
+] as const

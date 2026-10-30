@@ -16,8 +16,17 @@ type SlugDoc = PersonVisibility & {
  * Endereços de pessoas não públicas nunca geram redirecionamento (revelariam o novo slug,
  * derivado do nome, a quem conhece o antigo).
  */
-const isPublishedSlugDoc = (collection: ContentCollection, doc: SlugDoc | null | undefined) =>
-  collection === 'people' ? canViewPersonPublic(doc) : doc?._status === 'published'
+/** Coleções sem rascunhos: o endereço vale assim que o registro é salvo (S05: taxonomia). */
+const ALWAYS_PUBLISHED: readonly ContentCollection[] = ['categories', 'tags']
+
+const isPublishedSlugDoc = (collection: ContentCollection, doc: SlugDoc | null | undefined) => {
+  if (collection === 'people') return canViewPersonPublic(doc)
+  if (ALWAYS_PUBLISHED.includes(collection)) return !!doc
+  return doc?._status === 'published'
+}
+
+const hasDrafts = (collection: ContentCollection) =>
+  collection !== 'people' && !ALWAYS_PUBLISHED.includes(collection)
 
 const contextKey = (collection: string, id: number | string | undefined) =>
   `previousPublishedSlug:${collection}:${String(id ?? 'new')}`
@@ -30,7 +39,7 @@ export const rememberPublishedSlug =
   (collection: ContentCollection): CollectionBeforeChangeHook =>
   async ({ data, operation, originalDoc, req }) => {
     if (operation !== 'update' || !originalDoc?.id) return data
-    if (collection !== 'people' && data?._status !== 'published') return data
+    if (hasDrafts(collection) && data?._status !== 'published') return data
     const current = (await req.payload.db.findOne({
       collection,
       req,

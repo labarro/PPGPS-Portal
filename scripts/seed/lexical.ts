@@ -24,6 +24,11 @@ const block = (type: string, children: Node[], extra: Node = {}): Node => ({
 export const paragraph = (value: string): Node =>
   block('paragraph', [text(value)], { textFormat: 0, textStyle: '' })
 
+export const heading = (value: string, tag: 'h2' | 'h3' = 'h2'): Node =>
+  block('heading', [text(value)], { tag })
+
+export const quote = (value: string): Node => block('quote', [text(value)])
+
 export const bulletList = (items: string[]): Node =>
   block(
     'list',

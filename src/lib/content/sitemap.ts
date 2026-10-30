@@ -1,12 +1,16 @@
 import type { MetadataRoute } from 'next'
 
 import {
+  BLOG_BASE_PATH,
+  categoryPath,
+  essayPath,
   FIXED_GROUP_SLUGS,
   GROUP_SECTIONS,
   MEMBERS_BASE_PATH,
   pagePath,
   personPath,
   researchLinePath,
+  tagPath,
 } from './paths'
 
 export type SitemapEntries = {
@@ -15,6 +19,11 @@ export type SitemapEntries = {
   pages: { slug: string; updatedAt: string }[]
   /** S04: somente perfis com consentimento `public_profile` vigente (acesso público). */
   people?: { slug: string; updatedAt: string }[]
+  /** S05: somente ensaios listáveis (publicados, data alcançada, não arquivados). */
+  essays?: { slug: string; updatedAt: string }[]
+  /** S05: categorias e tags com ao menos um ensaio listável. */
+  categories?: { slug: string; updatedAt: string }[]
+  tags?: { slug: string; updatedAt: string }[]
 }
 
 /**
@@ -72,6 +81,43 @@ export function buildSitemap(entries: SitemapEntries, siteUrl: string): Metadata
         lastModified: person.updatedAt,
         changeFrequency: 'monthly',
         priority: 0.6,
+      })
+    }
+  }
+
+  const essays = entries.essays ?? []
+  if (essays.length > 0) {
+    items.push({
+      url: url(BLOG_BASE_PATH),
+      lastModified: essays
+        .map((essay) => essay.updatedAt)
+        .sort()
+        .at(-1),
+      changeFrequency: 'weekly',
+      priority: 0.8,
+    })
+    for (const essay of essays) {
+      items.push({
+        url: url(essayPath(essay.slug)),
+        lastModified: essay.updatedAt,
+        changeFrequency: 'monthly',
+        priority: 0.7,
+      })
+    }
+    for (const category of entries.categories ?? []) {
+      items.push({
+        url: url(categoryPath(category.slug)),
+        lastModified: category.updatedAt,
+        changeFrequency: 'weekly',
+        priority: 0.5,
+      })
+    }
+    for (const tag of entries.tags ?? []) {
+      items.push({
+        url: url(tagPath(tag.slug)),
+        lastModified: tag.updatedAt,
+        changeFrequency: 'weekly',
+        priority: 0.4,
       })
     }
   }

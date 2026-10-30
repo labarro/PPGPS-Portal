@@ -12,10 +12,20 @@ import { DEFAULT_HERO_ACTIONS, DEFAULT_HOME_SECTIONS } from '../../src/lib/conte
 import { resolveAppEnv } from '../../src/lib/env/app-env'
 import { DEFAULT_NAVIGATION } from '../../src/lib/site/chrome'
 import type { GroupProfile, ResearchLine } from '../../src/payload-types'
+import { categoriesSeed } from './data/editorial'
 import { groupProfileSeed, researchLinesSeed } from './data/institutional'
 
-/** Menu padrão gravado pela S03 (antes de existir /integrantes). */
-const S03_NAVIGATION_HREFS = ['/', '/o-grupo', '/linhas'].join('|')
+/** Menus padrão gravados pela S03 (antes de /integrantes) e pela S04 (antes de /blog). */
+const LEGACY_NAVIGATION_HREFS = [
+  ['/', '/o-grupo', '/linhas'].join('|'),
+  ['/', '/o-grupo', '/linhas', '/integrantes'].join('|'),
+]
+
+/** Seções habilitadas nos padrões da S03 e da S04 (antes dos destaques do blog, S05). */
+const LEGACY_ENABLED_SECTIONS = [
+  ['about', 'research-lines', 'institutional-references'].join('|'),
+  ['about', 'research-lines', 'featured-members', 'institutional-references'].join('|'),
+]
 
 async function main(): Promise<void> {
   const env = resolveAppEnv(process.env.APP_ENV)
@@ -81,27 +91,30 @@ async function main(): Promise<void> {
     overrideAccess: true,
     depth: 0,
   })
-  const isS03Default =
+  const isLegacyDefault =
     !!homepage?.sections &&
     homepage.sections.length === DEFAULT_HOME_SECTIONS.length &&
     homepage.sections.every(
       (section, index) =>
-        section.kind === DEFAULT_HOME_SECTIONS[index]?.kind &&
-        !section.heading &&
-        !section.intro &&
-        (section.enabled ?? true) ===
-          (section.kind === 'featured-members' ? false : DEFAULT_HOME_SECTIONS[index]?.enabled),
+        section.kind === DEFAULT_HOME_SECTIONS[index]?.kind && !section.heading && !section.intro,
+    ) &&
+    LEGACY_ENABLED_SECTIONS.includes(
+      homepage.sections
+        .filter((section) => section.enabled ?? true)
+        .map((section) => section.kind)
+        .join('|'),
     )
-  if (homepage?.updatedAt && isS03Default) {
-    // Seções idênticas ao padrão da S03: habilita "Integrantes em destaque" (disponível na S04).
-    // O site só exibe a seção quando houver perfis autorizados.
+  if (homepage?.updatedAt && isLegacyDefault) {
+    // Seções idênticas a um padrão anterior (nunca editadas): habilita as seções disponíveis
+    // (S04: integrantes em destaque; S05: destaques do blog). O site só exibe cada seção
+    // quando houver conteúdo público.
     await payload.updateGlobal({
       slug: 'homepage',
       data: { sections: DEFAULT_HOME_SECTIONS, _status: 'published' },
       overrideAccess: true,
       context,
     })
-    log('Página inicial padrão da S03 atualizada com "Integrantes em destaque".')
+    log('Página inicial padrão atualizada com as seções disponíveis (integrantes e blog).')
   } else if (homepage?.updatedAt && homepage.sections && homepage.sections.length > 0) {
     log('Página inicial já configurada; mantida.')
   } else {
@@ -125,15 +138,15 @@ async function main(): Promise<void> {
     depth: 0,
   })
   const currentHrefs = (navigation.items ?? []).map((item) => item.href).join('|')
-  if (currentHrefs === S03_NAVIGATION_HREFS) {
-    // Menu idêntico ao padrão da S03 (nunca editado): recebe o item "Integrantes" (S04).
+  if (LEGACY_NAVIGATION_HREFS.includes(currentHrefs)) {
+    // Menu idêntico a um padrão anterior (nunca editado): recebe "Integrantes" (S04) e "Blog" (S05).
     await payload.updateGlobal({
       slug: 'navigation',
       data: { items: DEFAULT_NAVIGATION },
       overrideAccess: true,
       context,
     })
-    log('Menu padrão da S03 atualizado com "Integrantes".')
+    log('Menu padrão anterior atualizado (Integrantes e Blog).')
   } else if (navigation.items && navigation.items.length > 0) {
     log('Menu principal já configurado; mantido.')
   } else {
@@ -143,7 +156,23 @@ async function main(): Promise<void> {
       overrideAccess: true,
       context,
     })
-    log('Menu principal preenchido (Início, O grupo, Linhas temáticas, Integrantes).')
+    log('Menu principal preenchido (Início, O grupo, Linhas temáticas, Integrantes, Blog).')
+  }
+
+  // Categorias do blog (S05): Bioética e Promoção da Saúde (Q7), somente se não houver nenhuma.
+  const categories = await payload.count({ collection: 'categories', overrideAccess: true })
+  if (categories.totalDocs > 0) {
+    log(`Categorias do blog já cadastradas (${categories.totalDocs}); mantidas.`)
+  } else {
+    for (const category of categoriesSeed) {
+      await payload.create({
+        collection: 'categories',
+        data: { ...category },
+        overrideAccess: true,
+        context,
+      })
+      log(`Categoria "${category.name}" criada.`)
+    }
   }
 
   await payload.destroy()

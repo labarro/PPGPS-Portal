@@ -14,6 +14,8 @@ export type SiteChrome = {
   shortName: string
   description: string | null
   navigation: SiteLink[]
+  /** S05: licença padrão dos ensaios e complemento do aviso editorial. */
+  editorial: { defaultLicense: string | null; noticeComplement: string | null }
   footer: {
     about: string | null
     contactEmail: string | null
@@ -22,12 +24,13 @@ export type SiteChrome = {
   }
 }
 
-/** Menu padrão enquanto o global "Navegação" estiver vazio (rotas existentes até a S04). */
+/** Menu padrão enquanto o global "Navegação" estiver vazio (rotas existentes até a S05). */
 export const DEFAULT_NAVIGATION: SiteLink[] = [
   { label: 'Início', href: '/' },
   { label: 'O grupo', href: '/o-grupo' },
   { label: 'Linhas temáticas', href: '/linhas' },
   { label: 'Integrantes', href: '/integrantes' },
+  { label: 'Blog', href: '/blog' },
 ]
 
 export const DEFAULT_CHROME: SiteChrome = {
@@ -35,6 +38,7 @@ export const DEFAULT_CHROME: SiteChrome = {
   shortName: SITE_SHORT_NAME,
   description: null,
   navigation: DEFAULT_NAVIGATION,
+  editorial: { defaultLicense: null, noticeComplement: null },
   footer: { about: null, contactEmail: null, links: [], legalLinks: [] },
 }
 
@@ -73,6 +77,10 @@ export const getSiteChrome = cache(async (): Promise<SiteChrome> => {
       shortName: settings.shortName || SITE_SHORT_NAME,
       description: settings.defaultDescription ?? null,
       navigation: nav.length > 0 ? nav : DEFAULT_NAVIGATION,
+      editorial: {
+        defaultLicense: settings.editorial?.defaultLicense ?? null,
+        noticeComplement: settings.editorial?.noticeComplement ?? null,
+      },
       footer: {
         about: footer.about ?? null,
         contactEmail: footer.contactEmail ?? null,

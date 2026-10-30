@@ -88,6 +88,57 @@ export function personJsonLd(
   }
 }
 
+/**
+ * JSON-LD `BlogPosting` dos ensaios (planejamento 16.7; ficha S05). Autores pelo nome
+ * publicado; `url` do perfil só quando a pessoa tem perfil público. O grupo é o editor
+ * (`publisher`), sem vínculo institucional. Gênero informa a natureza ensaística.
+ */
+export function blogPostingJsonLd(
+  essay: {
+    title: string
+    subtitle?: string | null
+    description?: string | null
+    natureLabel: string
+    publishedAt?: string | null
+    modifiedAt?: string | null
+    category?: string | null
+    tags?: string[]
+    authors: { name: string; personSlug: string | null }[]
+    licenseUrl?: string | null
+    imageUrl?: string | null
+    wordCount?: number | null
+  },
+  options: { siteUrl: string; path: string },
+): Record<string, unknown> {
+  const url = `${options.siteUrl}${options.path}`
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'BlogPosting',
+    '@id': `${url}#ensaio`,
+    headline: essay.title,
+    ...(essay.subtitle ? { alternativeHeadline: essay.subtitle } : {}),
+    ...(essay.description ? { description: essay.description } : {}),
+    url,
+    mainEntityOfPage: url,
+    inLanguage: 'pt-BR',
+    genre: essay.natureLabel,
+    ...(essay.publishedAt ? { datePublished: essay.publishedAt } : {}),
+    ...(essay.modifiedAt ? { dateModified: essay.modifiedAt } : {}),
+    ...(essay.category ? { articleSection: essay.category } : {}),
+    ...(essay.tags && essay.tags.length > 0 ? { keywords: essay.tags.join(', ') } : {}),
+    author: essay.authors.map((author) => ({
+      '@type': 'Person',
+      name: author.name,
+      ...(author.personSlug ? { url: `${options.siteUrl}/integrantes/${author.personSlug}` } : {}),
+    })),
+    publisher: { '@id': `${options.siteUrl}/#grupo` },
+    ...(essay.imageUrl ? { image: new URL(essay.imageUrl, options.siteUrl).toString() } : {}),
+    ...(essay.licenseUrl ? { license: essay.licenseUrl } : {}),
+    ...(essay.wordCount ? { wordCount: essay.wordCount } : {}),
+    isAccessibleForFree: true,
+  }
+}
+
 export function breadcrumbJsonLd(
   items: { name: string; path: string }[],
   siteUrl: string,

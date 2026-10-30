@@ -163,3 +163,56 @@ describe('blocos de páginas', () => {
     expect(renderToStaticMarkup(<RenderBlocks blocks={[]} />)).toBe('')
   })
 })
+
+describe('S05: imagens e XSS no texto dos ensaios', () => {
+  it('imagem autorizada vira figura com alt, legenda e crédito; não autorizada não aparece', () => {
+    const html = renderToStaticMarkup(
+      <RichText
+        data={doc(
+          {
+            type: 'upload',
+            relationTo: 'media',
+            value: {
+              url: '/api/media/file/foto.png',
+              alt: 'Roda de conversa fictícia',
+              caption: 'Legenda fictícia.',
+              credit: 'Acervo fictício',
+              width: 800,
+              height: 600,
+            },
+          },
+          { type: 'upload', relationTo: 'media', value: 42 },
+        )}
+      />,
+    )
+    expect(html).toContain('<figure>')
+    expect(html).toContain('alt="Roda de conversa fictícia"')
+    expect(html).toContain('Crédito: Acervo fictício')
+    expect(html.match(/<img/g)).toHaveLength(1)
+  })
+
+  it('script, estilo e javascript: inseridos no conteúdo não são executáveis', () => {
+    const html = renderToStaticMarkup(
+      <RichText
+        className="prose-essay"
+        data={doc(
+          paragraph(
+            text('<script>window.__xss = 1</script>'),
+            text('<img src=x onerror=alert(1)>'),
+            {
+              type: 'link',
+              fields: { linkType: 'custom', url: 'javascript:alert(1)' },
+              children: [text('clique')],
+            },
+          ),
+          { type: 'html', html: '<style>body{display:none}</style>', children: [] },
+        )}
+      />,
+    )
+    expect(html).not.toContain('<script')
+    expect(html).not.toContain('<style')
+    expect(html).not.toContain('<img')
+    expect(html).not.toContain('javascript:')
+    expect(html).toContain('&lt;script&gt;window.__xss = 1&lt;/script&gt;')
+  })
+})

@@ -18,7 +18,7 @@ describe('Payload (integração com PostgreSQL)', () => {
     await cleanupAccounts(payload)
   })
 
-  it('inicializa com as coleções e globals da S02, da S03 e da S04', () => {
+  it('inicializa com as coleções e globals da S02 à S05', () => {
     const slugs = payload.config.collections.map((collection) => collection.slug)
     expect(slugs).toEqual(
       expect.arrayContaining([
@@ -32,16 +32,27 @@ describe('Payload (integração com PostgreSQL)', () => {
         'people',
         'memberships',
         'consent-records',
+        // S05: blog acadêmico (e a fila de jobs do Payload para o agendamento).
+        'essays',
+        'categories',
+        'tags',
+        'payload-jobs',
       ]),
     )
     const globals = payload.config.globals.map((global) => global.slug)
-    expect(globals).toEqual(['group-profile', 'homepage', 'navigation', 'footer', 'site-settings'])
+    expect(globals).toEqual([
+      'group-profile',
+      'homepage',
+      'navigation',
+      'footer',
+      'site-settings',
+      'payload-jobs-stats',
+    ])
   })
 
   it('não antecipa coleções de sprints futuras nem coleções removidas (ADR-0006)', () => {
     const slugs = payload.config.collections.map((collection) => collection.slug)
     for (const future of [
-      'essays',
       'academic-completions',
       'alumni-profiles',
       'career-entries',

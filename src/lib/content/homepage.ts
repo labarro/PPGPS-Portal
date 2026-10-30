@@ -8,9 +8,8 @@ export const HOME_SECTION_OPTIONS = [
   { value: 'research-lines', label: 'Linhas temáticas', defaultHeading: 'Linhas temáticas' },
   {
     value: 'editorial-highlights',
-    label: 'Destaques editoriais (disponível na S05)',
+    label: 'Destaques editoriais (blog)',
     defaultHeading: 'Destaques do blog',
-    availableFrom: 'S05',
   },
   {
     value: 'featured-members',
@@ -50,7 +49,7 @@ export const HOME_SECTION_OPTIONS = [
 
 export type HomeSectionKind = (typeof HOME_SECTION_OPTIONS)[number]['value']
 
-/** Seções que o site sabe exibir nesta versão (S04). */
+/** Seções que o site sabe exibir nesta versão (S05). */
 export const AVAILABLE_SECTIONS: readonly HomeSectionKind[] = HOME_SECTION_OPTIONS.filter(
   (option) => !('availableFrom' in option),
 ).map((option) => option.value)

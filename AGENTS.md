@@ -82,6 +82,7 @@ Atualização de versão **maior** de Next/Payload/React só em sprint dedicada.
 | Popular dados fictícios | `pnpm seed` |
 | Conteúdo institucional público verificado (idempotente; bloqueado em produção) | `pnpm seed:content` |
 | Integrantes fictícios (idempotente; bloqueado em homologação e produção) | `pnpm seed:people` |
+| Ensaios fictícios do blog (idempotente; bloqueado em homologação e produção) | `pnpm seed:essays` |
 | Importar integrantes de CSV (pré-visualização; `--apply` grava; idempotente por ORCID/Lattes) | `pnpm import:people <arquivo.csv> [--apply]` |
 | Lighthouse CI (app em `localhost:3100`) | `pnpm dlx @lhci/cli@0.15.1 autorun` |
 | Desenvolvimento | `pnpm dev` |

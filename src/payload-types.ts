@@ -72,12 +72,16 @@ export interface Config {
     people: Person;
     memberships: Membership;
     'consent-records': ConsentRecord;
+    essays: Essay;
+    categories: Category;
+    tags: Tag;
     users: User;
     media: Media;
     documents: Document;
     'audit-logs': AuditLog;
     redirects: Redirect;
     'payload-kv': PayloadKv;
+    'payload-jobs': PayloadJob;
     'payload-locked-documents': PayloadLockedDocument;
     'payload-preferences': PayloadPreference;
     'payload-migrations': PayloadMigration;
@@ -94,12 +98,16 @@ export interface Config {
     people: PeopleSelect<false> | PeopleSelect<true>;
     memberships: MembershipsSelect<false> | MembershipsSelect<true>;
     'consent-records': ConsentRecordsSelect<false> | ConsentRecordsSelect<true>;
+    essays: EssaysSelect<false> | EssaysSelect<true>;
+    categories: CategoriesSelect<false> | CategoriesSelect<true>;
+    tags: TagsSelect<false> | TagsSelect<true>;
     users: UsersSelect<false> | UsersSelect<true>;
     media: MediaSelect<false> | MediaSelect<true>;
     documents: DocumentsSelect<false> | DocumentsSelect<true>;
     'audit-logs': AuditLogsSelect<false> | AuditLogsSelect<true>;
     redirects: RedirectsSelect<false> | RedirectsSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
+    'payload-jobs': PayloadJobsSelect<false> | PayloadJobsSelect<true>;
     'payload-locked-documents': PayloadLockedDocumentsSelect<false> | PayloadLockedDocumentsSelect<true>;
     'payload-preferences': PayloadPreferencesSelect<false> | PayloadPreferencesSelect<true>;
     'payload-migrations': PayloadMigrationsSelect<false> | PayloadMigrationsSelect<true>;
@@ -114,6 +122,7 @@ export interface Config {
     navigation: Navigation;
     footer: Footer;
     'site-settings': SiteSetting;
+    'payload-jobs-stats': PayloadJobsStat;
   };
   globalsSelect: {
     'group-profile': GroupProfileSelect<false> | GroupProfileSelect<true>;
@@ -121,6 +130,7 @@ export interface Config {
     navigation: NavigationSelect<false> | NavigationSelect<true>;
     footer: FooterSelect<false> | FooterSelect<true>;
     'site-settings': SiteSettingsSelect<false> | SiteSettingsSelect<true>;
+    'payload-jobs-stats': PayloadJobsStatsSelect<false> | PayloadJobsStatsSelect<true>;
   };
   locale: 'pt-BR' | 'en';
   widgets: {
@@ -128,7 +138,13 @@ export interface Config {
   };
   user: User;
   jobs: {
-    tasks: unknown;
+    tasks: {
+      publishScheduledEssays: TaskPublishScheduledEssays;
+      inline: {
+        input: unknown;
+        output: unknown;
+      };
+    };
     workflows: unknown;
   };
 }
@@ -596,6 +612,208 @@ export interface Membership {
   createdAt: string;
 }
 /**
+ * Ensaios do blog. Salve como rascunho e use as "Ações editoriais" (barra lateral) para enviar à revisão, devolver, aprovar, agendar, publicar e arquivar.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "essays".
+ */
+export interface Essay {
+  id: number;
+  title: string;
+  subtitle?: string | null;
+  /**
+   * Duas ou três frases. Usado nos cartões do blog, na home, no RSS e no SEO.
+   */
+  excerpt?: string | null;
+  /**
+   * Opcional. A imagem precisa ter crédito e licença; pessoas identificáveis exigem autorização de imagem.
+   */
+  cover?: (number | null) | Media;
+  content?: {
+    root: {
+      type: string;
+      children: {
+        type: any;
+        version: number;
+        [k: string]: unknown;
+      }[];
+      direction: ('ltr' | 'rtl') | null;
+      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+      indent: number;
+      version: number;
+    };
+    [k: string]: unknown;
+  } | null;
+  /**
+   * Integrantes cadastrados (pessoa) ou convidados externos. Os autores não têm conta: o texto é cadastrado em nome deles. O link para o perfil só aparece se a pessoa tiver autorização de perfil público.
+   */
+  authors?:
+    | {
+        role: 'author' | 'co_author' | 'guest';
+        person?: (number | null) | Person;
+        /**
+         * Convidado: obrigatório. Integrante: opcional (vazio = nome completo do cadastro).
+         */
+        name?: string | null;
+        bio?: string | null;
+        id?: string | null;
+      }[]
+    | null;
+  /**
+   * Exibidas ao final do ensaio, no estilo ABNT simplificado: AUTORES. Título. Fonte, editora, ano.
+   */
+  references?:
+    | {
+        /**
+         * Ex.: SOBRENOME, Nome; SOBRENOME, Nome.
+         */
+        authors?: string | null;
+        title: string;
+        source?: string | null;
+        publisher?: string | null;
+        year?: number | null;
+        doi?: string | null;
+        url?: string | null;
+        accessedAt?: string | null;
+        id?: string | null;
+      }[]
+    | null;
+  /**
+   * Obrigatória. Exibida como selo e no aviso editorial do ensaio.
+   */
+  nature:
+    | 'reflective_essay'
+    | 'science_communication'
+    | 'critical_analysis'
+    | 'academic_opinion'
+    | 'review'
+    | 'group_news'
+    | 'interview';
+  developmentStage?: ('idea' | 'essay' | 'in_discussion' | 'in_academic_development' | 'published_as_article') | null;
+  category: number | Category;
+  tags?: (number | Tag)[] | null;
+  /**
+   * Vazio = licença padrão das Configurações do site (sugerida: CC BY-NC-ND 4.0).
+   */
+  license?:
+    ('cc-by-nc-nd' | 'cc-by-nc-sa' | 'cc-by-nc' | 'cc-by-nd' | 'cc-by-sa' | 'cc-by' | 'all-rights-reserved') | null;
+  /**
+   * Para correções relevantes de texto já publicado: descreva o que mudou. Exibida no ensaio.
+   */
+  correctionNote?: string | null;
+  seo?: {
+    /**
+     * Opcional (vazio = título do ensaio).
+     */
+    title?: string | null;
+    /**
+     * Opcional (vazio = resumo).
+     */
+    description?: string | null;
+  };
+  /**
+   * Critérios de revisão do planejamento (15.2). Preencha durante a revisão; todos precisam estar marcados para aprovar.
+   */
+  checklist?: {
+    natureIndicated?: boolean | null;
+    groundedArguments?: boolean | null;
+    noPersonalData?: boolean | null;
+    imagesLicensed?: boolean | null;
+    accessibleLanguage?: boolean | null;
+    conflictsDeclared?: boolean | null;
+    noClinicalAdvice?: boolean | null;
+    notInstitutionalPosition?: boolean | null;
+  };
+  /**
+   * Uso interno (nunca públicas). Ex.: origem do envio, termo de cessão recebido, contato com o autor.
+   */
+  internalNotes?: string | null;
+  /**
+   * Gerado automaticamente a cada ação do fluxo (somente leitura).
+   */
+  reviewHistory?:
+    | {
+        from?: ('draft' | 'in_review' | 'returned' | 'approved' | 'scheduled' | 'published' | 'archived') | null;
+        to?: ('draft' | 'in_review' | 'returned' | 'approved' | 'scheduled' | 'published' | 'archived') | null;
+        at?: string | null;
+        actor?: (number | null) | User;
+        actorName?: string | null;
+        comment?: string | null;
+        id?: string | null;
+      }[]
+    | null;
+  /**
+   * Gerado a partir do título. Alterar o endereço de um ensaio publicado cria 301 automático.
+   */
+  slug: string;
+  /**
+   * Muda somente pelas ações do fluxo editorial (acima).
+   */
+  workflowStatus: 'draft' | 'in_review' | 'returned' | 'approved' | 'scheduled' | 'published' | 'archived';
+  publishedAt?: string | null;
+  scheduledAt?: string | null;
+  revisedAt?: string | null;
+  archivedAt?: string | null;
+  /**
+   * Calculado a partir do texto.
+   */
+  readingTime?: number | null;
+  submittedBy?: (number | null) | User;
+  submittedAt?: string | null;
+  approvedBy?: (number | null) | User;
+  approvedAt?: string | null;
+  publishedBy?: (number | null) | User;
+  archivedBy?: (number | null) | User;
+  updatedAt: string;
+  createdAt: string;
+  _status?: ('draft' | 'published') | null;
+}
+/**
+ * Categorias dos ensaios (/blog/categoria/...).
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "categories".
+ */
+export interface Category {
+  id: number;
+  name: string;
+  /**
+   * Gerado a partir do nome. Alterar o endereço cria um redirecionamento 301 automático.
+   */
+  slug: string;
+  /**
+   * Opcional. Exibida no topo da página da categoria.
+   */
+  description?: string | null;
+  /**
+   * Bioética e Promoção da Saúde são as principais (Q7). Aparecem primeiro no blog.
+   */
+  primary?: boolean | null;
+  order?: number | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * Palavras-chave dos ensaios (/blog/tag/...).
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "tags".
+ */
+export interface Tag {
+  id: number;
+  name: string;
+  /**
+   * Gerado a partir do nome. Alterar o endereço cria um redirecionamento 301 automático.
+   */
+  slug: string;
+  /**
+   * Opcional. Exibida no topo da página da tag.
+   */
+  description?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "users".
  */
@@ -647,7 +865,17 @@ export interface User {
 export interface AuditLog {
   id: number;
   at: string;
-  action: 'create' | 'update' | 'delete' | 'login' | 'role_change' | 'publish' | 'unpublish' | 'export';
+  action:
+    | 'create'
+    | 'update'
+    | 'delete'
+    | 'login'
+    | 'role_change'
+    | 'publish'
+    | 'unpublish'
+    | 'export'
+    | 'workflow'
+    | 'approve';
   targetCollection: string;
   documentId?: string | null;
   userId?: string | null;
@@ -698,6 +926,107 @@ export interface PayloadKv {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "payload-jobs".
+ */
+export interface PayloadJob {
+  id: number;
+  /**
+   * Input data provided to the job
+   */
+  input?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  taskStatus?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  completedAt?: string | null;
+  totalTried?: number | null;
+  /**
+   * If hasError is true this job will not be retried
+   */
+  hasError?: boolean | null;
+  /**
+   * If hasError is true, this is the error that caused it
+   */
+  error?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  /**
+   * Task execution log
+   */
+  log?:
+    | {
+        executedAt: string;
+        completedAt: string;
+        taskSlug: 'inline' | 'publishScheduledEssays';
+        taskID: string;
+        input?:
+          | {
+              [k: string]: unknown;
+            }
+          | unknown[]
+          | string
+          | number
+          | boolean
+          | null;
+        output?:
+          | {
+              [k: string]: unknown;
+            }
+          | unknown[]
+          | string
+          | number
+          | boolean
+          | null;
+        state: 'failed' | 'succeeded';
+        error?:
+          | {
+              [k: string]: unknown;
+            }
+          | unknown[]
+          | string
+          | number
+          | boolean
+          | null;
+        id?: string | null;
+      }[]
+    | null;
+  taskSlug?: ('inline' | 'publishScheduledEssays') | null;
+  queue?: string | null;
+  waitUntil?: string | null;
+  processing?: boolean | null;
+  meta?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "payload-locked-documents".
  */
 export interface PayloadLockedDocument {
@@ -722,6 +1051,18 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'consent-records';
         value: number | ConsentRecord;
+      } | null)
+    | ({
+        relationTo: 'essays';
+        value: number | Essay;
+      } | null)
+    | ({
+        relationTo: 'categories';
+        value: number | Category;
+      } | null)
+    | ({
+        relationTo: 'tags';
+        value: number | Tag;
       } | null)
     | ({
         relationTo: 'users';
@@ -979,6 +1320,115 @@ export interface ConsentRecordsSelect<T extends boolean = true> {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "essays_select".
+ */
+export interface EssaysSelect<T extends boolean = true> {
+  title?: T;
+  subtitle?: T;
+  excerpt?: T;
+  cover?: T;
+  content?: T;
+  authors?:
+    | T
+    | {
+        role?: T;
+        person?: T;
+        name?: T;
+        bio?: T;
+        id?: T;
+      };
+  references?:
+    | T
+    | {
+        authors?: T;
+        title?: T;
+        source?: T;
+        publisher?: T;
+        year?: T;
+        doi?: T;
+        url?: T;
+        accessedAt?: T;
+        id?: T;
+      };
+  nature?: T;
+  developmentStage?: T;
+  category?: T;
+  tags?: T;
+  license?: T;
+  correctionNote?: T;
+  seo?:
+    | T
+    | {
+        title?: T;
+        description?: T;
+      };
+  checklist?:
+    | T
+    | {
+        natureIndicated?: T;
+        groundedArguments?: T;
+        noPersonalData?: T;
+        imagesLicensed?: T;
+        accessibleLanguage?: T;
+        conflictsDeclared?: T;
+        noClinicalAdvice?: T;
+        notInstitutionalPosition?: T;
+      };
+  internalNotes?: T;
+  reviewHistory?:
+    | T
+    | {
+        from?: T;
+        to?: T;
+        at?: T;
+        actor?: T;
+        actorName?: T;
+        comment?: T;
+        id?: T;
+      };
+  slug?: T;
+  workflowStatus?: T;
+  publishedAt?: T;
+  scheduledAt?: T;
+  revisedAt?: T;
+  archivedAt?: T;
+  readingTime?: T;
+  submittedBy?: T;
+  submittedAt?: T;
+  approvedBy?: T;
+  approvedAt?: T;
+  publishedBy?: T;
+  archivedBy?: T;
+  updatedAt?: T;
+  createdAt?: T;
+  _status?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "categories_select".
+ */
+export interface CategoriesSelect<T extends boolean = true> {
+  name?: T;
+  slug?: T;
+  description?: T;
+  primary?: T;
+  order?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "tags_select".
+ */
+export interface TagsSelect<T extends boolean = true> {
+  name?: T;
+  slug?: T;
+  description?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "users_select".
  */
 export interface UsersSelect<T extends boolean = true> {
@@ -1093,6 +1543,38 @@ export interface RedirectsSelect<T extends boolean = true> {
 export interface PayloadKvSelect<T extends boolean = true> {
   key?: T;
   data?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "payload-jobs_select".
+ */
+export interface PayloadJobsSelect<T extends boolean = true> {
+  input?: T;
+  taskStatus?: T;
+  completedAt?: T;
+  totalTried?: T;
+  hasError?: T;
+  error?: T;
+  log?:
+    | T
+    | {
+        executedAt?: T;
+        completedAt?: T;
+        taskSlug?: T;
+        taskID?: T;
+        input?: T;
+        output?: T;
+        state?: T;
+        error?: T;
+        id?: T;
+      };
+  taskSlug?: T;
+  queue?: T;
+  waitUntil?: T;
+  processing?: T;
+  meta?: T;
+  updatedAt?: T;
+  createdAt?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -1296,6 +1778,10 @@ export interface Homepage {
       | null;
   };
   /**
+   * Opcional (até 3). Vazio = os 3 ensaios publicados mais recentes. Ensaios não publicados ou arquivados nunca aparecem.
+   */
+  featuredEssays?: (number | Essay)[] | null;
+  /**
    * Arraste para reordenar; desmarque "Exibir" para ocultar. Seções sem conteúdo nunca aparecem.
    */
   sections?:
@@ -1406,12 +1892,41 @@ export interface SiteSetting {
    */
   shortName: string;
   defaultDescription?: string | null;
+  editorial: {
+    /**
+     * Usada quando o ensaio não define licença própria (planejamento 15.5; política editorial a confirmar — Q8).
+     */
+    defaultLicense:
+      'cc-by-nc-nd' | 'cc-by-nc-sa' | 'cc-by-nc' | 'cc-by-nd' | 'cc-by-sa' | 'cc-by' | 'all-rights-reserved';
+    /**
+     * Opcional. Acrescentado ao aviso de natureza ensaística de todos os ensaios (ex.: canal para pedidos de correção). As frases sobre revisão por pares e posição institucional são fixas.
+     */
+    noticeComplement?: string | null;
+  };
   technical?: {
     /**
      * Reservado para indicadores (M2/V3).
      */
     showIndicators?: boolean | null;
   };
+  updatedAt?: string | null;
+  createdAt?: string | null;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "payload-jobs-stats".
+ */
+export interface PayloadJobsStat {
+  id: number;
+  stats?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
   updatedAt?: string | null;
   createdAt?: string | null;
 }
@@ -1488,6 +2003,7 @@ export interface HomepageSelect<T extends boolean = true> {
               id?: T;
             };
       };
+  featuredEssays?: T;
   sections?:
     | T
     | {
@@ -1551,11 +2067,27 @@ export interface SiteSettingsSelect<T extends boolean = true> {
   siteName?: T;
   shortName?: T;
   defaultDescription?: T;
+  editorial?:
+    | T
+    | {
+        defaultLicense?: T;
+        noticeComplement?: T;
+      };
   technical?:
     | T
     | {
         showIndicators?: T;
       };
+  updatedAt?: T;
+  createdAt?: T;
+  globalType?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "payload-jobs-stats_select".
+ */
+export interface PayloadJobsStatsSelect<T extends boolean = true> {
+  stats?: T;
   updatedAt?: T;
   createdAt?: T;
   globalType?: T;
@@ -1569,6 +2101,17 @@ export interface CollectionsWidget {
     [k: string]: unknown;
   };
   width: 'full';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "TaskPublishScheduledEssays".
+ */
+export interface TaskPublishScheduledEssays {
+  input?: unknown;
+  output: {
+    published?: number | null;
+    failed?: number | null;
+  };
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema

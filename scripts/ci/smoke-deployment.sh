@@ -53,6 +53,19 @@ if [[ "$MODE" == "protected" ]]; then
   if grep -qE '"consent(PublicProfile|Photo|Email|Status)"' <<<"$people"; then
     fail "/api/people expõe campos de consentimento"
   fi
+  # S05: blog público, feeds e endpoints editoriais/fila de jobs nunca abertos ao visitante.
+  for path in /blog /blog/rss.xml /blog/atom.xml; do
+    code=$(status "${auth[@]}" "$URL$path")
+    [[ "$code" == "200" ]] || fail "$path deveria responder 200 (recebido $code)"
+  done
+  code=$(status "${auth[@]}" "$URL/api/essays/publish-due")
+  [[ "$code" == "401" ]] || fail "/api/essays/publish-due deveria exigir autenticação (recebido $code)"
+  code=$(status "${auth[@]}" "$URL/api/payload-jobs")
+  [[ "$code" == "403" ]] || fail "/api/payload-jobs deveria ser negado ao visitante (recebido $code)"
+  essays=$(curl -s "${bypass[@]}" "${auth[@]}" "$URL/api/essays?limit=100&draft=true")
+  if grep -qE '"(reviewHistory|internalNotes|checklist|scheduledAt|approvedBy)"' <<<"$essays"; then
+    fail "/api/essays expõe campos internos do fluxo editorial"
+  fi
   home=$(curl -s "${bypass[@]}" "${auth[@]}" "$URL/")
   [[ "$home" == *"Bioética e Promoção da Saúde"* ]] || fail "Nome do grupo ausente na página inicial"
   if grep -qiE 'laborat(ó|o)rio' <<<"$home"; then fail "Menção a laboratório na página inicial (Q6)"; fi

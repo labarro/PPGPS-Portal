@@ -6,12 +6,22 @@ import { cache } from 'react'
 import { isAdminOrEditor } from '@/access'
 import { defaultLocale } from '@/lib/i18n/locales'
 import { buildDirectory, type DirectoryPerson } from '@/lib/people/directory'
-import type { GroupProfile, Homepage, Page, Person, ResearchLine, User } from '@/payload-types'
+import type {
+  Category,
+  Essay,
+  GroupProfile,
+  Homepage,
+  Page,
+  Person,
+  ResearchLine,
+  Tag,
+  User,
+} from '@/payload-types'
 
 import { cachedRead } from './cache'
-import { CACHE_TAGS, pageTag, personTag, researchLineTag } from './cache-tags'
+import { CACHE_TAGS, essayTag, pageTag, personTag, researchLineTag } from './cache-tags'
 import { normalizePath } from './paths'
-import { canViewPublic } from './visibility'
+import { canViewPublic, essayListedWhere, essayPublicWhere } from './visibility'
 
 /**
  * Leituras públicas via Local API em Server Components (AGENTS.md §4.5): sempre com
@@ -253,12 +263,48 @@ export async function getSitemapEntries(): Promise<{
   lines: { slug: string; updatedAt: string }[]
   pages: { slug: string; updatedAt: string }[]
   people: { slug: string; updatedAt: string }[]
+  essays: { slug: string; updatedAt: string }[]
+  categories: { slug: string; updatedAt: string }[]
+  tags: { slug: string; updatedAt: string }[]
 }> {
-  const empty = { profileUpdatedAt: null, lines: [], pages: [], people: [] }
+  const empty = {
+    profileUpdatedAt: null,
+    lines: [],
+    pages: [],
+    people: [],
+    essays: [],
+    categories: [],
+    tags: [],
+  }
   if (isBuildPhase()) return empty
-  return cachedRead(['sitemap'], [CACHE_TAGS.sitemap], async () => {
+  const epoch = await getEssayEpoch()
+  return cachedRead(['sitemap', epoch], [CACHE_TAGS.sitemap], async () => {
     const payload = await getPayloadClient()
     const anon = { overrideAccess: false, locale: defaultLocale, draft: false } as const
+    // S05: só ensaios listáveis (publicados e já alcançados pela data; nunca arquivados).
+    const essays = await payload.find({
+      collection: 'essays',
+      where: essayListedWhere(new Date()),
+      limit: 2000,
+      depth: 1,
+      pagination: false,
+      select: { slug: true, updatedAt: true, category: true, tags: true },
+      populate: { categories: { slug: true }, tags: { slug: true } },
+      ...anon,
+    })
+    const taxonomy = (key: 'category' | 'tags') => {
+      const bySlug = new Map<string, string>()
+      for (const essay of essays.docs) {
+        const raw = essay[key]
+        const terms = (Array.isArray(raw) ? raw : [raw]) as (number | Category | Tag | null)[]
+        for (const term of terms) {
+          if (!term || typeof term !== 'object') continue
+          const previous = bySlug.get(term.slug)
+          if (!previous || previous < essay.updatedAt) bySlug.set(term.slug, essay.updatedAt)
+        }
+      }
+      return [...bySlug].map(([slug, updatedAt]) => ({ slug, updatedAt }))
+    }
     const [profile, lines, pages, people] = await Promise.all([
       payload.findGlobal({ slug: 'group-profile', depth: 0, ...anon }),
       payload.find({
@@ -296,6 +342,325 @@ export async function getSitemapEntries(): Promise<{
         .filter((doc) => canViewPublic('pages', doc))
         .map((doc) => ({ slug: doc.slug, updatedAt: doc.updatedAt })),
       people: people.docs.map((doc) => ({ slug: doc.slug, updatedAt: doc.updatedAt })),
+      essays: essays.docs.map((doc) => ({ slug: doc.slug, updatedAt: doc.updatedAt })),
+      categories: taxonomy('category'),
+      tags: taxonomy('tags'),
     }
   })
 }
+
+// ---------------------------------------------------------------------------------------------
+// S05 — blog acadêmico. Listagens, RSS, sitemap e destaques: SEMPRE como visitante anônimo
+// (nunca rascunhos, agendados futuros ou arquivados). A página do ensaio aceita a
+// pré-visualização autenticada (Draft Mode) do coordenador/desenvolvedor.
+// ---------------------------------------------------------------------------------------------
+
+/**
+ * "Época de publicação": a data de publicação mais recente já alcançada entre os ensaios em
+ * estado público. Entra na chave do cache: quando um agendamento vence, a chave muda e as
+ * listagens são recalculadas na hora — sem depender do job. Consulta interna (só uma data).
+ */
+export const getEssayEpoch = cache(async (): Promise<string> => {
+  if (isBuildPhase()) return 'build'
+  try {
+    const payload = await getPayloadClient()
+    const result = await payload.find({
+      collection: 'essays',
+      where: essayPublicWhere(new Date()),
+      sort: '-publishedAt',
+      limit: 1,
+      depth: 0,
+      pagination: false,
+      select: { publishedAt: true },
+      overrideAccess: true,
+    })
+    return result.docs[0]?.publishedAt ?? 'none'
+  } catch (error) {
+    console.error('[site] Falha ao ler a época de publicação dos ensaios.', error)
+    return 'error'
+  }
+})
+
+export type EssayAuthorSummary = {
+  name: string
+  role: 'author' | 'co_author' | 'guest'
+  bio: string | null
+  /** Somente quando a pessoa tem perfil público (consentimento vigente). */
+  personSlug: string | null
+}
+
+export type EssayTerm = { id: number; name: string; slug: string }
+
+export type EssayCover = {
+  url: string
+  alt: string
+  width: number | null
+  height: number | null
+  credit: string | null
+  caption: string | null
+}
+
+export type EssaySummary = {
+  id: number
+  title: string
+  slug: string
+  subtitle: string | null
+  excerpt: string | null
+  nature: Essay['nature']
+  publishedAt: string | null
+  revisedAt: string | null
+  updatedAt: string
+  readingTime: number
+  category: EssayTerm | null
+  tags: EssayTerm[]
+  authors: EssayAuthorSummary[]
+  cover: EssayCover | null
+}
+
+const SUMMARY_SELECT = {
+  title: true,
+  slug: true,
+  subtitle: true,
+  excerpt: true,
+  nature: true,
+  publishedAt: true,
+  revisedAt: true,
+  updatedAt: true,
+  readingTime: true,
+  category: true,
+  tags: true,
+  authors: true,
+  cover: true,
+} as const
+
+const SUMMARY_POPULATE = {
+  categories: { name: true, slug: true },
+  tags: { name: true, slug: true },
+  people: { fullName: true, slug: true },
+  media: { url: true, alt: true, width: true, height: true, credit: true, caption: true },
+} as const
+
+const toTerm = (value: unknown): EssayTerm | null =>
+  value && typeof value === 'object' && typeof (value as Category).slug === 'string'
+    ? {
+        id: (value as Category).id,
+        name: (value as Category).name,
+        slug: (value as Category).slug,
+      }
+    : null
+
+export function toEssayCover(value: unknown): EssayCover | null {
+  if (!value || typeof value !== 'object') return null
+  const media = value as {
+    url?: string | null
+    alt?: string | null
+    width?: number | null
+    height?: number | null
+    credit?: string | null
+    caption?: string | null
+  }
+  if (!media.url || !media.alt) return null
+  return {
+    url: media.url,
+    alt: media.alt,
+    width: media.width ?? null,
+    height: media.height ?? null,
+    credit: media.credit ?? null,
+    caption: media.caption ?? null,
+  }
+}
+
+export function toEssayAuthors(authors: Essay['authors']): EssayAuthorSummary[] {
+  return (authors ?? [])
+    .map((author) => {
+      const person = author.person && typeof author.person === 'object' ? author.person : null
+      const name = author.name?.trim() || person?.fullName || ''
+      return {
+        name,
+        role: author.role,
+        bio: author.role === 'guest' ? (author.bio ?? null) : null,
+        personSlug: person && typeof person.slug === 'string' ? person.slug : null,
+      }
+    })
+    .filter((author) => author.name)
+}
+
+export function toEssaySummary(doc: Partial<Essay> & Pick<Essay, 'id'>): EssaySummary {
+  return {
+    id: doc.id,
+    title: doc.title ?? '',
+    slug: doc.slug ?? '',
+    subtitle: doc.subtitle ?? null,
+    excerpt: doc.excerpt ?? null,
+    nature: doc.nature ?? 'reflective_essay',
+    publishedAt: doc.publishedAt ?? null,
+    revisedAt: doc.revisedAt ?? null,
+    updatedAt: doc.updatedAt ?? '',
+    readingTime: doc.readingTime ?? 1,
+    category: toTerm(doc.category),
+    tags: (doc.tags ?? []).map(toTerm).filter((term): term is EssayTerm => term !== null),
+    authors: toEssayAuthors(doc.authors ?? []),
+    cover: toEssayCover(doc.cover),
+  }
+}
+
+export const ESSAYS_PER_PAGE = 12
+
+export type EssayPage = {
+  docs: EssaySummary[]
+  page: number
+  totalPages: number
+  totalDocs: number
+}
+
+export type EssayListFilter = {
+  page?: number
+  limit?: number
+  categoryId?: number
+  tagId?: number
+  personId?: number
+  excludeId?: number
+}
+
+export const listEssays = cache(async (filter: EssayListFilter = {}): Promise<EssayPage> => {
+  const empty: EssayPage = { docs: [], page: 1, totalPages: 0, totalDocs: 0 }
+  if (isBuildPhase()) return empty
+  const epoch = await getEssayEpoch()
+  const page = Math.max(1, Math.floor(filter.page ?? 1))
+  const limit = Math.min(Math.max(1, filter.limit ?? ESSAYS_PER_PAGE), 100)
+  const key = [
+    'essays',
+    'list',
+    epoch,
+    `p${page}`,
+    `l${limit}`,
+    `c${filter.categoryId ?? ''}`,
+    `t${filter.tagId ?? ''}`,
+    `a${filter.personId ?? ''}`,
+    `x${filter.excludeId ?? ''}`,
+  ]
+  return cachedRead(key, [CACHE_TAGS.essays, CACHE_TAGS.essayTaxonomy], async () => {
+    const payload = await getPayloadClient()
+    const conditions = [
+      essayListedWhere(new Date()),
+      ...(filter.categoryId ? [{ category: { equals: filter.categoryId } }] : []),
+      ...(filter.tagId ? [{ tags: { in: [filter.tagId] } }] : []),
+      ...(filter.personId ? [{ 'authors.person': { equals: filter.personId } }] : []),
+      ...(filter.excludeId ? [{ id: { not_equals: filter.excludeId } }] : []),
+    ]
+    const result = await payload.find({
+      collection: 'essays',
+      where: { and: conditions },
+      sort: '-publishedAt',
+      page,
+      limit,
+      depth: 1,
+      select: SUMMARY_SELECT,
+      populate: SUMMARY_POPULATE,
+      ...anonymousArgs,
+    })
+    return {
+      docs: result.docs.map((doc) => toEssaySummary(doc as Essay)),
+      page: result.page ?? page,
+      totalPages: result.totalPages,
+      totalDocs: result.totalDocs,
+    }
+  }).catch((error) => {
+    console.error('[site] Falha ao listar ensaios.', error)
+    return empty
+  })
+})
+
+/** Destaques da home: fixados no global "Página inicial" (se listáveis) ou os 3 mais recentes. */
+export const getFeaturedEssays = cache(
+  async (pinned: (number | { id: number } | null | undefined)[] = []): Promise<EssaySummary[]> => {
+    const ids = pinned
+      .map((item) => (item && typeof item === 'object' ? item.id : item))
+      .filter((id): id is number => typeof id === 'number')
+    const recent = await listEssays({ limit: 3 })
+    if (ids.length === 0 || isBuildPhase()) return recent.docs
+    const epoch = await getEssayEpoch()
+    const chosen = await cachedRead(
+      ['essays', 'featured', epoch, ids.join('-')],
+      [CACHE_TAGS.essays, CACHE_TAGS.essayTaxonomy],
+      async () => {
+        const payload = await getPayloadClient()
+        const result = await payload.find({
+          collection: 'essays',
+          where: { and: [essayListedWhere(new Date()), { id: { in: ids } }] },
+          limit: ids.length,
+          depth: 1,
+          pagination: false,
+          select: SUMMARY_SELECT,
+          populate: SUMMARY_POPULATE,
+          ...anonymousArgs,
+        })
+        const byId = new Map(result.docs.map((doc) => [doc.id, toEssaySummary(doc as Essay)]))
+        return ids.map((id) => byId.get(id)).filter((doc): doc is EssaySummary => !!doc)
+      },
+    ).catch(() => [] as EssaySummary[])
+    // Completa com os mais recentes se algum fixado não estiver mais publicado.
+    const extra = recent.docs.filter((doc) => !chosen.some((item) => item.id === doc.id))
+    return [...chosen, ...extra].slice(0, 3)
+  },
+)
+
+/** Ensaio completo pelo slug: público (inclusive arquivado, com aviso) ou rascunho na prévia. */
+export const getEssay = cache(async (slug: string): Promise<Essay | null> => {
+  if (isBuildPhase()) return null
+  const epoch = await getEssayEpoch()
+  return read(
+    ['essays', 'slug', slug, epoch],
+    [CACHE_TAGS.essays, CACHE_TAGS.essayTaxonomy, essayTag(slug)],
+    null,
+    async (payload, ctx) => {
+      const result = await payload.find({
+        collection: 'essays',
+        where: { slug: { equals: slug } },
+        limit: 1,
+        depth: 2,
+        populate: { people: { fullName: true, slug: true } },
+        ...baseArgs(ctx),
+      })
+      const doc = result.docs[0] ?? null
+      if (doc && !ctx.draft && !canViewPublic('essays', doc)) return null
+      return doc
+    },
+  )
+})
+
+const taxonomyQuery = (collection: 'categories' | 'tags') =>
+  cache(async (slug: string): Promise<(Category | Tag) | null> => {
+    if (isBuildPhase()) return null
+    return cachedRead([collection, 'slug', slug], [CACHE_TAGS.essayTaxonomy], async () => {
+      const payload = await getPayloadClient()
+      const result = await payload.find({
+        collection,
+        where: { slug: { equals: slug } },
+        limit: 1,
+        depth: 0,
+        ...anonymousArgs,
+      })
+      return (result.docs[0] as Category | Tag | undefined) ?? null
+    }).catch(() => null)
+  })
+
+export const getCategory = taxonomyQuery('categories')
+export const getTag = taxonomyQuery('tags')
+
+/** Categorias (principais primeiro) para a navegação do blog. */
+export const listCategories = cache(async (): Promise<Category[]> => {
+  if (isBuildPhase()) return []
+  return cachedRead(['categories', 'list'], [CACHE_TAGS.essayTaxonomy], async () => {
+    const payload = await getPayloadClient()
+    const result = await payload.find({
+      collection: 'categories',
+      sort: ['-primary', 'order', 'name'],
+      limit: 100,
+      depth: 0,
+      pagination: false,
+      ...anonymousArgs,
+    })
+    return result.docs
+  }).catch(() => [])
+})

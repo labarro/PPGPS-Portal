@@ -12,6 +12,8 @@ const ACTION_LABELS: Record<(typeof AUDIT_ACTIONS)[number], string> = {
   publish: 'Publicação',
   unpublish: 'Despublicação',
   export: 'Exportação',
+  workflow: 'Fluxo editorial',
+  approve: 'Aprovação editorial',
 }
 
 /**

@@ -9,15 +9,21 @@ import { buildConfig } from 'payload'
 import sharp from 'sharp'
 import { fileURLToPath } from 'url'
 
+import { isAdmin } from './access'
 import { AuditLogs } from './collections/AuditLogs'
+import { Categories } from './collections/Categories'
 import { ConsentRecords } from './collections/ConsentRecords'
 import { Documents } from './collections/Documents'
+import { Essays } from './collections/Essays'
+import { hasValidCronSecret } from './collections/Essays/endpoints'
+import { EDITORIAL_QUEUE, publishScheduledEssaysTask } from './collections/Essays/jobs'
 import { Media } from './collections/Media'
 import { Memberships } from './collections/Memberships'
 import { Pages } from './collections/Pages'
 import { People } from './collections/People'
 import { redirectsPluginConfig } from './collections/Redirects'
 import { ResearchLines } from './collections/ResearchLines'
+import { Tags } from './collections/Tags'
 import { Users } from './collections/Users'
 import { sentryTestEndpoint } from './endpoints/sentry-test'
 import { Footer } from './globals/Footer'
@@ -41,6 +47,16 @@ const storage = resolveStorageConfig()
 /** URL assinada de documentos: 5 minutos, gerada só depois da verificação de acesso. */
 const SIGNED_URL_TTL_SECONDS = 300
 
+/**
+ * Fila de jobs (S05: publicação agendada de ensaios). O utoRun só existe em servidores
+ * contínuos (local, Docker, `next start`): na Vercel não há processo permanente e o
+ * agendamento é concluído pelo endpoint `/api/essays/publish-due` (cron externo, S06) ou ao
+ * abrir um ensaio no painel. A visibilidade pública não depende do job (ADR-0015).
+ */
+const jobsAutoRun = process.env.PAYLOAD_JOBS_AUTORUN
+  ? process.env.PAYLOAD_JOBS_AUTORUN === 'true'
+  : !process.env.VERCEL
+
 export default buildConfig({
   // Sem `serverURL`: o painel usa URLs relativas (previews têm URL variável). Links absolutos
   // de e-mail usam `resolveServerUrl()` (nunca o cabeçalho Host).
@@ -59,6 +75,9 @@ export default buildConfig({
     People,
     Memberships,
     ConsentRecords,
+    Essays,
+    Categories,
+    Tags,
     Users,
     Media,
     Documents,
@@ -69,6 +88,25 @@ export default buildConfig({
       : collection,
   ),
   globals: withGlobalAudit([GroupProfile, Homepage, Navigation, Footer, SiteSettings]),
+  jobs: {
+    tasks: [publishScheduledEssaysTask],
+    autoRun: jobsAutoRun ? [{ cron: '* * * * *', queue: EDITORIAL_QUEUE }] : undefined,
+    // Somente o administrador (ou o cron com CRON_SECRET) dispara a fila pela API.
+    access: {
+      run: ({ req }) => isAdmin({ req }) || hasValidCronSecret(req.headers.get('authorization')),
+      queue: ({ req }) => isAdmin({ req }),
+      cancel: ({ req }) => isAdmin({ req }),
+    },
+    jobsCollectionOverrides: ({ defaultJobsCollection }) => ({
+      ...defaultJobsCollection,
+      access: {
+        read: ({ req }) => isAdmin({ req }),
+        create: () => false,
+        update: () => false,
+        delete: ({ req }) => isAdmin({ req }),
+      },
+    }),
+  },
   editor: lexicalEditor(),
   email: buildEmailAdapter(),
   // Idioma da interface do painel administrativo.

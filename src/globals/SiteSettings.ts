@@ -2,6 +2,7 @@ import type { GlobalConfig } from 'payload'
 
 import { anyone, fieldIsAdmin, isAdminOrEditor } from '../access'
 import { revalidateSiteLayout } from '../hooks/revalidate'
+import { DEFAULT_ESSAY_LICENSE, ESSAY_LICENSES } from '../lib/editorial/essay'
 import { SITE_FULL_NAME, SITE_SHORT_NAME } from '../lib/site/identity'
 
 /**
@@ -41,6 +42,36 @@ export const SiteSettings: GlobalConfig = {
       label: 'Descrição padrão (SEO)',
       localized: true,
       maxLength: 300,
+    },
+    {
+      name: 'editorial',
+      type: 'group',
+      label: 'Blog e ensaios',
+      fields: [
+        {
+          name: 'defaultLicense',
+          type: 'select',
+          label: 'Licença padrão dos ensaios',
+          required: true,
+          defaultValue: DEFAULT_ESSAY_LICENSE,
+          options: ESSAY_LICENSES.map(({ value, label }) => ({ value, label })),
+          admin: {
+            description:
+              'Usada quando o ensaio não define licença própria (planejamento 15.5; política editorial a confirmar — Q8).',
+          },
+        },
+        {
+          name: 'noticeComplement',
+          type: 'textarea',
+          label: 'Complemento do aviso editorial',
+          localized: true,
+          maxLength: 400,
+          admin: {
+            description:
+              'Opcional. Acrescentado ao aviso de natureza ensaística de todos os ensaios (ex.: canal para pedidos de correção). As frases sobre revisão por pares e posição institucional são fixas.',
+          },
+        },
+      ],
     },
     {
       name: 'technical',

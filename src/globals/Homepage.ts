@@ -71,6 +71,18 @@ export const Homepage: GlobalConfig = {
       ],
     },
     {
+      name: 'featuredEssays',
+      type: 'relationship',
+      relationTo: 'essays',
+      hasMany: true,
+      maxRows: 3,
+      label: 'Ensaios fixados nos destaques do blog',
+      admin: {
+        description:
+          'Opcional (até 3). Vazio = os 3 ensaios publicados mais recentes. Ensaios não publicados ou arquivados nunca aparecem.',
+      },
+    },
+    {
       name: 'sections',
       type: 'array',
       label: 'Seções',
