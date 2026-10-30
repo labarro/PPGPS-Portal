@@ -3,6 +3,7 @@ import { Inter, Source_Serif_4 } from 'next/font/google'
 import type { ReactNode } from 'react'
 
 import { DraftBanner } from '@/components/site/draft-banner'
+import { MaintenanceNotice } from '@/components/site/maintenance-notice'
 import { SiteFooter } from '@/components/site/site-footer'
 import { SiteHeader } from '@/components/site/site-header'
 import { SkipLink } from '@/components/site/skip-link'
@@ -57,6 +58,7 @@ export default async function SiteLayout({ children }: { children: ReactNode }) 
       <body className="flex min-h-dvh flex-col">
         <SkipLink />
         {readContext.draft ? <DraftBanner /> : null}
+        <MaintenanceNotice />
         <SiteHeader chrome={chrome} />
         <main id="conteudo" tabIndex={-1} className="flex-1 focus:outline-none">
           {children}

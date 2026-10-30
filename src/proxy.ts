@@ -6,6 +6,12 @@ import { isProduction, isProtectedNonProduction, resolveAppEnv } from './lib/env
 import { PRODUCTION_HOST, PRODUCTION_SITE_URL } from './lib/env/server-url'
 import { isAuthorized, readBasicAuthCredentials } from './lib/security/basic-auth'
 import { NOINDEX_VALUE } from './lib/security/headers'
+import {
+  isBlockedByMaintenance,
+  isFirstRegisterBlocked,
+  isMaintenanceMode,
+  MAINTENANCE_MESSAGE,
+} from './lib/security/maintenance'
 
 type Lookup = (pathname: string) => Promise<RedirectHit | null>
 
@@ -47,6 +53,23 @@ export async function handleProxy(request: NextRequest, lookup: Lookup): Promise
         )
       }
     }
+  }
+
+  // S06: cadastro do primeiro usuário fechado em produção (a conta admin vem do pipeline).
+  if (isFirstRegisterBlocked(env, request.nextUrl.pathname)) {
+    return NextResponse.json(
+      { errors: [{ message: 'Cadastro do primeiro usuário desativado em produção.' }] },
+      { status: 403, headers: { 'Cache-Control': 'no-store' } },
+    )
+  }
+
+  // S06: modo de manutenção — painel somente leitura (escritas pela API recusadas).
+  if (isMaintenanceMode() && isBlockedByMaintenance(request.method, request.nextUrl.pathname)) {
+    const response = NextResponse.json(
+      { errors: [{ message: MAINTENANCE_MESSAGE }] },
+      { status: 503, headers: { 'Retry-After': '1800', 'Cache-Control': 'no-store' } },
+    )
+    return isProduction(env) ? response : withNoindex(response)
   }
 
   // Produção (ADR-0014): `www.bioeticaps.app` → apex canônico. Nunca fora da produção.

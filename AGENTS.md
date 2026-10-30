@@ -84,6 +84,7 @@ Atualização de versão **maior** de Next/Payload/React só em sprint dedicada.
 | Integrantes fictícios (idempotente; bloqueado em homologação e produção) | `pnpm seed:people` |
 | Ensaios fictícios do blog (idempotente; bloqueado em homologação e produção) | `pnpm seed:essays` |
 | Importar integrantes de CSV (pré-visualização; `--apply` grava; idempotente por ORCID/Lattes) | `pnpm import:people <arquivo.csv> [--apply]` |
+| Conta `admin` inicial (somente com banco sem contas; senha aleatória descartada — definir por recuperação de senha) | `BOOTSTRAP_ADMIN_EMAIL=<e-mail> pnpm users:bootstrap-admin` |
 | Lighthouse CI (app em `localhost:3100`) | `pnpm dlx @lhci/cli@0.15.1 autorun` |
 | Desenvolvimento | `pnpm dev` |
 | Lint / formatação | `pnpm lint` / `pnpm format:check` |

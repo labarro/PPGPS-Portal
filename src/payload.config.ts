@@ -68,6 +68,10 @@ export default buildConfig({
     meta: {
       titleSuffix: ' — Portal Bioética e Promoção da Saúde',
     },
+    components: {
+      // S06: aviso de manutenção (painel somente leitura quando MAINTENANCE_MODE=true).
+      header: ['/components/admin/maintenance-banner#MaintenanceBanner'],
+    },
   },
   collections: withAudit([
     ResearchLines,

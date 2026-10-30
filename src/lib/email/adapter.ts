@@ -51,10 +51,24 @@ function disabledAdapter(reason: string, from: string, fromName: string): EmailA
   })
 }
 
+/**
+ * Remetente: aceita `endereco@dominio` ou `Nome <endereco@dominio>` (formato comum dos
+ * provedores SMTP). O nome explícito de `EMAIL_FROM_NAME` tem precedência.
+ */
+export function parseSender(
+  address: string | undefined,
+  name: string | undefined,
+): { from: string; fromName: string } {
+  const raw = address?.trim() ?? ''
+  const match = /^\s*"?([^"<]*?)"?\s*<([^<>\s]+@[^<>\s]+)>\s*$/.exec(raw)
+  const from = (match ? match[2] : raw) || DEFAULT_FROM_ADDRESS
+  const fromName = name?.trim() || match?.[1]?.trim() || DEFAULT_FROM_NAME
+  return { from, fromName }
+}
+
 /** Adaptador de e-mail do Payload conforme o ambiente (ver `transport.ts`). */
 export function buildEmailAdapter(env: Env = process.env): EmailAdapter | Promise<EmailAdapter> {
-  const from = env.EMAIL_FROM_ADDRESS?.trim() || DEFAULT_FROM_ADDRESS
-  const fromName = env.EMAIL_FROM_NAME?.trim() || DEFAULT_FROM_NAME
+  const { from, fromName } = parseSender(env.EMAIL_FROM_ADDRESS, env.EMAIL_FROM_NAME)
   const choice = resolveEmailTransport(env)
 
   if (choice.kind === 'capture') return captureAdapter(choice, from, fromName)

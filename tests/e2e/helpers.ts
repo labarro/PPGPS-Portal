@@ -26,7 +26,14 @@ export const PUBLIC_ROUTES = [
   '/blog/ensaio-ficticio-arquivado',
   '/blog/categoria/bioetica',
   '/blog/tag/autonomia',
+  // S06: páginas legais.
+  '/privacidade',
+  '/acessibilidade',
+  '/sobre-o-portal',
 ] as const
+
+/** S06: páginas legais (RF-021). */
+export const LEGAL_ROUTES = ['/privacidade', '/acessibilidade', '/sobre-o-portal'] as const
 
 export async function expectNoSeriousA11yViolations(page: Page) {
   const results = await new AxeBuilder({ page })

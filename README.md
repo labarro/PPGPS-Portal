@@ -49,6 +49,7 @@ Serviços locais: Postgres em `127.0.0.1:5432` (bancos `ppgps` e `ppgps_test`), 
 | Integrantes fictícios (S04; idempotente; bloqueado em homologação/produção) | `pnpm seed:people` |
 | Ensaios fictícios (S05; idempotente; bloqueado em homologação/produção; depois de `seed:content` e `seed:people`) | `pnpm seed:essays` |
 | Importar integrantes de planilha CSV (pré-visualização; `--apply` grava; nunca cria consentimentos) | `pnpm import:people <arquivo.csv> [--apply]` — modelo em `docs/privacidade/registro-tratamento.md` §6 |
+| Conta `admin` inicial de um ambiente sem contas (produção: executado pelo `deploy-production.yml`) | `BOOTSTRAP_ADMIN_EMAIL=<e-mail> pnpm users:bootstrap-admin` |
 | Lighthouse CI (com o app em `http://localhost:3100`) | `pnpm dlx @lhci/cli@0.15.1 autorun` (config.: `lighthouserc.json`) |
 | Lint / formatação / tipos | `pnpm lint` / `pnpm format:check` / `pnpm typecheck` |
 | Testes unitários + integração | `pnpm test` (`test:unit`, `test:int`, `test:coverage`) |
