@@ -104,6 +104,17 @@ describe('S04 — integrantes, vínculos e consentimentos', () => {
       context: { skipRevalidation: true },
     })
     lineId = line.id
+    // Perfil do grupo publicado (independe da ordem dos arquivos e do estado do banco).
+    await payload.updateGlobal({
+      slug: 'group-profile',
+      data: {
+        ...(groupProfileSeed as unknown as Record<string, unknown>),
+        leaders: [],
+        _status: 'published',
+      },
+      overrideAccess: true,
+      context: { skipRevalidation: true },
+    })
   })
 
   beforeEach(() => {
