@@ -8,7 +8,8 @@
 #   BASIC_AUTH_PASSWORD e o armazenamento S3/R2 (S3_BUCKET, S3_ENDPOINT, S3_ACCESS_KEY_ID,
 #   S3_SECRET_ACCESS_KEY) — S02, ADR-0011.
 # Opcionais repassados ao runtime (somente servidor, nunca NEXT_PUBLIC_): S3_REGION, S3_PREFIX,
-#   S3_FORCE_PATH_STYLE, SERVER_URL, SMTP_*, EMAIL_*, SENTRY_DSN.
+#   S3_FORCE_PATH_STYLE, SERVER_URL, SMTP_*, EMAIL_*, SENTRY_DSN, CRON_SECRET, MAINTENANCE_MODE.
+# Storage S3/R2 obrigatório também na produção (S06).
 # Opcionais de build (públicos por natureza): NEXT_PUBLIC_SENTRY_DSN, CSP_REPORT_URI.
 # Saída: URL do deploy em $GITHUB_OUTPUT (deployment_url) e no stdout. Nenhum valor é impresso.
 set -euo pipefail
@@ -26,10 +27,16 @@ if [[ "$TARGET" == "production" ]]; then
 else
   [[ "$APP_ENV" != "production" ]] || { echo "::error::APP_ENV=production só em deploy de produção"; exit 1; }
   : "${BASIC_AUTH_USER:?}" "${BASIC_AUTH_PASSWORD:?}"
-  for var in S3_BUCKET S3_ENDPOINT S3_ACCESS_KEY_ID S3_SECRET_ACCESS_KEY; do
-    [[ -n "${!var:-}" ]] || { echo "::error::$var ausente: storage obrigatório fora do ambiente local (ADR-0011)"; exit 1; }
-  done
-  [[ "${S3_BUCKET}" != *backup* ]] || { echo "::error::O bucket de backups não pode ser usado pela aplicação"; exit 1; }
+fi
+# Storage obrigatório fora do ambiente local, inclusive na produção (ADR-0011; falha fechada).
+for var in S3_BUCKET S3_ENDPOINT S3_ACCESS_KEY_ID S3_SECRET_ACCESS_KEY; do
+  [[ -n "${!var:-}" ]] || { echo "::error::$var ausente: storage obrigatório fora do ambiente local (ADR-0011)"; exit 1; }
+done
+[[ "${S3_BUCKET}" != *backup* ]] || { echo "::error::O bucket de backups não pode ser usado pela aplicação"; exit 1; }
+if [[ "$TARGET" == "production" ]]; then
+  # Produção nunca usa os buckets de preview/homologação.
+  [[ "${S3_BUCKET}" != *preview* && "${S3_BUCKET}" != *staging* ]] \
+    || { echo "::error::Bucket de outro ambiente na produção"; exit 1; }
 fi
 
 $VERCEL pull --yes --environment="$TARGET" --token="$VERCEL_TOKEN" >/dev/null
@@ -55,7 +62,7 @@ fi
 optional=(
   S3_ENDPOINT S3_REGION S3_BUCKET S3_ACCESS_KEY_ID S3_SECRET_ACCESS_KEY S3_FORCE_PATH_STYLE S3_PREFIX
   SERVER_URL SMTP_HOST SMTP_PORT SMTP_USER SMTP_PASSWORD SMTP_SECURE EMAIL_SMTP_IS_SANDBOX
-  EMAIL_FROM_ADDRESS EMAIL_FROM_NAME SENTRY_DSN
+  EMAIL_FROM_ADDRESS EMAIL_FROM_NAME SENTRY_DSN CRON_SECRET MAINTENANCE_MODE
 )
 for var in "${optional[@]}"; do
   if [[ -n "${!var:-}" ]]; then

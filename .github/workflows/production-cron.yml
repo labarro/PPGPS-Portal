@@ -1,0 +1,70 @@
+name: Produção — disponibilidade e publicação agendada
+
+# S06 (custo zero; repositório público): monitor de disponibilidade e agendador externo.
+# - Disponibilidade: a cada 30 min, página inicial, robots, sitemap e validade do certificado
+#   (>= 14 dias). Falha de execução agendada gera notificação do GitHub ao responsável.
+# - Publicação agendada (ADR-0015): conclui ensaios agendados vencidos chamando
+#   /api/essays/publish-due com CRON_SECRET. A visibilidade não depende deste job.
+# Só roda depois do lançamento (PRODUCTION_DEPLOY_ENABLED=true). Runbook: docs/runbooks/incidente.md.
+on:
+  schedule:
+    - cron: '*/30 * * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: production-cron
+  cancel-in-progress: false
+
+jobs:
+  uptime:
+    name: Disponibilidade (bioeticaps.app)
+    if: vars.PRODUCTION_DEPLOY_ENABLED == 'true'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    env:
+      URL: ${{ vars.PRODUCTION_DOMAIN != '' && format('https://{0}', vars.PRODUCTION_DOMAIN) || 'https://bioeticaps.app' }}
+    steps:
+      - name: Rotas essenciais (3 tentativas)
+        run: |
+          for path in / /robots.txt /sitemap.xml /blog; do
+            ok=false
+            for attempt in 1 2 3; do
+              code=$(curl -s -o /dev/null -w '%{http_code}' --max-time 20 "$URL$path" || echo 000)
+              if [[ "$code" == "200" ]]; then ok=true; break; fi
+              sleep 10
+            done
+            $ok || { echo "::error::$URL$path indisponível (último status $code)"; exit 1; }
+            echo "$URL$path 200"
+          done
+      - name: Certificado TLS válido por pelo menos 14 dias
+        run: |
+          host="${URL#https://}"
+          end=$(echo | openssl s_client -servername "$host" -connect "$host:443" 2>/dev/null \
+            | openssl x509 -noout -enddate | cut -d= -f2)
+          days=$(( ( $(date -d "$end" +%s) - $(date +%s) ) / 86400 ))
+          echo "Certificado expira em $end ($days dias)"
+          (( days >= 14 )) || { echo "::error::Certificado expira em $days dias"; exit 1; }
+
+  publish-due:
+    name: Concluir publicações agendadas
+    if: vars.PRODUCTION_DEPLOY_ENABLED == 'true'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    environment: production-cron
+    env:
+      URL: ${{ vars.PRODUCTION_DOMAIN != '' && format('https://{0}', vars.PRODUCTION_DOMAIN) || 'https://bioeticaps.app' }}
+      CRON_SECRET: ${{ secrets.CRON_SECRET }}
+    steps:
+      - name: Chamar /api/essays/publish-due
+        run: |
+          if [[ -z "$CRON_SECRET" ]]; then
+            echo "::warning::CRON_SECRET ausente no ambiente production-cron."
+            exit 0
+          fi
+          code=$(curl -s -o /tmp/out.json -w '%{http_code}' --max-time 30 \
+            -X POST -H "Authorization: Bearer ${CRON_SECRET}" "$URL/api/essays/publish-due")
+          [[ "$code" == "200" ]] || { echo "::error::publish-due respondeu $code"; exit 1; }
+          jq -c '{published: (.published // .count // null)}' /tmp/out.json || true

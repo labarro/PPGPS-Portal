@@ -7,6 +7,11 @@ on:
   push:
     branches: [main]
   workflow_dispatch:
+    inputs:
+      maintenance:
+        description: 'Ensaio do modo de manutenção (painel somente leitura) — S06'
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -159,6 +164,7 @@ jobs:
           EMAIL_SMTP_IS_SANDBOX: ${{ vars.EMAIL_SMTP_IS_SANDBOX }}
           SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
           NEXT_PUBLIC_SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
+          MAINTENANCE_MODE: ${{ github.event.inputs.maintenance == 'true' && 'true' || '' }}
         run: bash scripts/ci/vercel-deploy.sh preview
       - name: Fumaça (deploy)
         if: steps.config.outputs.enabled == 'true'

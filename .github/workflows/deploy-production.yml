@@ -1,19 +1,22 @@
 name: Deploy de produção (release aprovada)
 
 # Somente por tag vX.Y.Z na main, disparado pelo dono do repositório com a variável
-# PRODUCTION_DEPLOY_ENABLED=true e, quando o plano permitir, aprovação manual no GitHub
-# Environment `production` (revisores obrigatórios). Agentes nunca disparam este fluxo.
-# Ordem (ADR-0005): ponto de restauração -> migrate (trava de concorrência) -> deploy -> fumaça.
-# Publicação pública só a partir da S06 (ativação de https://bioeticaps.app — ADR-0014 —,
-# remoção de noindex na produção, decisão de hospedagem).
+# PRODUCTION_DEPLOY_ENABLED=true. O ambiente GitHub `production` só aceita tags v*.*.*.
+# Ordem (ADR-0005): ponto de restauração -> migrate (trava de concorrência) + conteúdo
+# institucional e conta admin inicial (idempotentes) -> verificação do R2 -> deploy -> fumaça
+# no domínio oficial https://bioeticaps.app (ADR-0014). Runbook: docs/runbooks/deploy.md.
 on:
   push:
     tags: ['v*.*.*']
   workflow_dispatch:
     inputs:
       tag:
-        description: 'Tag da release já existente (ex.: v1.0.0)'
+        description: 'Tag da release já existente (ex.: v1.0.0). Dispare com --ref <tag>.'
         required: true
+      maintenance:
+        description: 'Publicar com modo de manutenção ativo (painel somente leitura)'
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -32,8 +35,7 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 5
     steps:
-      # Trava independente do plano do GitHub: em repositório privado no plano Free, ambientes
-      # não aceitam revisores obrigatórios. Só o supervisor define PRODUCTION_DEPLOY_ENABLED
+      # Trava independente do plano do GitHub: só o supervisor define PRODUCTION_DEPLOY_ENABLED
       # (Settings → Variables) e só o dono do repositório pode disparar o deploy.
       - name: Trava de produção (habilitação explícita do supervisor)
         env:
@@ -69,20 +71,19 @@ jobs:
       NEON_PROJECT_ID: ${{ vars.NEON_PROJECT_ID }}
       NEON_PRODUCTION_BRANCH: ${{ vars.NEON_PRODUCTION_BRANCH || 'production' }}
     steps:
-      - name: Criar predeploy-<tag> e manter só os 2 mais recentes
+      - name: Criar predeploy-<tag>-<execução> e manter só os 2 mais recentes
         run: |
           neon() { npx -y neon@8.8.0 "$@" --no-analytics; }
-          name="predeploy-${RELEASE_TAG}"
+          name="predeploy-${RELEASE_TAG}-${GITHUB_RUN_ID}"
           neon branches create --project-id "$NEON_PROJECT_ID" --name "$name" \
             --parent "$NEON_PRODUCTION_BRANCH" --no-compute --no-secrets --output json >/dev/null
           echo "Ponto de restauração criado: $name"
           neon branches list --project-id "$NEON_PROJECT_ID" --output json \
             | jq -r '[.[] | select(.name | startswith("predeploy-"))] | sort_by(.created_at) | reverse | .[2:] | .[].name' \
             | while read -r old; do [[ -n "$old" ]] && neon branches delete "$old" --project-id "$NEON_PROJECT_ID"; done
-      # O pg_dump criptografado do ponto de restauração entra com a infraestrutura de backup (S02).
 
   migrate:
-    name: Migrations em produção
+    name: Migrations, conteúdo institucional e conta admin (produção)
     needs: restore-point
     runs-on: ubuntu-24.04
     timeout-minutes: 15
@@ -101,6 +102,23 @@ jobs:
       - uses: ./.github/actions/setup
       - run: pnpm migrate
       - run: pnpm migrate:status
+      # Conteúdo público verificado (S03–S06): idempotente, nunca sobrescreve edições do painel;
+      # sem pessoas, ensaios ou dados fictícios (seed:people/seed:essays/seed continuam bloqueados).
+      - name: Conteúdo institucional (idempotente)
+        env:
+          SEED_CONTENT_ALLOW_PRODUCTION: 'true'
+        run: pnpm seed:content
+      # Primeira conta admin (somente se o banco não tiver contas). Senha aleatória descartada:
+      # o titular define a senha pela recuperação de senha.
+      - name: Conta admin inicial (idempotente)
+        env:
+          BOOTSTRAP_ADMIN_EMAIL: ${{ secrets.BOOTSTRAP_ADMIN_EMAIL }}
+        run: |
+          if [[ -z "$BOOTSTRAP_ADMIN_EMAIL" ]]; then
+            echo "::notice::BOOTSTRAP_ADMIN_EMAIL ausente: nenhuma conta criada."
+          else
+            pnpm users:bootstrap-admin
+          fi
 
   deploy:
     name: Deploy e fumaça (produção)
@@ -113,6 +131,14 @@ jobs:
         with:
           ref: ${{ env.RELEASE_TAG }}
       - uses: ./.github/actions/setup
+      - name: Verificação real do bucket R2 de produção (objeto de 64 bytes, removido)
+        env:
+          S3_ENDPOINT: ${{ vars.R2_ENDPOINT }}
+          S3_REGION: ${{ vars.R2_REGION }}
+          S3_BUCKET: ${{ secrets.R2_BUCKET }}
+          S3_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+          S3_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+        run: node scripts/storage/r2-smoke.mjs
       - name: Deploy (Vercel --prod)
         id: deploy
         env:
@@ -122,8 +148,29 @@ jobs:
           APP_ENV: production
           DATABASE_URL: ${{ secrets.DATABASE_URL_POOLED }}
           PAYLOAD_SECRET: ${{ secrets.PAYLOAD_SECRET }}
-          # Domínio oficial (ADR-0014). Ativação pública somente na S06.
+          # Domínio oficial (ADR-0014).
           SERVER_URL: ${{ vars.PRODUCTION_DOMAIN != '' && format('https://{0}', vars.PRODUCTION_DOMAIN) || 'https://bioeticaps.app' }}
+          S3_ENDPOINT: ${{ vars.R2_ENDPOINT }}
+          S3_REGION: ${{ vars.R2_REGION }}
+          S3_BUCKET: ${{ secrets.R2_BUCKET }}
+          S3_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+          S3_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+          SMTP_HOST: ${{ secrets.SMTP_HOST }}
+          SMTP_PORT: ${{ secrets.SMTP_PORT }}
+          SMTP_USER: ${{ secrets.SMTP_USER }}
+          SMTP_PASSWORD: ${{ secrets.SMTP_PASSWORD }}
+          SMTP_SECURE: ${{ secrets.SMTP_SECURE || vars.SMTP_SECURE }}
+          EMAIL_FROM_ADDRESS: ${{ secrets.SMTP_FROM || vars.EMAIL_FROM_ADDRESS }}
+          EMAIL_FROM_NAME: ${{ vars.EMAIL_FROM_NAME }}
+          SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
+          NEXT_PUBLIC_SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+          MAINTENANCE_MODE: ${{ github.event.inputs.maintenance == 'true' && 'true' || '' }}
         run: bash scripts/ci/vercel-deploy.sh production
-      - name: Fumaça pós-deploy
-        run: bash scripts/ci/smoke-deployment.sh "${{ steps.deploy.outputs.deployment_url }}" production
+      # O deploy de produção recebe o domínio oficial automaticamente (alvo production da Vercel).
+      # A URL própria do deploy fica atrás da proteção da Vercel; a fumaça usa o domínio.
+      - name: Fumaça pós-deploy (domínio oficial)
+        env:
+          PRODUCTION_URL: ${{ vars.PRODUCTION_DOMAIN != '' && format('https://{0}', vars.PRODUCTION_DOMAIN) || 'https://bioeticaps.app' }}
+          EXPECT_MAINTENANCE: ${{ github.event.inputs.maintenance == 'true' && 'true' || '' }}
+        run: bash scripts/ci/smoke-deployment.sh "$PRODUCTION_URL" production

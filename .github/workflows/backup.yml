@@ -1,19 +1,24 @@
-name: Backup criptografado (homologação)
+name: Backup criptografado (homologação e produção)
 
 # Planejamento 17.5 e 24.5; ADR-0012.
-# - Diário: pg_dump do banco de HOMOLOGAÇÃO, criptografado com age (chave pública) antes de
-#   gravar em disco. A chave privada NÃO é usada aqui.
-# - Destino: bucket R2 `ppgps-backups` (prefixo staging/, retenção 7 dias) com credenciais
-#   exclusivas de backup. Enquanto elas não existirem no ambiente `backups`, o arquivo
-#   criptografado fica como artefato do GitHub (7 dias) e o job registra a pendência.
-# - Produção: não habilitado nesta fase (S06). Nenhuma operação na branch `production`.
+# - Diário: pg_dump do banco, criptografado com age (chave pública) antes de gravar em disco.
+#   A chave privada NÃO é usada aqui.
+# - Destino: bucket R2 `ppgps-backups` (prefixos staging/ e production/) com credenciais
+#   exclusivas de backup. Retenção: homologação 7 dias; produção 30 dias.
+# - Produção (S06): somente leitura do banco (`PRODUCTION_DATABASE_URL` no ambiente `backups`).
 on:
   schedule:
     - cron: '17 5 * * *'
   workflow_dispatch:
+    inputs:
+      target:
+        description: 'Ambiente (vazio = ambos)'
+        type: choice
+        options: ['', staging, production]
+        default: ''
 
 concurrency:
-  group: backup-staging
+  group: backup
   cancel-in-progress: false
 
 permissions:
@@ -21,43 +26,62 @@ permissions:
 
 jobs:
   dump:
-    name: pg_dump + age (staging)
+    name: pg_dump + age (${{ matrix.target }})
+    strategy:
+      fail-fast: false
+      matrix:
+        target: [staging, production]
     runs-on: ubuntu-24.04
     timeout-minutes: 20
-    environment: staging
-    outputs:
-      base: ${{ steps.names.outputs.base }}
+    environment: ${{ matrix.target == 'production' && 'backups' || 'staging' }}
+    env:
+      DATABASE_URL: ${{ matrix.target == 'production' && secrets.PRODUCTION_DATABASE_URL || secrets.DATABASE_URL }}
+      BACKUP_AGE_RECIPIENT: ${{ vars.BACKUP_AGE_RECIPIENT }}
+      ALLOW_PRODUCTION_BACKUP: ${{ matrix.target == 'production' && 'true' || '' }}
     steps:
       - name: Verificar configuração
+        id: config
         env:
-          DATABASE_URL: ${{ secrets.DATABASE_URL }}
-          BACKUP_AGE_RECIPIENT: ${{ vars.BACKUP_AGE_RECIPIENT }}
+          REQUESTED: ${{ github.event.inputs.target }}
         run: |
-          [[ -n "$DATABASE_URL" ]] || { echo "::error::DATABASE_URL ausente no ambiente staging"; exit 1; }
+          if [[ -n "$REQUESTED" && "$REQUESTED" != "${{ matrix.target }}" ]]; then
+            echo "Somente '$REQUESTED' solicitado."; echo "enabled=false" >> "$GITHUB_OUTPUT"; exit 0
+          fi
           [[ "$BACKUP_AGE_RECIPIENT" == age1* ]] || { echo "::error::BACKUP_AGE_RECIPIENT (variável) ausente"; exit 1; }
+          if [[ -z "$DATABASE_URL" ]]; then
+            if [[ "${{ matrix.target }}" == "production" ]]; then
+              echo "::warning::PRODUCTION_DATABASE_URL ausente no ambiente 'backups': backup de produção não executado."
+              echo "enabled=false" >> "$GITHUB_OUTPUT"; exit 0
+            fi
+            echo "::error::DATABASE_URL ausente no ambiente staging"; exit 1
+          fi
+          echo "enabled=true" >> "$GITHUB_OUTPUT"
       - uses: actions/checkout@v7
+        if: steps.config.outputs.enabled == 'true'
       - name: Backup criptografado (pg_dump 18 + age no contêiner postgres:18)
-        env:
-          DATABASE_URL: ${{ secrets.DATABASE_URL }}
-          BACKUP_AGE_RECIPIENT: ${{ vars.BACKUP_AGE_RECIPIENT }}
+        if: steps.config.outputs.enabled == 'true'
         run: |
           mkdir -p out
-          docker run --rm -e DATABASE_URL -e BACKUP_AGE_RECIPIENT \
+          docker run --rm -e DATABASE_URL -e BACKUP_AGE_RECIPIENT -e ALLOW_PRODUCTION_BACKUP \
             -v "$PWD/scripts:/scripts:ro" -v "$PWD/out:/out" postgres:18-alpine \
-            sh -c 'apk add --no-cache age jq bash coreutils >/dev/null && bash /scripts/backup/backup.sh staging /out'
+            sh -c 'apk add --no-cache age jq bash coreutils >/dev/null && bash /scripts/backup/backup.sh ${{ matrix.target }} /out'
           ls -l out
-      - id: names
-        run: echo "base=$(basename out/*.dump.age .dump.age)" >> "$GITHUB_OUTPUT"
       - uses: actions/upload-artifact@v7
+        if: steps.config.outputs.enabled == 'true'
         with:
-          name: backup-staging
+          name: backup-${{ matrix.target }}
           path: out/
-          retention-days: 7
+          retention-days: 1
           if-no-files-found: error
 
   upload:
-    name: Enviar ao bucket de backups (R2)
+    name: Enviar ao bucket de backups (${{ matrix.target }})
     needs: dump
+    if: always() && needs.dump.result != 'cancelled'
+    strategy:
+      fail-fast: false
+      matrix:
+        target: [staging, production]
     runs-on: ubuntu-24.04
     timeout-minutes: 10
     environment: backups
@@ -66,45 +90,46 @@ jobs:
       contents: read
       actions: write
     steps:
+      - name: Existe artefato deste ambiente?
+        id: artifact
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          n=$(gh api "repos/${{ github.repository }}/actions/runs/${{ github.run_id }}/artifacts" --jq '[.artifacts[] | select(.name == "backup-${{ matrix.target }}")] | length')
+          [[ "$n" -gt 0 ]] && echo "present=true" >> "$GITHUB_OUTPUT" || echo "present=false" >> "$GITHUB_OUTPUT"
       - name: Verificar credenciais exclusivas de backup
-        id: config
+        if: steps.artifact.outputs.present == 'true'
         env:
           KEY: ${{ secrets.R2_BACKUP_ACCESS_KEY_ID }}
           SECRET: ${{ secrets.R2_BACKUP_SECRET_ACCESS_KEY }}
         run: |
-          if [[ -z "$KEY" || -z "$SECRET" ]]; then
-            echo "::warning::R2_BACKUP_ACCESS_KEY_ID/R2_BACKUP_SECRET_ACCESS_KEY ausentes no ambiente 'backups'. Backup mantido apenas como artefato criptografado do GitHub (7 dias)."
-            echo "enabled=false" >> "$GITHUB_OUTPUT"
-          else
-            echo "enabled=true" >> "$GITHUB_OUTPUT"
-          fi
+          [[ -n "$KEY" && -n "$SECRET" ]] || { echo "::error::Credenciais de backup ausentes no ambiente 'backups'"; exit 1; }
       - uses: actions/checkout@v7
-        if: steps.config.outputs.enabled == 'true'
+        if: steps.artifact.outputs.present == 'true'
       - uses: ./.github/actions/setup
-        if: steps.config.outputs.enabled == 'true'
+        if: steps.artifact.outputs.present == 'true'
       - uses: actions/download-artifact@v8
-        if: steps.config.outputs.enabled == 'true'
+        if: steps.artifact.outputs.present == 'true'
         with:
-          name: backup-staging
+          name: backup-${{ matrix.target }}
           path: out
-      - name: Enviar e aplicar retenção (7 dias)
-        if: steps.config.outputs.enabled == 'true'
+      - name: Enviar e aplicar retenção
+        if: steps.artifact.outputs.present == 'true'
         env:
           BACKUP_S3_ENDPOINT: ${{ vars.R2_ENDPOINT }}
           BACKUP_S3_REGION: ${{ vars.R2_REGION }}
           BACKUP_S3_BUCKET: ${{ secrets.R2_BACKUP_BUCKET || 'ppgps-backups' }}
           BACKUP_S3_ACCESS_KEY_ID: ${{ secrets.R2_BACKUP_ACCESS_KEY_ID }}
           BACKUP_S3_SECRET_ACCESS_KEY: ${{ secrets.R2_BACKUP_SECRET_ACCESS_KEY }}
-          BACKUP_RETENTION_DAYS: '7'
+          BACKUP_RETENTION_DAYS: ${{ matrix.target == 'production' && '30' || '7' }}
         run: |
-          base="${{ needs.dump.outputs.base }}"
-          node scripts/backup/upload.mjs "out/${base}.dump.age" "out/${base}.manifest.json" staging
-      # Repositório público: artefatos ficam disponíveis a qualquer usuário autenticado do GitHub.
-      # O dump é criptografado (age), mas não permanece como artefato depois de estar no bucket.
+          dump=$(ls out/*.dump.age); manifest=$(ls out/*.manifest.json)
+          node scripts/backup/upload.mjs "$dump" "$manifest" ${{ matrix.target }}
+      # Repositório público: o dump é criptografado (age), mas não permanece como artefato.
       - name: Apagar o artefato temporário (backup já no bucket)
-        if: steps.config.outputs.enabled == 'true'
+        if: steps.artifact.outputs.present == 'true'
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          ids=$(gh api "repos/${{ github.repository }}/actions/runs/${{ github.run_id }}/artifacts" --jq '.artifacts[] | select(.name == "backup-staging") | .id')
+          ids=$(gh api "repos/${{ github.repository }}/actions/runs/${{ github.run_id }}/artifacts" --jq '.artifacts[] | select(.name == "backup-${{ matrix.target }}") | .id')
           for id in $ids; do gh api -X DELETE "repos/${{ github.repository }}/actions/artifacts/$id"; done
