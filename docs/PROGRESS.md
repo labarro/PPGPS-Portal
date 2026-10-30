@@ -14,12 +14,12 @@
 | Situação da S02 | **Concluída** (22/10/2026). Exceções formais: validação externa do **Sentry** e do **SMTP de homologação** adiadas para a S06 por decisão do responsável técnico (não são testes aprovados) |
 | Situação da S03 | **Concluída** (30/10/2026; PR #14). Revisão visual/funcional, navegação desktop/mobile, conteúdo provisório e os 9 critérios aprovados pelo responsável técnico; textos definitivos do coordenador (Q7) seguem pendentes para a S06 |
 | Situação da S04 | **Concluída** (30/10/2026; PRs #23 e #24). Roteiro de homologação executado e os 8 critérios aprovados pelo responsável técnico; autorizações individuais reais e dados do grupo seguem pendentes (bloqueiam só a publicação dos perfis, S06) |
-| Situação da S05 | **Executada — aguardando revisão humana** (30/10/2026; PR #34 mesclado em `8f08cf6`; homologação atualizada) |
+| Situação da S05 | **Executada — homologação aprovada; encerramento bloqueado** (30/10/2026). Homologação manual e ADR-0015 aprovados pelo responsável técnico. Falta integrar a correção de desempenho (PR #36), comprovada localmente; o CI do GitHub Actions não executa (cobrança/limite da conta) — ver sessão de finalização |
 | Próxima sprint | **S06 — Reauditoria, conteúdo inicial e lançamento do M1** — **não iniciada** (somente com autorização do responsável técnico) |
 | Domínio oficial | **`https://bioeticaps.app`** (ADR-0014) — associado ao projeto `ppgps-portal` na Vercel, DNS e HTTPS ativos, **nenhum deploy servido** (404 `DEPLOYMENT_NOT_FOUND`); ativação pública na S06 |
 | Última atualização | 30/10/2026 |
 | Planejamento vigente | `docs/PLANEJAMENTO_PORTAL_PPGPS.md` **v1.4** (30/10/2026) |
-| ADRs | 0001–0014 **Aceitos** (0013 e 0014 em 30/10/2026); **0015 Proposto** (S05: fluxo editorial e publicação agendada) |
+| ADRs | 0001–0015 **Aceitos** (0015 — fluxo editorial e publicação agendada — em 30/10/2026) |
 
 ## Situação das sprints
 
@@ -30,7 +30,7 @@
 | S02 | Autenticação, papéis, auditoria, storage, backup e base visual | M1 | **Concluída** (22/10/2026; Sentry e SMTP de homologação adiados para a S06) |
 | S03 | Portal do grupo: identidade, linhas temáticas e homepage v1 | M1 | **Concluída** (30/10/2026; PR #14) |
 | S04 | Integrantes, vínculos e consentimentos | M1 | **Concluída** (30/10/2026; PRs #23 e #24) |
-| S05 | Blog acadêmico e fluxo editorial | M1 | **Executada — aguardando revisão humana** (30/10/2026) |
+| S05 | Blog acadêmico e fluxo editorial | M1 | **Executada — homologação aprovada; encerramento bloqueado** (PR #36 aguardando CI) |
 | S06 | Reauditoria, conteúdo inicial e lançamento do M1 | M1 | Não iniciada |
 | S07 | Orientações, conclusões acadêmicas e egressos | M2 | Não iniciada |
 | S08 | Catálogo de publicações do grupo | M2 | Não iniciada |
@@ -38,6 +38,107 @@
 | S10 | Eventos, projetos e impacto social | M2 | Não iniciada |
 | S11 | Consolidação, carga de dados acadêmicos e lançamento do M2 | M2 | Não iniciada |
 
+## Sessão de 30/10/2026 — finalização da S05 (desempenho mobile e encerramento)
+
+**Modo:** autônomo, autorizado expressamente pelo responsável técnico. Sem funcionalidades novas, sem migrations, sem deploy de produção; S06 **não iniciada**. Branch `s05-finalizacao-lighthouse`, PR #36.
+
+### Aprovações do responsável técnico (declaração expressa em 30/10/2026)
+
+| Item | Registro |
+|---|---|
+| Roteiro completo de homologação da S05 | Realizado pelo responsável técnico e **aprovado** (blog no navegador; criação, revisão, devolução, aprovação, agendamento, publicação e arquivamento; navegação e apresentação visual) |
+| ADR-0015 (fluxo editorial e publicação agendada) | Revisado e **aprovado** → status `Aceito` |
+
+### Investigação Lighthouse local × CI
+
+| Fator | Local (antes) | CI (antes, PR #34) | Conclusão |
+|---|---|---|---|
+| Lighthouse / Chrome | 12.6.1 / Chrome 156 | 12.6.1 / Chrome 156 | Iguais |
+| Throttling | Simulado (Lantern), rede 4G lenta, CPU ×4 | Igual | Iguais (config. `lighthouserc.json`) |
+| CPU do host (`benchmarkIndex`) | ~3 800 | 700–2 500 (variável) | Runner 1,5–5× mais lento: o TBT simulado escala com o tempo real de execução do JS |
+| Fontes | 2 (Inter e Source Serif 4), 101 882 B, auto-hospedadas | Iguais | Sem diferença |
+| Terceiros | 0 | 0 | Sem diferença |
+| **JavaScript** | **201 501 B** (13 arquivos) | **272 182 B** (13 arquivos; maior chunk 442 KB descomprimido) | **Causa real** |
+| Cache | Medição a frio, uma execução | Uma execução; 1ª URL com servidor frio (home 0,59, TTFB 1 s) | Metodologia pouco reprodutível |
+
+**Causa identificada:** `src/instrumentation-client.ts` lia `process.env.NEXT_PUBLIC_SENTRY_DSN`. No ambiente local o `.env` define a variável vazia, e o build elimina o SDK. No CI (e em qualquer build sem a variável definida, como a Vercel sem o segredo) a expressão não é substituída: o SDK inteiro do Sentry (~70 KB comprimidos, ~200 KB descomprimidos) entrava no JavaScript inicial de **todas** as páginas públicas — regressão real para o visitante, não só para a medição. Reproduzido localmente compilando sem `.env` (chunk de 441 839 B com o SDK).
+
+### Correções (PR #36)
+
+1. `next.config.ts` define sempre `NEXT_PUBLIC_SENTRY_DSN` (vazio quando ausente): sem DSN, o SDK é eliminado do navegador.
+2. `instrumentation-client.ts`, `error.tsx` e `global-error.tsx` carregam o SDK **sob demanda** (`import()` assíncrono) e só com DSN: mesmo com DSN (S06), o SDK fica num chunk assíncrono fora do JavaScript inicial (verificado: nenhum manifesto de página referencia o chunk do Sentry). Teste unitário novo (`client-capture`).
+3. CI: o job de build falha se o SDK do Sentry aparecer no JavaScript do navegador sem DSN (guarda contra regressão).
+4. Lighthouse reproduzível: 3 execuções por URL com asserção pela **mediana** (`median-run`), aquecimento das rotas antes da medição, e resumo com LCP, TBT e `benchmarkIndex`. Desempenho ≥ 0,90 da página do ensaio passou de aviso para **erro** (critério da ficha). Nenhuma auditoria desabilitada, nenhum limite reduzido, sem alteração de throttling.
+5. E2E do primeiro usuário aguarda a hidratação do formulário antes de preencher (falha intermitente local pré-existente, reproduzida também na `main`).
+
+### Medições (página do ensaio, mobile, build idêntico ao do CI — sem `.env` —, 3 execuções cada)
+
+| Situação | CPU simulada | Desempenho | Acessib. | Boas práticas | SEO | JS | LCP | TBT |
+|---|---|---|---|---|---|---|---|---|
+| Antes (`main` `05a9b5a`) | ×4 | 0,90 / 0,90 / 0,90 | 1,00 | 1,00 | 1,00 | 272 098 B | ~3,6 s | ~40 ms |
+| Antes | ×6 (pior que o runner) | 0,89 / 0,89 / 0,89 | 1,00 | 1,00 | 1,00 | 272 098 B | ~3,66 s | ~75 ms |
+| **Depois (PR #36)** | ×4 | **0,94 / 0,94 / 0,94** | 1,00 | 1,00 | 1,00 | **188 755 B** (−31%) | ~3,1 s | ~21 ms |
+| **Depois** | ×6 | **0,94 / 0,94 / 0,93** | 1,00 | 1,00 | 1,00 | 188 755 B | ~3,15 s | ~42–67 ms |
+| CI (antes, PR #34/#35) | ×4, runner | 0,76 / 0,77 | 1,00 | 1,00 | 1,00 | 272 182 B | ~3,8 s | ~520 ms |
+
+`lhci autorun` completo (9 rotas × 3 execuções, novas asserções) local: **todas as asserções passaram**; demais rotas 0,93–0,94 e 1,00 nas outras categorias. O LCP restante (~3,1 s simulado) vem do JavaScript base do Next/React baixado antes da pintura em rede 4G lenta; reduzir mais exigiria mudança arquitetural (fora do escopo).
+
+### Testes de regressão (30/10/2026, locais, PR #36)
+
+| Verificação | Resultado |
+|---|---|
+| lint / format / typecheck | Passou |
+| Unitários + integração | 365/365 (+2 unitários novos) — máquina de estados, transições inválidas, comentário, checklist, versionamento, agendamento/visibilidade por data, arquivamento/restauração, autoria e permissões, rascunhos, XSS, RSS/Atom, sitemap/SEO, vazamento nas APIs |
+| E2E (Playwright + axe) | **87/87** em banco limpo (destaques da home, ensaios no perfil autorizado, 360 px, axe desktop/celular) |
+| Build | Passou (com e sem DSN; SDK ausente do navegador sem DSN) |
+| Migrations | Sem alteração de schema; `migrate` em banco limpo e `migrate:check` sem drift |
+| `pnpm audit --audit-level high` | Passou (1 baixa, 1 moderada conhecidas) |
+| Gitleaks (Docker, commits do PR) | Nenhum vazamento |
+| Lighthouse | Ver tabela acima (local) |
+
+### Bloqueio: CI do GitHub indisponível
+
+Os workflows do PR #36 **não iniciaram**: "The job was not started because recent account payments have failed or your spending limit needs to be increased" (run `41118411943`). O repositório é privado e o limite gratuito de minutos do GitHub Actions da conta foi atingido ou há pendência de cobrança. Pela política (`AGENTS.md` §11.1) **não houve merge** sem checks verdes; nenhuma alteração de limite de gastos foi feita (orçamento R$ 0). Consequências: o PR #36 aguarda; a `main` segue com o problema de desempenho; a homologação não recebe o deploy (que também roda no Actions).
+
+**Decisão necessária do responsável técnico:** (a) aguardar a renovação mensal dos minutos e reexecutar os checks do PR #36; ou (b) regularizar a conta/limite; ou (c) outra alternativa sem custo (ex.: tornar o repositório público — exige avaliação de segurança). Após os checks verdes, o merge confirmará o critério de Lighthouse no runner.
+
+### Situação dos critérios da S05
+
+| Critério | Situação |
+|---|---|
+| Visitante sem alterações; transições só por editor/admin; aprovador e publicador auditados | Atendido |
+| Transições inválidas rejeitadas | Atendido |
+| Agendado publicado após a data, na home e no RSS | Atendido |
+| Arquivado 200 com aviso, fora de listagens, RSS e sitemap | Atendido |
+| Selo de natureza e aviso de ausência de revisão por pares | Atendido |
+| XSS | Atendido |
+| Lighthouse mobile ≥ 90 nas 4 categorias (página do ensaio) | **Comprovado localmente com o build do CI (0,94/1,00/1,00/1,00); confirmação no runner e merge pendentes** (bloqueio do Actions) |
+| DoD: homologação pelo supervisor | **Atendido** (30/10/2026) |
+
+**Status:** a S05 **não** é marcada como `Concluída` até o PR #36 ser integrado com o job Lighthouse verde (critério com asserção de erro).
+
+### Dependências para a S06 (conferidas; nada implementado)
+
+| Dependência | Registro |
+|---|---|
+| Política editorial aprovada pelo coordenador (Q8) | `questoes-institucionais.md` Q8; pendências da S05 |
+| ≥ 3 ensaios iniciais reais com autorização dos autores | Q8; ficha S06 (critérios do M1) |
+| Textos definitivos do grupo e das linhas (Q7) | Pendências da S03; ficha S06 |
+| Lista validada de integrantes e consentimentos individuais | Pendências da S04; ficha S06 |
+| Controlador dos dados e canal do titular (Q4) | Pendências da S04; ficha S06 (páginas legais) |
+| Prazo de guarda dos comprovantes de autorização | Registro de tratamento T6; pendências da S04 |
+| E-mail de contato do grupo | Pendências da S03 (Q1/Q4) |
+| SMTP real | Exceção da S02; ficha S06 |
+| Validação real do Sentry | Exceção da S02; ficha S06 (com o SDK agora carregado sob demanda) |
+| Uploads acima do limite da Vercel Hobby (~4,5 MB) | ADR-0011; ficha S06 (ADR de hospedagem) |
+| Cron externo gratuito para a publicação agendada (`CRON_SECRET`) | ADR-0015; pendências da S05 |
+| Backups, monitoramento e rollback de produção | Ficha S06 (runbooks, uptime, backup, ensaio de rollback) |
+| Ativação de `https://bioeticaps.app` só no lançamento autorizado | ADR-0014; ficha S06 |
+| **Novo:** disponibilidade do GitHub Actions (minutos/cobrança da conta) | Esta sessão; ficha S06 já prevê decisão sobre o plano GitHub no ADR de hospedagem |
+
+### Produção
+
+Nenhum deploy; `PRODUCTION_DEPLOY_ENABLED` não definida; branch `production` do Neon não acessada.
 ## Sessão de 30/10/2026 — execução da S05
 
 **Modo:** autônomo, autorizado expressamente pelo responsável técnico (execução integral da S05; política de PRs `AGENTS.md` §11.1). Branch `s05-blog-editorial`. S06 **não iniciada**. Nenhum deploy de produção; `PRODUCTION_DEPLOY_ENABLED` não definida; branch `production` do Neon não acessada. Somente dados fictícios.
@@ -81,7 +182,7 @@
 | Selo de natureza e aviso de ausência de revisão por pares em todo ensaio | Atendido | E2E (página, cartões, arquivado) |
 | Script/estilo no conteúdo não executa (XSS) | Atendido | Unitário (higienização e render) + integração + E2E no navegador |
 | Lighthouse mobile ≥ 90 nas 4 categorias na página do ensaio | **Parcial** | Local 0,93/1,00/1,00/1,00; runner do CI 0,76/1,00/1,00/1,00 (desempenho como aviso) |
-| DoD: roteiro de homologação pelo supervisor | Pendente | — |
+| DoD: roteiro de homologação pelo supervisor | **Atendido** (30/10/2026) | Aprovação expressa do responsável técnico |
 
 ### Decisões e premissas (ADR-0015, Proposto)
 
@@ -111,8 +212,8 @@
 | Política editorial (temas, tom, conflitos de interesse, licença padrão, termo de cessão) — Q8 | Antes do M1 (S06) |
 | Ensaios iniciais reais (≥ 3) e autores, com autorização | S06 |
 | Cron externo gratuito para concluir agendamentos em homologação/produção (`CRON_SECRET`) | S06 (com autorização) |
-| Aceite do ADR-0015 | Supervisor |
-| Roteiro de homologação da ficha (passos 1–8) — DoD | Supervisor |
+| ~~Aceite do ADR-0015~~ | **Feito** (30/10/2026) |
+| ~~Roteiro de homologação da ficha (passos 1–8) — DoD~~ | **Feito e aprovado** (30/10/2026) |
 ## Sessão de 30/10/2026 — auditoria dos PRs do Dependabot (manutenção técnica)
 
 **Modo:** manutenção autorizada pelo responsável técnico; sem funcionalidades, sem migrations, sem deploy de produção; S05 não iniciada. Estado verificado diretamente no GitHub: 10 PRs abertos (#3–#6, #16–#18, #20, #21, #25); #19 já fechado pelo Dependabot (substituído pelo #25).

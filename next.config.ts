@@ -14,7 +14,12 @@ const appEnv = resolveAppEnv(process.env.APP_ENV)
 const nextConfig: NextConfig = {
   poweredByHeader: false,
   // Ambiente lógico exposto ao cliente (somente o nome; nunca segredos) — usado pelo Sentry.
-  env: { NEXT_PUBLIC_APP_ENV: appEnv },
+  // O DSN público do Sentry é SEMPRE definido (vazio quando ausente) para que o build elimine o
+  // SDK do navegador quando não houver DSN (S05: diferença de ~66 KB entre o build local e o do CI).
+  env: {
+    NEXT_PUBLIC_APP_ENV: appEnv,
+    NEXT_PUBLIC_SENTRY_DSN: process.env.NEXT_PUBLIC_SENTRY_DSN ?? '',
+  },
   images: {
     localPatterns: [
       {
