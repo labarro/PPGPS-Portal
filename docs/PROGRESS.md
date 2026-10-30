@@ -57,6 +57,21 @@
 | #21 | `@types/node` | 24.19.2 → 26.6.5 | **major** | Incompatível com o runtime fixado (Node 24 LTS em `.nvmrc`/`engines`): exporia tipos de APIs inexistentes no Node 24 | — | **Fechado** com justificativa; regra no `dependabot.yml` ignora versões maiores de `@types/node` até a troca do runtime |
 
 **Vulnerabilidades após a manutenção** (`pnpm audit`): nenhuma alta/crítica. Remanescentes conhecidas: `esbuild` (moderada, GHSA-67mh-4wv8-2f99, só no `drizzle-kit` de desenvolvimento do `@payloadcms/db-postgres`; servidor de desenvolvimento do esbuild não é usado), `deepmerge` (baixa, sem correção publicada) e `graphql-scalars` (alta, GHSA-x8rm-f576-gq67, **ignorada** desde o PR #22: escalar `PhoneNumber` do GraphQL, que está desabilitado e sem rota — risco residual nulo enquanto o GraphQL permanecer desligado). Os overrides de `undici` e `happy-dom` foram mantidos (inócuos; revisar quando o Payload/Vitest os superarem).
+**Resultado (PR #27):** CI completo, verificação de migrations e preview verdes; mesclado por *squash* (`2907e28`). PRs #3, #4, #5, #6, #16, #17, #18, #20 e #25 fechados como substituídos; #21 fechado (pelo próprio Dependabot após a nova regra de `ignore`; justificativa comentada). `backup.yml` executado manualmente após o merge (run `41066904944`): **sucesso** com `upload-artifact@v7`/`download-artifact@v8` (dump criptografado de 375 303 bytes enviado ao bucket).
+
+**Segunda leva** (abertos pelo Dependabot após o PR #27, já sobre a `main` atual; CI completo verde em cada um, sem conflitos):
+
+| PR | Dependência | De → para | Tipo | Observação | Decisão |
+|---|---|---|---|---|---|
+| #32 | `lucide-react` | 1.61.0 → 1.62.0 | minor | Ícones; sem mudança de API usada | Mesclado |
+| #30 | `@sentry/nextjs` | 11.8.0 → 11.9.0 | minor | Sem DSN fora da S06; `beforeSend` inalterado | Mesclado |
+| #29 | `@aws-sdk/s3-request-presigner` | 3.1155.0 → 3.1157.0 | patch | URLs assinadas de documentos (testes de integração com MinIO) | Mesclado |
+| #28 | `pg`, `@types/pg` | 8.20.0 → 8.23.1 | minor | Driver do Postgres (integração, E2E, migrations e homologação verdes) | Mesclado |
+| #31 | `cross-env` | 7.0.3 → 10.1.0 | **major** | v8+: pacote ESM e Node ≥ 20; uso apenas como CLI nos scripts do `package.json`. Testado também no Windows (ambiente local do supervisor): `migrate:status`, `seed:people`, testes unitários | Mesclado |
+
+**Estado final (30/10/2026):** nenhum PR aberto; `main` `02f2f01` com CI, Verificação de migrations e Deploy de homologação **verdes** (execuções intermediárias canceladas pela regra de concorrência, como esperado); `pnpm install --frozen-lockfile`, `pnpm audit --audit-level high`, typecheck e unit + integração (318/318) verificados localmente sobre o resultado combinado.
+
+**Pendências de manutenção:** `pnpm/action-setup@v4` (ação composta `.github/actions/setup`) ainda declara Node 20 e é executada no Node 24 pelo GitHub (aviso nos logs); o Dependabot não propôs atualização — avaliar versão compatível em manutenção futura. Overrides de `undici`/`happy-dom` e o GHSA ignorado do `graphql-scalars` permanecem documentados acima.
 ## Sessão de 30/10/2026 — encerramento formal da S04
 
 **Modo:** documental (sem funcionalidades, migrations ou deploy), autorizado pelo responsável técnico. S05 **não iniciada**.
