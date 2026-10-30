@@ -9,6 +9,23 @@ export function formatDate(value: string | null | undefined): string | null {
   return new Intl.DateTimeFormat('pt-BR', { timeZone: 'UTC' }).format(date)
 }
 
+/** Fuso de exibição de datas com horário (publicação de ensaios): horário de Brasília. */
+export const SITE_TIME_ZONE = 'America/Sao_Paulo'
+
+/**
+ * Data por extenso (ex.: 30 de outubro de 2026). Instantes (publicação de ensaios) usam o
+ * horário de Brasília; datas sem horário, UTC.
+ */
+export function formatLongDate(
+  value: string | null | undefined,
+  timeZone: string = SITE_TIME_ZONE,
+): string | null {
+  if (!value) return null
+  const date = new Date(value)
+  if (Number.isNaN(date.getTime())) return null
+  return new Intl.DateTimeFormat('pt-BR', { dateStyle: 'long', timeZone }).format(date)
+}
+
 export function isoDate(value: string | null | undefined): string | null {
   if (!value) return null
   const date = new Date(value)

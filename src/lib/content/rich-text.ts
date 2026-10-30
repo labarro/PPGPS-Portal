@@ -1,4 +1,4 @@
-import { pagePath, researchLinePath } from './paths'
+import { essayPath, pagePath, researchLinePath } from './paths'
 
 /**
  * Tipos e regras puras do renderizador próprio de rich text (Lexical → React), sem HTML bruto
@@ -69,6 +69,7 @@ export function internalLinkHref(
   if (typeof slug !== 'string' || !slug) return null
   if (doc.relationTo === 'research-lines') return researchLinePath(slug)
   if (doc.relationTo === 'pages') return pagePath(slug)
+  if (doc.relationTo === 'essays') return essayPath(slug)
   return null
 }
 
@@ -124,4 +125,32 @@ export function leadingParagraphs(state: LexicalState | unknown, maxChars = 480)
 
 export function isRichTextEmpty(state: LexicalState | unknown): boolean {
   return plainText(state) === ''
+}
+
+/** Imagem inserida no texto (nó `upload` do Lexical) já populada e autorizada para o visitante. */
+export type RichTextImage = {
+  url: string
+  alt: string
+  width: number | null
+  height: number | null
+  caption: string | null
+  credit: string | null
+}
+
+export function uploadImage(node: LexicalNode): RichTextImage | null {
+  if (node.relationTo !== 'media') return null
+  const value = node.value as Record<string, unknown> | null | undefined
+  // Mídia não autorizada ao visitante chega só como id: não é exibida.
+  if (!value || typeof value !== 'object') return null
+  const url = typeof value.url === 'string' ? value.url : null
+  const alt = typeof value.alt === 'string' ? value.alt : null
+  if (!url || !alt || !safeHref(url)) return null
+  return {
+    url,
+    alt,
+    width: typeof value.width === 'number' ? value.width : null,
+    height: typeof value.height === 'number' ? value.height : null,
+    caption: typeof value.caption === 'string' && value.caption ? value.caption : null,
+    credit: typeof value.credit === 'string' && value.credit ? value.credit : null,
+  }
 }

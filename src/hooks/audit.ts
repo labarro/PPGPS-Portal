@@ -27,6 +27,10 @@ export const AUDIT_ACTIONS = [
   'publish',
   'unpublish',
   'export',
+  // S05: fluxo editorial dos ensaios (envio, devolução, agendamento, arquivamento, restauração)
+  // e aprovação — quem aprovou e quem publicou ficam registrados na auditoria.
+  'workflow',
+  'approve',
 ] as const
 
 export type AuditAction = (typeof AUDIT_ACTIONS)[number]

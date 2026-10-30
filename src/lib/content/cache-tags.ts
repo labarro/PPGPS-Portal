@@ -1,4 +1,6 @@
 import {
+  BLOG_BASE_PATH,
+  essayPath,
   GROUP_BASE_PATH,
   LINES_BASE_PATH,
   MEMBERS_BASE_PATH,
@@ -18,6 +20,8 @@ export const CACHE_TAGS = {
   researchLines: 'research-lines',
   pages: 'pages',
   people: 'people',
+  essays: 'essays',
+  essayTaxonomy: 'essay-taxonomy',
   sitemap: 'sitemap',
 } as const
 
@@ -26,6 +30,7 @@ export type CacheTag = (typeof CACHE_TAGS)[keyof typeof CACHE_TAGS]
 export const researchLineTag = (slug: string) => `research-line:${slug}`
 export const pageTag = (slug: string) => `page:${slug}`
 export const personTag = (slug: string) => `person:${slug}`
+export const essayTag = (slug: string) => `essay:${slug}`
 
 export type RevalidationPlan = { tags: string[]; paths: { path: string; type?: 'layout' }[] }
 
@@ -48,7 +53,10 @@ export function revalidationPlan(
     | 'pages'
     | 'site-chrome'
     | 'redirects'
-    | 'people',
+    | 'people'
+    | 'essays'
+    | 'categories'
+    | 'tags',
   doc?: SlugDoc,
   previousDoc?: SlugDoc,
 ): RevalidationPlan {
@@ -104,6 +112,26 @@ export function revalidationPlan(
         ],
       }
     }
+    // S05: ensaios aparecem no blog, na home (destaques), nos perfis dos autores, no RSS e no
+    // sitemap; categorias e tags afetam as páginas de taxonomia e os rótulos dos ensaios.
+    case 'essays': {
+      const slugs = slugsOf(doc, previousDoc)
+      return {
+        tags: uniq([CACHE_TAGS.essays, CACHE_TAGS.sitemap, ...slugs.map(essayTag)]),
+        paths: [
+          { path: '/' },
+          { path: BLOG_BASE_PATH, type: 'layout' },
+          { path: MEMBERS_BASE_PATH, type: 'layout' },
+          ...slugs.map((slug) => ({ path: essayPath(slug) })),
+        ],
+      }
+    }
+    case 'categories':
+    case 'tags':
+      return {
+        tags: [CACHE_TAGS.essayTaxonomy, CACHE_TAGS.essays, CACHE_TAGS.sitemap],
+        paths: [{ path: '/' }, { path: BLOG_BASE_PATH, type: 'layout' }],
+      }
     case 'redirects':
       return { tags: [], paths: [] }
   }
