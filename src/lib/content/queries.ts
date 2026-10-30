@@ -61,20 +61,18 @@ async function read<T>(
 }
 
 /** Perfil do grupo publicado (ou `null` se ainda não houver publicação). */
-export const getGroupProfile = cache(
-  (): Promise<GroupProfile | null> =>
-    read(['group-profile'], [CACHE_TAGS.groupProfile], null, async (payload, ctx) => {
-      const doc = await payload.findGlobal({ slug: 'group-profile', depth: 1, ...baseArgs(ctx) })
-      return doc && typeof doc.officialName === 'string' && doc.officialName ? doc : null
-    }),
+export const getGroupProfile = cache((): Promise<GroupProfile | null> =>
+  read(['group-profile'], [CACHE_TAGS.groupProfile], null, async (payload, ctx) => {
+    const doc = await payload.findGlobal({ slug: 'group-profile', depth: 1, ...baseArgs(ctx) })
+    return doc && typeof doc.officialName === 'string' && doc.officialName ? doc : null
+  }),
 )
 
-export const getHomepage = cache(
-  (): Promise<Homepage | null> =>
-    read(['homepage'], [CACHE_TAGS.homepage], null, async (payload, ctx) => {
-      const doc = await payload.findGlobal({ slug: 'homepage', depth: 0, ...baseArgs(ctx) })
-      return doc && doc.updatedAt ? doc : null
-    }),
+export const getHomepage = cache((): Promise<Homepage | null> =>
+  read(['homepage'], [CACHE_TAGS.homepage], null, async (payload, ctx) => {
+    const doc = await payload.findGlobal({ slug: 'homepage', depth: 0, ...baseArgs(ctx) })
+    return doc && doc.updatedAt ? doc : null
+  }),
 )
 
 export type ResearchLineSummary = Pick<
@@ -82,85 +80,81 @@ export type ResearchLineSummary = Pick<
   'id' | 'name' | 'slug' | 'summary' | 'order' | 'provisional' | 'updatedAt'
 >
 
-export const listResearchLines = cache(
-  (): Promise<ResearchLineSummary[]> =>
-    read(['research-lines', 'list'], [CACHE_TAGS.researchLines], [], async (payload, ctx) => {
+export const listResearchLines = cache((): Promise<ResearchLineSummary[]> =>
+  read(['research-lines', 'list'], [CACHE_TAGS.researchLines], [], async (payload, ctx) => {
+    const result = await payload.find({
+      collection: 'research-lines',
+      sort: 'order',
+      limit: 50,
+      depth: 0,
+      pagination: false,
+      select: {
+        name: true,
+        slug: true,
+        summary: true,
+        order: true,
+        provisional: true,
+        active: true,
+        updatedAt: true,
+      },
+      ...(ctx.draft ? {} : { where: { active: { equals: true } } }),
+      ...baseArgs(ctx),
+    })
+    return result.docs as ResearchLineSummary[]
+  }),
+)
+
+export const getResearchLine = cache((slug: string): Promise<ResearchLine | null> =>
+  read(
+    ['research-lines', 'slug', slug],
+    [CACHE_TAGS.researchLines, researchLineTag(slug)],
+    null,
+    async (payload, ctx) => {
       const result = await payload.find({
         collection: 'research-lines',
-        sort: 'order',
-        limit: 50,
-        depth: 0,
-        pagination: false,
-        select: {
-          name: true,
-          slug: true,
-          summary: true,
-          order: true,
-          provisional: true,
-          active: true,
-          updatedAt: true,
-        },
-        ...(ctx.draft ? {} : { where: { active: { equals: true } } }),
-        ...baseArgs(ctx),
-      })
-      return result.docs as ResearchLineSummary[]
-    }),
-)
-
-export const getResearchLine = cache(
-  (slug: string): Promise<ResearchLine | null> =>
-    read(
-      ['research-lines', 'slug', slug],
-      [CACHE_TAGS.researchLines, researchLineTag(slug)],
-      null,
-      async (payload, ctx) => {
-        const result = await payload.find({
-          collection: 'research-lines',
-          where: { slug: { equals: slug } },
-          limit: 1,
-          depth: 1,
-          ...baseArgs(ctx),
-        })
-        const doc = result.docs[0] ?? null
-        // Fora da pré-visualização, aplica a mesma regra pública da coleção (defesa extra).
-        if (doc && !ctx.draft && !canViewPublic('research-lines', doc)) return null
-        return doc
-      },
-    ),
-)
-
-export const getPage = cache(
-  (slug: string): Promise<Page | null> =>
-    read(['pages', 'slug', slug], [CACHE_TAGS.pages, pageTag(slug)], null, async (payload, ctx) => {
-      const result = await payload.find({
-        collection: 'pages',
         where: { slug: { equals: slug } },
         limit: 1,
         depth: 1,
         ...baseArgs(ctx),
       })
       const doc = result.docs[0] ?? null
-      if (doc && !ctx.draft && !canViewPublic('pages', doc)) return null
+      // Fora da pré-visualização, aplica a mesma regra pública da coleção (defesa extra).
+      if (doc && !ctx.draft && !canViewPublic('research-lines', doc)) return null
       return doc
-    }),
+    },
+  ),
+)
+
+export const getPage = cache((slug: string): Promise<Page | null> =>
+  read(['pages', 'slug', slug], [CACHE_TAGS.pages, pageTag(slug)], null, async (payload, ctx) => {
+    const result = await payload.find({
+      collection: 'pages',
+      where: { slug: { equals: slug } },
+      limit: 1,
+      depth: 1,
+      ...baseArgs(ctx),
+    })
+    const doc = result.docs[0] ?? null
+    if (doc && !ctx.draft && !canViewPublic('pages', doc)) return null
+    return doc
+  }),
 )
 
 export type PageSummary = Pick<Page, 'id' | 'title' | 'slug' | 'summary' | 'updatedAt'>
 
-export const listPages = cache(
-  (): Promise<PageSummary[]> =>
-    read(['pages', 'list'], [CACHE_TAGS.pages], [], async (payload, ctx) => {
-      const result = await payload.find({
-        collection: 'pages',
-        sort: 'title',
-        limit: 100,
-        depth: 0,
-        pagination: false,
-        select: { title: true, slug: true, summary: true, updatedAt: true },
-        ...baseArgs(ctx),
-      })
-      return result.docs as PageSummary[]
-    }),
+export const listPages = cache((): Promise<PageSummary[]> =>
+  read(['pages', 'list'], [CACHE_TAGS.pages], [], async (payload, ctx) => {
+    const result = await payload.find({
+      collection: 'pages',
+      sort: 'title',
+      limit: 100,
+      depth: 0,
+      pagination: false,
+      select: { title: true, slug: true, summary: true, updatedAt: true },
+      ...baseArgs(ctx),
+    })
+    return result.docs as PageSummary[]
+  }),
 )
 
 /**
@@ -171,64 +165,62 @@ export const listPages = cache(
  */
 const anonymousArgs = { overrideAccess: false, locale: defaultLocale, draft: false } as const
 
-export const listDirectory = cache(
-  (): Promise<DirectoryPerson[]> =>
-    isBuildPhase()
-      ? Promise.resolve([])
-      : cachedRead(['people', 'directory'], [CACHE_TAGS.people], async () => {
-          const payload = await getPayloadClient()
-          const [people, memberships] = await Promise.all([
-            payload.find({
-              collection: 'people',
-              limit: 1000,
-              depth: 1,
-              pagination: false,
-              select: { fullName: true, slug: true, shortBio: true, photo: true },
-              ...anonymousArgs,
-            }),
-            payload.find({
-              collection: 'memberships',
-              limit: 5000,
-              depth: 0,
-              pagination: false,
-              select: {
-                person: true,
-                role: true,
-                trainingLevel: true,
-                startDate: true,
-                endDate: true,
-                lines: true,
-              },
-              ...anonymousArgs,
-            }),
-          ])
-          return buildDirectory(people.docs, memberships.docs)
-        }).catch((error) => {
-          console.error('[site] Falha ao ler o diretório de integrantes.', error)
-          return []
-        }),
+export const listDirectory = cache((): Promise<DirectoryPerson[]> =>
+  isBuildPhase()
+    ? Promise.resolve([])
+    : cachedRead(['people', 'directory'], [CACHE_TAGS.people], async () => {
+        const payload = await getPayloadClient()
+        const [people, memberships] = await Promise.all([
+          payload.find({
+            collection: 'people',
+            limit: 1000,
+            depth: 1,
+            pagination: false,
+            select: { fullName: true, slug: true, shortBio: true, photo: true },
+            ...anonymousArgs,
+          }),
+          payload.find({
+            collection: 'memberships',
+            limit: 5000,
+            depth: 0,
+            pagination: false,
+            select: {
+              person: true,
+              role: true,
+              trainingLevel: true,
+              startDate: true,
+              endDate: true,
+              lines: true,
+            },
+            ...anonymousArgs,
+          }),
+        ])
+        return buildDirectory(people.docs, memberships.docs)
+      }).catch((error) => {
+        console.error('[site] Falha ao ler o diretório de integrantes.', error)
+        return []
+      }),
 )
 
 /** Perfil público completo (sempre anônimo; 
 ull sem consentimento vigente). */
-export const getPerson = cache(
-  (slug: string): Promise<Person | null> =>
-    isBuildPhase()
-      ? Promise.resolve(null)
-      : cachedRead(['people', 'slug', slug], [CACHE_TAGS.people, personTag(slug)], async () => {
-          const payload = await getPayloadClient()
-          const result = await payload.find({
-            collection: 'people',
-            where: { slug: { equals: slug } },
-            limit: 1,
-            depth: 1,
-            ...anonymousArgs,
-          })
-          return result.docs[0] ?? null
-        }).catch((error) => {
-          console.error(`[site] Falha ao ler o perfil ${slug}.`, error)
-          return null
-        }),
+export const getPerson = cache((slug: string): Promise<Person | null> =>
+  isBuildPhase()
+    ? Promise.resolve(null)
+    : cachedRead(['people', 'slug', slug], [CACHE_TAGS.people, personTag(slug)], async () => {
+        const payload = await getPayloadClient()
+        const result = await payload.find({
+          collection: 'people',
+          where: { slug: { equals: slug } },
+          limit: 1,
+          depth: 1,
+          ...anonymousArgs,
+        })
+        return result.docs[0] ?? null
+      }).catch((error) => {
+        console.error(`[site] Falha ao ler o perfil ${slug}.`, error)
+        return null
+      }),
 )
 
 /**

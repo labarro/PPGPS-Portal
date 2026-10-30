@@ -10,9 +10,8 @@ const {
   revalidateGlobal,
   runRevalidation,
 } = await import('@/hooks/revalidate')
-const { publishedOnlyForPublic, publishedOnlyForPublicGlobal } = await import(
-  '@/hooks/published-only'
-)
+const { publishedOnlyForPublic, publishedOnlyForPublicGlobal } =
+  await import('@/hooks/published-only')
 const { rememberPublishedSlug, syncSlugRedirects } = await import('@/hooks/slug-redirects')
 
 type AnyHook = (args: Record<string, unknown>) => Promise<unknown> | unknown

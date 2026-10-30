@@ -49,7 +49,7 @@ jobs:
             echo "::error::Somente o dono do repositório ($OWNER) pode disparar o deploy de produção."
             exit 1
           fi
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 0
           ref: ${{ env.RELEASE_TAG }}
@@ -95,7 +95,7 @@ jobs:
       DATABASE_URL: ${{ secrets.DATABASE_URL }}
       PAYLOAD_SECRET: ${{ secrets.PAYLOAD_SECRET }}
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
         with:
           ref: ${{ env.RELEASE_TAG }}
       - uses: ./.github/actions/setup
@@ -109,7 +109,7 @@ jobs:
     timeout-minutes: 25
     environment: production
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
         with:
           ref: ${{ env.RELEASE_TAG }}
       - uses: ./.github/actions/setup

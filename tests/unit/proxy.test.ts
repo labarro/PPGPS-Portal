@@ -88,9 +88,8 @@ describe('proxy (autenticação básica + noindex)', () => {
 })
 
 describe('proxy (redirecionamentos 301 do plugin de redirects)', () => {
-  const hit = vi.fn(
-    async (path: string): Promise<RedirectHit | null> =>
-      path === '/linhas/antiga' ? { to: '/linhas/nova', status: 301 } : null,
+  const hit = vi.fn(async (path: string): Promise<RedirectHit | null> =>
+    path === '/linhas/antiga' ? { to: '/linhas/nova', status: 301 } : null,
   )
 
   it('responde 301 com Location para o novo endereço (e noindex fora da produção)', async () => {
