@@ -81,6 +81,8 @@ Atualização de versão **maior** de Next/Payload/React só em sprint dedicada.
 | Gerar tipos / import map do Payload | `pnpm generate:types` / `pnpm generate:importmap` |
 | Popular dados fictícios | `pnpm seed` |
 | Conteúdo institucional público verificado (idempotente; bloqueado em produção) | `pnpm seed:content` |
+| Integrantes fictícios (idempotente; bloqueado em homologação e produção) | `pnpm seed:people` |
+| Importar integrantes de CSV (pré-visualização; `--apply` grava; idempotente por ORCID/Lattes) | `pnpm import:people <arquivo.csv> [--apply]` |
 | Lighthouse CI (app em `localhost:3100`) | `pnpm dlx @lhci/cli@0.15.1 autorun` |
 | Desenvolvimento | `pnpm dev` |
 | Lint / formatação | `pnpm lint` / `pnpm format:check` |
