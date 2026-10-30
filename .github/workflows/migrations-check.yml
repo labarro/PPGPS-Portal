@@ -43,7 +43,10 @@ jobs:
       - uses: actions/checkout@v7
       - uses: ./.github/actions/setup
       - name: Segredo efêmero do Payload
-        run: echo "PAYLOAD_SECRET=$(openssl rand -hex 32)" >> "$GITHUB_ENV"
+        run: |
+          secret="$(openssl rand -hex 32)"
+          echo "::add-mask::$secret"
+          echo "PAYLOAD_SECRET=$secret" >> "$GITHUB_ENV"
 
       - name: 1. Aplicar todas as migrations em banco limpo
         run: pnpm migrate && pnpm migrate:status

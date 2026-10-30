@@ -2,7 +2,7 @@
 
 Portal acadêmico do **Grupo de Pesquisa em Bioética e Promoção da Saúde - Unicesumar** (DGP/CNPq), publicado como iniciativa do grupo, com foco em Bioética e Promoção da Saúde. Não é site oficial da UniCesumar nem do PPGPS. O nome do repositório (`PPGPS-Portal`) é apenas técnico.
 
-> Situação: **S00–S04 concluídas**; **S05** (blog acadêmico e fluxo editorial) homologada; encerramento aguarda a integração do PR #36 — ver [`docs/PROGRESS.md`](./docs/PROGRESS.md). Planejamento **v1.4**. Domínio oficial de produção: **`https://bioeticaps.app`** (ativação pública na S06; [ADR-0014](./docs/adr/0014-dominio-oficial-bioeticaps-app.md)).
+> Situação: **S00–S05 concluídas**; **S06** (reauditoria, conteúdo inicial e lançamento do M1) não iniciada — ver [`docs/PROGRESS.md`](./docs/PROGRESS.md). Planejamento **v1.4**. Domínio oficial de produção: **`https://bioeticaps.app`** (ativação pública na S06; [ADR-0014](./docs/adr/0014-dominio-oficial-bioeticaps-app.md)).
 
 Stack: Next.js 16 (App Router) + Payload CMS 3 + PostgreSQL 18 (Neon nos ambientes publicados), TypeScript estrito, pnpm. Versões fixadas no [ADR-0007](./docs/adr/0007-versoes-fixadas.md).
 

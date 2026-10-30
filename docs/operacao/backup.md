@@ -6,7 +6,7 @@ Decisão: ADR-0012. Scripts: `scripts/backup/`. Workflows: `.github/workflows/ba
 
 | Item | Quando | Onde | Retenção |
 |---|---|---|---|
-| `pg_dump` de homologação criptografado com `age` | Diário (05:17 UTC) e sob demanda | R2 `ppgps-backups/staging/AAAA/MM/` (credenciais exclusivas, ambiente `backups`) + artefato cifrado do GitHub | 7 dias |
+| `pg_dump` de homologação criptografado com `age` | Diário (05:17 UTC) e sob demanda | R2 `ppgps-backups/staging/AAAA/MM/` (credenciais exclusivas, ambiente `backups`). O artefato cifrado do GitHub é só transporte entre jobs e é apagado após o envio ao bucket (repositório público, 30/10/2026) | 7 dias |
 | Verificação de restauração em branch Neon temporário, **a partir do bucket** (artefato só como alternativa) | Mensal (dia 3) e sob demanda (entrada opcional `backup_base`) | Branch `restore-check-<run>`, removido ao final (expira em 24 h de qualquer forma) | — |
 | Produção | A partir da S06 | — | 30 diários + 12 mensais |
 
@@ -24,7 +24,7 @@ Decisão: ADR-0012. Scripts: `scripts/backup/`. Workflows: `.github/workflows/ba
 ## Restauração de emergência (manual)
 
 1. Criar um banco **vazio** de destino (branch Neon novo, nunca `production` sem plano de incidente).
-2. Baixar `*.dump.age` e `*.manifest.json` (R2 `ppgps-backups/staging/AAAA/MM/` ou artefato do run).
+2. Baixar `*.dump.age` e `*.manifest.json` (R2 `ppgps-backups/staging/AAAA/MM/`; o artefato do run só existe se o envio ao bucket falhar).
 3. Salvar a chave privada num arquivo temporário com permissão 600 e executar, num ambiente com PostgreSQL 18, `age` e `jq`:
    `TARGET_DATABASE_URL=… BACKUP_AGE_IDENTITY_FILE=… bash scripts/backup/restore.sh <dump.age> <manifest.json>`
 4. Apagar o arquivo da chave. Registrar o incidente e o tempo.
