@@ -2,18 +2,23 @@
  * Seed de CONTEÚDO INSTITUCIONAL da S03 (homologação, previews e local). Idempotente e
  * conservador: só preenche o que ainda não existe — nunca sobrescreve edições do coordenador.
  *
- * Uso: `pnpm seed:content`. Bloqueado em produção (a carga de produção é da S06).
+ * Uso: `pnpm seed:content`. Em produção, somente no pipeline de lançamento com
+ * `SEED_CONTENT_ALLOW_PRODUCTION=true` (S06): mesmo conteúdo público verificado, textos
+ * provisórios sinalizados, sem pessoas, ensaios ou qualquer dado fictício.
  * Fonte e data de cada dado: `scripts/seed/data/institutional.ts`.
  */
 import config from '@payload-config'
 import { getPayload } from 'payload'
 
 import { DEFAULT_HERO_ACTIONS, DEFAULT_HOME_SECTIONS } from '../../src/lib/content/homepage'
+import { LEGAL_DEFAULTS } from '../../src/lib/content/legal-defaults'
+import { LEGAL_PAGES, type LegalPageSlug } from '../../src/lib/content/paths'
 import { resolveAppEnv } from '../../src/lib/env/app-env'
 import { DEFAULT_NAVIGATION } from '../../src/lib/site/chrome'
-import type { GroupProfile, ResearchLine } from '../../src/payload-types'
+import type { GroupProfile, Page, ResearchLine } from '../../src/payload-types'
 import { categoriesSeed } from './data/editorial'
 import { groupProfileSeed, researchLinesSeed } from './data/institutional'
+import { bulletList, heading, linkParagraph, paragraph, richText } from './lexical'
 
 /** Menus padrão gravados pela S03 (antes de /integrantes) e pela S04 (antes de /blog). */
 const LEGACY_NAVIGATION_HREFS = [
@@ -27,10 +32,29 @@ const LEGACY_ENABLED_SECTIONS = [
   ['about', 'research-lines', 'featured-members', 'institutional-references'].join('|'),
 ]
 
+/** Página legal (S06) em Lexical, a partir do texto padrão versionado. */
+function legalLayout(slug: LegalPageSlug) {
+  const doc = LEGAL_DEFAULTS[slug]
+  const nodes = doc.sections.flatMap((section) => [
+    heading(section.heading),
+    ...(section.paragraphs ?? []).map((p) =>
+      typeof p === 'string'
+        ? paragraph(p)
+        : linkParagraph(p.before, p.link.label, p.link.href, p.after ?? ''),
+    ),
+    ...(section.items ? [bulletList(section.items)] : []),
+  ])
+  return [{ blockType: 'richText' as const, content: richText(...nodes) }]
+}
+
 async function main(): Promise<void> {
   const env = resolveAppEnv(process.env.APP_ENV)
-  if (env === 'production') {
-    throw new Error('Seed de conteúdo bloqueado em produção (carga de produção: S06).')
+  // Produção (S06): somente com opt-in explícito do pipeline de lançamento. O seed é
+  // idempotente e nunca sobrescreve edições; não cria pessoas, ensaios nem dados fictícios.
+  if (env === 'production' && process.env.SEED_CONTENT_ALLOW_PRODUCTION !== 'true') {
+    throw new Error(
+      'Seed de conteúdo bloqueado em produção sem SEED_CONTENT_ALLOW_PRODUCTION=true (pipeline de lançamento).',
+    )
   }
 
   const payload = await getPayload({ config })
@@ -173,6 +197,33 @@ async function main(): Promise<void> {
       })
       log(`Categoria "${category.name}" criada.`)
     }
+  }
+
+  // Páginas legais (S06): cria somente as que ainda não existem (o coordenador edita no painel).
+  for (const legal of LEGAL_PAGES) {
+    const existing = await payload.count({
+      collection: 'pages',
+      where: { slug: { equals: legal.slug } },
+      overrideAccess: true,
+    })
+    if (existing.totalDocs > 0) {
+      log(`Página legal "${legal.slug}" já existe; mantida.`)
+      continue
+    }
+    const doc = LEGAL_DEFAULTS[legal.slug]
+    await payload.create({
+      collection: 'pages',
+      data: {
+        title: doc.title,
+        slug: legal.slug,
+        summary: doc.summary,
+        layout: legalLayout(legal.slug) as unknown as Page['layout'],
+        _status: 'published',
+      },
+      overrideAccess: true,
+      context,
+    })
+    log(`Página legal "${legal.slug}" publicada (texto padrão).`)
   }
 
   await payload.destroy()

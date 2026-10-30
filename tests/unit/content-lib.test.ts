@@ -382,11 +382,15 @@ describe('SEO: metadados, robots, sitemap e JSON-LD', () => {
       'https://portal.example.org/linhas',
       'https://portal.example.org/linhas/bioetica',
       'https://portal.example.org/o-grupo/equipe',
+      // S06: páginas legais (sempre presentes).
+      'https://portal.example.org/privacidade',
+      'https://portal.example.org/acessibilidade',
+      'https://portal.example.org/sobre-o-portal',
     ])
     expect(urls[2]?.lastModified).toBe('2026-10-22T00:00:00.000Z')
     expect(
       buildSitemap({ profileUpdatedAt: null, lines: [], pages: [] }, 'https://a.org'),
-    ).toHaveLength(1)
+    ).toHaveLength(4)
   })
 
   it('JSON-LD do grupo sem vínculo oficial (sem parentOrganization/memberOf) e sem dados pessoais', () => {

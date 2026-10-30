@@ -1,5 +1,6 @@
 import Link from 'next/link'
 
+import { LEGAL_PAGES } from '@/lib/content/paths'
 import type { SiteChrome, SiteLink } from '@/lib/site/chrome'
 import type { GroupProfile } from '@/payload-types'
 
@@ -65,6 +66,12 @@ export function SiteFooter({
   const year = new Date().getUTCFullYear()
   const contactEmail = profile?.contactEmail || footer.contactEmail
   const references = (profile?.institutionalReferences ?? []).filter((r) => r.showInFooter)
+  // S06: páginas legais sempre presentes; links legais extras do CMS sem duplicar endereços.
+  const legalHrefs = new Set<string>(LEGAL_PAGES.map((page) => page.href))
+  const legalLinks: SiteLink[] = [
+    ...LEGAL_PAGES.map(({ label, href }) => ({ label, href })),
+    ...footer.legalLinks.filter((link) => !legalHrefs.has(link.href)),
+  ]
   return (
     <footer className="surface-inverse mt-20 bg-inverse text-inverse-foreground">
       <div className="mx-auto grid max-w-6xl gap-10 px-4 py-14 sm:px-6 md:grid-cols-2 lg:grid-cols-[1.4fr_1fr_1fr_1fr]">
@@ -101,11 +108,7 @@ export function SiteFooter({
           </section>
         ) : null}
 
-        <FooterColumn
-          id="rodape-links"
-          title="Links"
-          links={[...footer.links, ...footer.legalLinks]}
-        />
+        <FooterColumn id="rodape-links" title="Links" links={[...footer.links, ...legalLinks]} />
       </div>
       <div className="border-t border-white/20">
         <p className="mx-auto max-w-6xl px-4 py-5 text-xs text-inverse-muted-foreground sm:px-6">

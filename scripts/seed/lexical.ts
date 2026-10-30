@@ -24,6 +24,21 @@ const block = (type: string, children: Node[], extra: Node = {}): Node => ({
 export const paragraph = (value: string): Node =>
   block('paragraph', [text(value)], { textFormat: 0, textStyle: '' })
 
+/** Parágrafo com um link interno no meio do texto. */
+export const linkParagraph = (before: string, label: string, href: string, after = ''): Node =>
+  block(
+    'paragraph',
+    [
+      text(before),
+      block('link', [text(label)], {
+        fields: { linkType: 'custom', url: href, newTab: false },
+        id: `seed-link-${href.replace(/[^a-z0-9]+/gi, '-')}`,
+      }),
+      ...(after ? [text(after)] : []),
+    ],
+    { textFormat: 0, textStyle: '' },
+  )
+
 export const heading = (value: string, tag: 'h2' | 'h3' = 'h2'): Node =>
   block('heading', [text(value)], { tag })
 

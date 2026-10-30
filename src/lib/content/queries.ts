@@ -20,7 +20,7 @@ import type {
 
 import { cachedRead } from './cache'
 import { CACHE_TAGS, essayTag, pageTag, personTag, researchLineTag } from './cache-tags'
-import { normalizePath } from './paths'
+import { isLegalPageSlug, normalizePath } from './paths'
 import { canViewPublic, essayListedWhere, essayPublicWhere } from './visibility'
 
 /**
@@ -163,7 +163,8 @@ export const listPages = cache((): Promise<PageSummary[]> =>
       select: { title: true, slug: true, summary: true, updatedAt: true },
       ...baseArgs(ctx),
     })
-    return result.docs as PageSummary[]
+    // Páginas legais (S06) ficam no rodapé, não na navegação de "O grupo".
+    return (result.docs as PageSummary[]).filter((page) => !isLegalPageSlug(page.slug))
   }),
 )
 
