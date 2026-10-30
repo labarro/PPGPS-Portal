@@ -14,7 +14,7 @@
 | Situação da S02 | **Concluída** (22/10/2026). Exceções formais: validação externa do **Sentry** e do **SMTP de homologação** adiadas para a S06 por decisão do responsável técnico (não são testes aprovados) |
 | Situação da S03 | **Concluída** (30/10/2026; PR #14). Revisão visual/funcional, navegação desktop/mobile, conteúdo provisório e os 9 critérios aprovados pelo responsável técnico; textos definitivos do coordenador (Q7) seguem pendentes para a S06 |
 | Situação da S04 | **Concluída** (30/10/2026; PRs #23 e #24). Roteiro de homologação executado e os 8 critérios aprovados pelo responsável técnico; autorizações individuais reais e dados do grupo seguem pendentes (bloqueiam só a publicação dos perfis, S06) |
-| Situação da S05 | **Executada — homologação aprovada; encerramento bloqueado** (30/10/2026). Homologação manual e ADR-0015 aprovados pelo responsável técnico. Falta integrar a correção de desempenho (PR #36), comprovada localmente; o CI do GitHub Actions não executa (cobrança/limite da conta) — ver sessão de finalização |
+| Situação da S05 | **Concluída** (30/10/2026; PRs #34, #35, #36 e PR de encerramento). Homologação manual e ADR-0015 aprovados pelo responsável técnico; Lighthouse ≥ 0,90 nas 4 categorias comprovado no runner do CI |
 | Próxima sprint | **S06 — Reauditoria, conteúdo inicial e lançamento do M1** — **não iniciada** (somente com autorização do responsável técnico) |
 | Domínio oficial | **`https://bioeticaps.app`** (ADR-0014) — associado ao projeto `ppgps-portal` na Vercel, DNS e HTTPS ativos, **nenhum deploy servido** (404 `DEPLOYMENT_NOT_FOUND`); ativação pública na S06 |
 | Última atualização | 30/10/2026 |
@@ -30,7 +30,7 @@
 | S02 | Autenticação, papéis, auditoria, storage, backup e base visual | M1 | **Concluída** (22/10/2026; Sentry e SMTP de homologação adiados para a S06) |
 | S03 | Portal do grupo: identidade, linhas temáticas e homepage v1 | M1 | **Concluída** (30/10/2026; PR #14) |
 | S04 | Integrantes, vínculos e consentimentos | M1 | **Concluída** (30/10/2026; PRs #23 e #24) |
-| S05 | Blog acadêmico e fluxo editorial | M1 | **Executada — homologação aprovada; encerramento bloqueado** (PR #36 aguardando CI) |
+| S05 | Blog acadêmico e fluxo editorial | M1 | **Concluída** (30/10/2026; PRs #34–#36) |
 | S06 | Reauditoria, conteúdo inicial e lançamento do M1 | M1 | Não iniciada |
 | S07 | Orientações, conclusões acadêmicas e egressos | M2 | Não iniciada |
 | S08 | Catálogo de publicações do grupo | M2 | Não iniciada |
@@ -38,6 +38,50 @@
 | S10 | Eventos, projetos e impacto social | M2 | Não iniciada |
 | S11 | Consolidação, carga de dados acadêmicos e lançamento do M2 | M2 | Não iniciada |
 
+## Sessão de 30/10/2026 — encerramento da S05 e auditoria do repositório público
+
+**Modo:** autônomo, autorizado pelo responsável técnico após a recuperação do GitHub Actions (repositório tornado **público** pelo responsável técnico). Sem funcionalidades, sem migrations, sem deploy de produção; S06 **não iniciada**.
+
+### PR #36 (finalização técnica)
+
+| Verificação | Resultado |
+|---|---|
+| Workflows | Reexecutados após a mudança de visibilidade; **todos verdes**: lint/tipos, unitários, integração, E2E + axe, build sem banco (com a nova guarda "sem SDK do Sentry no navegador"), Lighthouse, gitleaks, audit, banco limpo/drift/down-up, preview |
+| Lighthouse no runner (PR #36, mediana de 3, CPU do runner `benchmarkIndex` ~2 400) | Página do ensaio **0,90 / 1,00 / 1,00 / 1,00** (execuções 0,90, 0,90, 0,92); demais rotas: medianas 0,90–0,92; JS 188 KB; LCP ~3,1–3,3 s; TBT 150–220 ms |
+| Merge | Squash `6072e84` |
+| Workflows da `main` em `6072e84` | CI `41138213677`, Verificação de migrations `41138213654`, Deploy de homologação `41138213655`: **sucesso** |
+| Lighthouse no runner (`main` `6072e84`) | Página do ensaio **0,91 / 1,00 / 1,00 / 1,00** (execuções 0,88, 0,91, 0,91; asserção pela mediana) |
+| Homologação | Deploy e fumaça OK (`https://ppgps-portal-staging.vercel.app`, protegida) |
+
+**Comparação no runner do CI (página do ensaio):** antes (PR #34/#35) 0,76–0,77 com 272 KB de JS e TBT ~520 ms → depois 0,90–0,91 (mediana) com 188 KB e TBT ~150 ms. Margem pequena: o runner é ~1,6× mais lento que a máquina local e o LCP simulado (~3,2 s) é dominado pelo JavaScript base do Next/React em rede 4G lenta. Reduções adicionais (ex.: menos JS cliente no layout) ficam como recomendação para a S06/desempenho, sem mudança arquitetural nesta sprint.
+
+### Auditoria de exposição do repositório público (30/10/2026)
+
+| Verificação | Resultado |
+|---|---|
+| Arquivos versionados | Nenhum `.env`, chave, dump, backup, `.age`, `.sql`, planilha real; únicos sensíveis por nome: `.env.example` (sem valores) e `tests/fixtures/people-ficticio.csv` (fictício) |
+| Histórico Git (todas as refs, 85 commits) | Gitleaks: **nenhum vazamento** (2 falsos positivos antigos já revisados em `.gitleaksignore`); busca por padrões de Neon, connection strings, chaves `age`, R2, Vercel, GitHub, chaves privadas: só exemplos locais/CI (`localhost`, `ci:ci`, `nobody:nothing`) e textos de documentação |
+| Logs do Actions (348 execuções concluídas) | Nenhuma connection string com senha, chave `age`, token, cabeçalho de autenticação básica ou bypass em claro (o GitHub mascara os segredos). **Achado:** o `PAYLOAD_SECRET` **efêmero** gerado por `openssl rand` nos jobs de teste aparecia nos logs (CI e verificação de migrations) — valor descartável, usado só em bancos de serviço temporários; **sem impacto**. Corrigido (`::add-mask::`). Os hosts dos endpoints Neon dos branches de preview aparecem nos logs (sem credenciais) — informação de baixo risco |
+| Artefatos | `lighthouse-report` (HTML/JSON de páginas fictícias) e `gitleaks-results.sarif` (sem segredos): sem risco. **`backup-staging`** (dump de homologação **criptografado com `age`**, 8 artefatos, retenção 7 dias): conteúdo ilegível sem a chave privada, mas desnecessariamente exposto num repositório público → **apagados** e o workflow passa a apagar o artefato logo após o envio ao bucket |
+| Chave privada do backup | Somente no segredo `BACKUP_AGE_IDENTITY` (ambiente `backups`) e no cofre do supervisor; nunca no repositório/logs |
+| Workflows com segredos × PRs externos | CI e verificação de migrations usam `pull_request` (sem segredos para forks, `GITHUB_TOKEN` somente leitura). `preview-db.yml` só roda com segredos se o PR vier do próprio repositório (`head.repo.full_name == github.repository`) e usa ambiente `preview`; limpeza de branch usa só a API do Neon. Nenhum `pull_request_target`, `workflow_run` ou `issue_comment`. Deploy de produção só por `workflow_dispatch`/tag com trava |
+| Permissões do Actions | Permissão padrão do `GITHUB_TOKEN`: **somente leitura**; não aprova PRs; PRs de colaboradores de primeira viagem exigem aprovação para rodar workflows |
+| Varredura de segredos do GitHub | Estava desativada → **ativada** a varredura de segredos e a proteção de push (gratuitas em repositório público); **0 alertas** |
+| Dados pessoais no repositório | Nenhum dado de discente/terceiro; fixtures/seeds fictícios (`example.com`, ORCIDs fora das faixas). Documentos de planejamento citam apenas dados **públicos** já registrados: e-mail institucional da secretaria do PPGPS (fonte pública, planejamento) e nomes dos 2 líderes do grupo conforme o espelho público do DGP (regra explícita do inventário) |
+| Credenciais realmente expostas | **Nenhuma** → não há incidente; nenhuma rotação obrigatória |
+
+Recomendações (sem urgência, decisão do responsável técnico): restringir as ações permitidas a verificadas/fixadas por SHA; adicionar regras de proteção de ambiente (`staging`, `backups`, `production`) com revisores obrigatórios; considerar remover a menção nominal dos líderes do inventário antes da S06, caso o coordenador prefira.
+
+### Encerramento
+
+| Item | Situação |
+|---|---|
+| ADR-0015 | **Aceito** na `main` (`6072e84`) |
+| Homologação manual do responsável técnico | Registrada (30/10/2026) |
+| Critérios de aceite da S05 | **7/7 atendidos** + DoD |
+| S05 | **Concluída** (30/10/2026) |
+| S06 | **Não iniciada** |
+| Produção | Nenhum deploy; `PRODUCTION_DEPLOY_ENABLED` não definida; branch `production` do Neon intocada; `bioeticaps.app` sem deploy |
 ## Sessão de 30/10/2026 — finalização da S05 (desempenho mobile e encerramento)
 
 **Modo:** autônomo, autorizado expressamente pelo responsável técnico. Sem funcionalidades novas, sem migrations, sem deploy de produção; S06 **não iniciada**. Branch `s05-finalizacao-lighthouse`, PR #36.
@@ -112,10 +156,10 @@ Os workflows do PR #36 **não iniciaram**: "The job was not started because rece
 | Arquivado 200 com aviso, fora de listagens, RSS e sitemap | Atendido |
 | Selo de natureza e aviso de ausência de revisão por pares | Atendido |
 | XSS | Atendido |
-| Lighthouse mobile ≥ 90 nas 4 categorias (página do ensaio) | **Comprovado localmente com o build do CI (0,94/1,00/1,00/1,00); confirmação no runner e merge pendentes** (bloqueio do Actions) |
+| Lighthouse mobile ≥ 90 nas 4 categorias (página do ensaio) | **Atendido no runner do CI** (PR #36: 0,90/1,00/1,00/1,00; main: 0,91/1,00/1,00/1,00) |
 | DoD: homologação pelo supervisor | **Atendido** (30/10/2026) |
 
-**Status:** a S05 **não** é marcada como `Concluída` até o PR #36 ser integrado com o job Lighthouse verde (critério com asserção de erro).
+**Status (atualizado no encerramento):** PR #36 integrado com o job Lighthouse verde — S05 **Concluída** (ver sessão de encerramento).
 
 ### Dependências para a S06 (conferidas; nada implementado)
 
@@ -134,7 +178,7 @@ Os workflows do PR #36 **não iniciaram**: "The job was not started because rece
 | Cron externo gratuito para a publicação agendada (`CRON_SECRET`) | ADR-0015; pendências da S05 |
 | Backups, monitoramento e rollback de produção | Ficha S06 (runbooks, uptime, backup, ensaio de rollback) |
 | Ativação de `https://bioeticaps.app` só no lançamento autorizado | ADR-0014; ficha S06 |
-| **Novo:** disponibilidade do GitHub Actions (minutos/cobrança da conta) | Esta sessão; ficha S06 já prevê decisão sobre o plano GitHub no ADR de hospedagem |
+| ~~Disponibilidade do GitHub Actions~~ | Resolvido: repositório público (30/10/2026) |
 
 ### Produção
 

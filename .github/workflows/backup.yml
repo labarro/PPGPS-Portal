@@ -61,6 +61,10 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 10
     environment: backups
+    # actions: write somente para apagar o artefato temporário após o envio ao bucket.
+    permissions:
+      contents: read
+      actions: write
     steps:
       - name: Verificar credenciais exclusivas de backup
         id: config
@@ -95,3 +99,12 @@ jobs:
         run: |
           base="${{ needs.dump.outputs.base }}"
           node scripts/backup/upload.mjs "out/${base}.dump.age" "out/${base}.manifest.json" staging
+      # Repositório público: artefatos ficam disponíveis a qualquer usuário autenticado do GitHub.
+      # O dump é criptografado (age), mas não permanece como artefato depois de estar no bucket.
+      - name: Apagar o artefato temporário (backup já no bucket)
+        if: steps.config.outputs.enabled == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          ids=$(gh api "repos/${{ github.repository }}/actions/runs/${{ github.run_id }}/artifacts" --jq '.artifacts[] | select(.name == "backup-staging") | .id')
+          for id in $ids; do gh api -X DELETE "repos/${{ github.repository }}/actions/artifacts/$id"; done

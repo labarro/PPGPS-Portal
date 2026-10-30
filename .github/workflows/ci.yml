@@ -60,7 +60,10 @@ jobs:
       - uses: ./.github/actions/setup
       - uses: ./.github/actions/test-services
       - name: Segredo efêmero do Payload
-        run: echo "PAYLOAD_SECRET=$(openssl rand -hex 32)" >> "$GITHUB_ENV"
+        run: |
+          secret="$(openssl rand -hex 32)"
+          echo "::add-mask::$secret"
+          echo "PAYLOAD_SECRET=$secret" >> "$GITHUB_ENV"
       # O globalSetup aplica as migrations versionadas antes dos testes.
       - run: pnpm test:int
 
@@ -87,7 +90,10 @@ jobs:
       - uses: ./.github/actions/setup
       - uses: ./.github/actions/test-services
       - name: Segredo efêmero do Payload
-        run: echo "PAYLOAD_SECRET=$(openssl rand -hex 32)" >> "$GITHUB_ENV"
+        run: |
+          secret="$(openssl rand -hex 32)"
+          echo "::add-mask::$secret"
+          echo "PAYLOAD_SECRET=$secret" >> "$GITHUB_ENV"
       - name: Migrations (job separado do build)
         run: pnpm migrate && pnpm migrate:status
       - name: Conteúdo institucional (S03) e integrantes fictícios (S04), seeds idempotentes
@@ -125,7 +131,10 @@ jobs:
       - uses: ./.github/actions/setup
       - uses: ./.github/actions/test-services
       - name: Segredo efêmero do Payload
-        run: echo "PAYLOAD_SECRET=$(openssl rand -hex 32)" >> "$GITHUB_ENV"
+        run: |
+          secret="$(openssl rand -hex 32)"
+          echo "::add-mask::$secret"
+          echo "PAYLOAD_SECRET=$secret" >> "$GITHUB_ENV"
       - name: Migrations, conteúdo institucional e integrantes fictícios (seeds)
         run: pnpm migrate && pnpm seed:content && pnpm seed:people && pnpm seed:essays
       - run: pnpm build
