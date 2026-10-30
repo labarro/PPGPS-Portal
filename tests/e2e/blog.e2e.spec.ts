@@ -129,7 +129,8 @@ test.describe('Blog — páginas públicas', () => {
     // Imagem Open Graph gerada por next/og.
     const og = await page.locator('meta[property="og:image"]').getAttribute('content')
     expect(og).toContain(`/blog/${PUBLISHED.slug}/opengraph-image`)
-    const image = await page.request.get(og!)
+    const ogUrl = new URL(og!)
+    const image = await page.request.get(`${ogUrl.pathname}${ogUrl.search}`)
     expect(image.status()).toBe(200)
     expect(image.headers()['content-type']).toContain('image/png')
     await expect(page.locator('meta[property="og:type"]')).toHaveAttribute('content', 'article')
@@ -197,6 +198,13 @@ test.describe('Blog — páginas públicas', () => {
 })
 
 test.describe('Fluxo editorial completo (S05)', () => {
+  // IP próprio (faixa de testes, RFC 2544): os logins deste bloco não consomem o limite de
+  // taxa de login (10 por 10 min por IP) usado pelos demais arquivos E2E.
+  test.use({
+    extraHTTPHeaders: {
+      'x-forwarded-for': `198.18.${Math.floor(Math.random() * 200) + 1}.${Math.floor(Math.random() * 200) + 1}`,
+    },
+  })
   let editorToken: string
   let adminToken: string
   let categoryId: number

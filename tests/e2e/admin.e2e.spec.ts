@@ -14,8 +14,8 @@ const firstUser = {
   password: strongTestPassword(),
 }
 
-async function expectDashboard(page: Page) {
-  await expect(page).toHaveURL(/\/admin\/?$/)
+async function expectDashboard(page: Page, timeout = 5_000) {
+  await expect(page).toHaveURL(/\/admin\/?$/, { timeout })
   await expect(page.locator('.dashboard')).toBeVisible()
 }
 
@@ -41,7 +41,8 @@ test.describe.serial('Painel administrativo', () => {
     await page.locator('#field-password').fill(firstUser.password)
     await page.locator('#field-confirm-password').fill(firstUser.password)
     await page.locator('button[type="submit"]').click()
-    await expectDashboard(page)
+    // Primeira navegação da execução (servidor frio): criação, login e painel inicial.
+    await expectDashboard(page, 20_000)
   })
 
   test('faz login, sai e entra novamente', async ({ page }) => {
