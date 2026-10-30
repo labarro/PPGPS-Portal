@@ -94,6 +94,27 @@
 7. 301 de perfis só para endereços que foram públicos (evita revelar slugs de pessoas não autorizadas).
 8. Importação nunca cria consentimentos; identidade por ORCID → Lattes → slug (último caso sinalizado para conferência).
 
+### Merge e homologação (após o PR #23)
+
+| Verificação | Resultado |
+|---|---|
+| CI do PR #23 | 1ª execução: integração falhou (teste de líderes dependia do perfil do grupo já publicado no banco; o banco do CI é limpo) → corrigido no próprio PR (`test(s04)`) e reproduzido em banco de teste limpo. Execução final: **todos verdes** (lint/tipos, unit, integração, E2E + axe, build sem banco, Lighthouse, gitleaks, audit, banco limpo/drift/down-up, preview) |
+| Lighthouse (runner) | `/integrantes`: desempenho 0,80, acessibilidade **1,00**, boas práticas 1,00, SEO **1,00**; `/integrantes/marina-ficticia-duarte`: 0,91 / **1,00** / 1,00 / **1,00**; JS 271 KB (orçamento 300 KB) |
+| Preview | Branch `preview/pr-23` com migrations, `seed:content` e `seed:people` (6 pessoas fictícias); deploy e fumaça (incluindo `/integrantes` 200, `/api/consent-records` 403, sem campos de consentimento em `/api/people`) OK |
+| Merge | PR #23 por *squash* (`93eb029`) |
+| Workflows da `main` | CI `41058574032`, Verificação de migrations `41058574060`, Deploy de homologação `41058574019`: **sucesso** |
+| Homologação | Migration aplicada em `staging` e `seed`; `seed:content` atualizou o menu (Integrantes) e a home padrão; **nenhuma pessoa carregada** (`seed:people` bloqueado em staging) |
+| Verificação independente (`curl`, 30/10/2026) | 401 sem autenticação; com credenciais: `/`, `/integrantes`, `/integrantes?situacao=ex-integrantes`, `/o-grupo`, `/linhas/bioetica`, `/sitemap.xml`, `/robots.txt` → 200; perfil fictício e `/integrantes/egressos` → 404; `/api/consent-records` 403; `/api/graphql` 404; `/api/people` totalDocs 0; diretório exibe "Perfis em preparação"; menu com Integrantes; sitemap sem perfis e **sem `bioeticaps.app`**; canônica `https://ppgps-portal-staging.vercel.app/o-grupo`; `robots.txt` `Disallow: /`; `X-Robots-Tag: noindex, nofollow, noarchive` |
+| `bioeticaps.app` | Continua **404 `DEPLOYMENT_NOT_FOUND`** (verificado de fora após o merge) |
+| Neon | `production` sem operações dos pipelines/agente (única operação recente: `check_availability` do sistema Neon, 30/10 09:46 UTC); `staging` e `seed` migrados; `preview/pr-22` e `preview/pr-23` removidos ao fechar os PRs |
+| Produção | Nenhum deploy; `PRODUCTION_DEPLOY_ENABLED` não definida; nenhum `deploy-production.yml` executado |
+
+### Pendências técnicas / backlog (S04)
+
+- Roteiro de homologação da ficha (passos 1–8) pelo supervisor no preview (dados fictícios) — DoD.
+- Aceite do ADR-0014.
+- *Contract* de `GroupProfile.leadersText` em release posterior à primeira publicação com líderes autorizados.
+- PRs do Dependabot (#3–#6, #16–#21) seguem abertos: atualizações maiores (Payload 3.92, Next/React, dotenv 18, @types/node 26, actions) — avaliar em sprint dedicada (`AGENTS.md` §2). As vulnerabilidades altas novas foram tratadas por overrides no PR #22 (undici, happy-dom; GHSA de graphql-scalars ignorado com GraphQL desabilitado).
 ### Pendências de consentimento e conteúdo (coordenador)
 
 | Item | Necessário para |
