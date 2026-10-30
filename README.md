@@ -24,7 +24,7 @@ pnpm dev              # http://localhost:3000
 ```
 
 1. Acesse <http://localhost:3000/admin> e crie o **primeiro usuário** (vira `admin`). Senha: ≥ 12 caracteres, não comum.
-2. `pnpm seed:content` publica o conteúdo institucional público verificado do grupo (S03), com textos provisórios marcados; não sobrescreve edições feitas no painel.
+2. `pnpm seed:content` publica o conteúdo institucional público verificado do grupo (S03), com textos provisórios marcados; não sobrescreve edições feitas no painel. `pnpm seed:people` cria integrantes **fictícios** (S04) para testar o diretório e os consentimentos.
 3. Opcional: `pnpm seed` cria a conta **fictícia** `SEED_ADMIN_EMAIL` com a senha `SEED_ADMIN_PASSWORD` do `.env` (rode antes de criar o primeiro usuário se quiser usá-la).
 
 O `.env` local é gerado por `pnpm env:local` (chamado por `pnpm db:up`) a partir de `.env.example`, com senhas e `PAYLOAD_SECRET` aleatórios. Ele nunca é versionado e só aponta para os serviços do Docker — **nunca** use URLs do Neon localmente.
@@ -46,6 +46,8 @@ Serviços locais: Postgres em `127.0.0.1:5432` (bancos `ppgps` e `ppgps_test`), 
 | Gerar tipos / import map do Payload | `pnpm generate:types` / `pnpm generate:importmap` |
 | Seed fictício | `pnpm seed` |
 | Conteúdo institucional público (perfil do grupo, 2 linhas temáticas, página inicial, menu; idempotente, bloqueado em produção) | `pnpm seed:content` |
+| Integrantes fictícios (S04; idempotente; bloqueado em homologação/produção) | `pnpm seed:people` |
+| Importar integrantes de planilha CSV (pré-visualização; `--apply` grava; nunca cria consentimentos) | `pnpm import:people <arquivo.csv> [--apply]` — modelo em `docs/privacidade/registro-tratamento.md` §6 |
 | Lighthouse CI (com o app em `http://localhost:3100`) | `pnpm dlx @lhci/cli@0.15.1 autorun` (config.: `lighthouserc.json`) |
 | Lint / formatação / tipos | `pnpm lint` / `pnpm format:check` / `pnpm typecheck` |
 | Testes unitários + integração | `pnpm test` (`test:unit`, `test:int`, `test:coverage`) |
@@ -101,3 +103,4 @@ Cada ambiente usa valores **distintos** de `PAYLOAD_SECRET` e de autenticação 
 - [`docs/sprints/`](./docs/sprints/) — fichas das sprints S00–S11
 - [`docs/adr/`](./docs/adr/) — decisões arquiteturais
 - [`docs/convencoes-git.md`](./docs/convencoes-git.md) — branches, commits e releases
+- [`docs/privacidade/registro-tratamento.md`](./docs/privacidade/registro-tratamento.md) — registro das operações de tratamento de dados pessoais (S04)

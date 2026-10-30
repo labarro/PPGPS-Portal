@@ -1,4 +1,4 @@
-import type { GlobalConfig } from 'payload'
+import { type GlobalBeforeChangeHook, type GlobalConfig, ValidationError } from 'payload'
 
 import { isAdminOrEditor } from '../access'
 import { contentEditor } from '../collections/shared/rich-text'
@@ -35,8 +35,63 @@ const urlField = (name: string, label: string, description?: string) => ({
  * Perfil do grupo (planejamento 13.3; ADR-0006): instância única que representa o grupo.
  * Referências institucionais são SOMENTE texto e link (sem logotipos, Q2). As linhas do DGP
  * são referência histórica, sem páginas próprias (Q7). `leadersText` é temporário (S04).
- * Rascunho e publicação: a publicação exige os campos obrigatórios (ex.: `leadersText`).
+ * Rascunho e publicação: a publicação exige os campos obrigatórios e ao menos um líder
+ * (`leaders`, S04) ou, na transição, o texto `leadersText`.
  */
+const idOf = (value: unknown) =>
+  value && typeof value === 'object' ? (value as { id?: number | string }).id : value
+
+/**
+ * Publicação exige ≥ 1 líder (planejamento 13.3) — na transição (expand/contract), aceita o
+ * texto `leadersText`. Todo líder indicado precisa ter vínculo ativo de "Líder".
+ */
+export const validateLeaders: GlobalBeforeChangeHook = async ({ data, originalDoc, req }) => {
+  const leaders = ((data.leaders ?? originalDoc?.leaders ?? []) as unknown[])
+    .map(idOf)
+    .filter((id): id is number | string => id != null)
+  const errors: { path: string; message: string }[] = []
+
+  if (data._status === 'published') {
+    const text = (data.leadersText ?? originalDoc?.leadersText ?? '') as string
+    if (leaders.length === 0 && !text.trim()) {
+      errors.push({
+        path: 'leaders',
+        message: 'Para publicar, indique ao menos um líder (ou o texto de liderança de transição).',
+      })
+    }
+  }
+
+  if (leaders.length > 0) {
+    const active = await req.payload.find({
+      collection: 'memberships',
+      where: {
+        and: [
+          { person: { in: leaders } },
+          { role: { equals: 'leader' } },
+          { endDate: { exists: false } },
+          { 'person.archivedAt': { exists: false } },
+        ],
+      },
+      limit: 100,
+      depth: 0,
+      overrideAccess: true,
+      req,
+      select: { person: true },
+    })
+    const withRole = new Set(active.docs.map((doc) => String(idOf(doc.person))))
+    if (leaders.some((id) => !withRole.has(String(id)))) {
+      errors.push({
+        path: 'leaders',
+        message:
+          'Todo líder indicado precisa estar ativo (não arquivado) e ter um vínculo ativo com o papel "Líder".',
+      })
+    }
+  }
+
+  if (errors.length > 0) throw new ValidationError({ errors })
+  return data
+}
+
 export const GroupProfile: GlobalConfig = {
   slug: 'group-profile',
   label: 'Perfil do grupo',
@@ -53,6 +108,7 @@ export const GroupProfile: GlobalConfig = {
   },
   hooks: {
     beforeOperation: [publishedOnlyForPublicGlobal],
+    beforeChange: [validateLeaders],
     afterChange: [revalidateGlobal('group-profile')],
   },
   fields: [
@@ -125,15 +181,26 @@ export const GroupProfile: GlobalConfig = {
               },
             },
             {
+              name: 'leaders',
+              type: 'relationship',
+              relationTo: 'people',
+              hasMany: true,
+              label: 'Líderes',
+              maxRows: 6,
+              admin: {
+                description:
+                  'Pessoas com vínculo ativo de "Líder". Em /o-grupo aparecem somente as que têm autorização "Perfil público" vigente.',
+              },
+            },
+            {
               name: 'leadersText',
               type: 'textarea',
-              label: 'Liderança (texto temporário)',
-              required: true,
+              label: 'Liderança (texto de transição)',
               localized: true,
               maxLength: 600,
               admin: {
                 description:
-                  'Obrigatório para publicar. Temporário: será substituído pelos perfis autorizados dos líderes na S04. Nomes de pessoas só com autorização.',
+                  'Exibido em /o-grupo enquanto nenhum líder tiver perfil público autorizado. Será removido em release futura (expand/contract). Sem nomes de pessoas sem autorização.',
               },
             },
           ],

@@ -43,6 +43,22 @@ export const userFields: Field[] = [
     admin: { description: 'Contas desativadas não entram no painel nem têm permissões.' },
   },
   {
+    name: 'person',
+    type: 'relationship',
+    relationTo: 'people',
+    label: 'Pessoa acadêmica (opcional)',
+    unique: true,
+    access: {
+      create: fieldIsAdmin,
+      update: fieldIsAdmin,
+    },
+    admin: {
+      position: 'sidebar',
+      description:
+        'Liga a conta (coordenador ou desenvolvedor) ao seu registro em "Pessoas". Não cria contas para integrantes (Q5) e não altera permissões.',
+    },
+  },
+  {
     name: 'lastLoginAt',
     type: 'date',
     label: 'Último acesso',

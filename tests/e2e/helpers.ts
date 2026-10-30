@@ -5,7 +5,7 @@ export const GROUP_NAME = 'Grupo de Pesquisa em Bioética e Promoção da Saúde
 export const SHORT_NAME = 'Bioética e Promoção da Saúde'
 export const DGP_URL = 'http://dgp.cnpq.br/dgp/espelhogrupo/5367326681852422'
 
-/** Rotas públicas da S03 (planejamento 9.2). */
+/** Rotas públicas da S03 e da S04 (planejamento 9.2; perfis fictícios do seed:people). */
 export const PUBLIC_ROUTES = [
   '/',
   '/o-grupo',
@@ -16,6 +16,10 @@ export const PUBLIC_ROUTES = [
   '/linhas',
   '/linhas/bioetica',
   '/linhas/promocao-da-saude',
+  '/integrantes',
+  '/integrantes?situacao=ex-integrantes',
+  '/integrantes/marina-ficticia-duarte',
+  '/integrantes/helena-exemplar-ficticia',
 ] as const
 
 export async function expectNoSeriousA11yViolations(page: Page) {

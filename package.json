@@ -28,6 +28,8 @@
     "generate:importmap": "cross-env NODE_OPTIONS=--no-deprecation payload generate:importmap",
     "seed": "cross-env NODE_OPTIONS=--no-deprecation payload run scripts/seed/index.ts",
     "seed:content": "cross-env NODE_OPTIONS=--no-deprecation payload run scripts/seed/content.ts",
+    "seed:people": "cross-env NODE_OPTIONS=--no-deprecation payload run scripts/seed/people.ts",
+    "import:people": "cross-env NODE_OPTIONS=--no-deprecation payload run scripts/import/people.ts --",
     "lint": "eslint .",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
@@ -64,7 +66,8 @@
     "react": "19.2.6",
     "react-dom": "19.2.6",
     "sharp": "0.35.5",
-    "tailwind-merge": "3.7.0"
+    "tailwind-merge": "3.7.0",
+    "zod": "4.6.7"
   },
   "pnpm": {
     "onlyBuiltDependencies": [

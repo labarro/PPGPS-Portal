@@ -103,6 +103,8 @@ jobs:
           pnpm migrate:status
           # Conteúdo institucional público verificado (S03), idempotente.
           pnpm seed:content
+          # Integrantes FICTÍCIOS (S04) para o roteiro de homologação; bloqueado em staging/produção.
+          pnpm seed:people
 
       - name: Verificação real do bucket R2 de preview (objeto de 64 bytes, removido)
         if: steps.config.outputs.enabled == 'true' && steps.config.outputs.vercel == 'true'

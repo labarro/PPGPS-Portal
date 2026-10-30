@@ -13,11 +13,12 @@
 | Situação da S01 | **Concluída** (22/10/2026) |
 | Situação da S02 | **Concluída** (22/10/2026). Exceções formais: validação externa do **Sentry** e do **SMTP de homologação** adiadas para a S06 por decisão do responsável técnico (não são testes aprovados) |
 | Situação da S03 | **Concluída** (30/10/2026; PR #14). Revisão visual/funcional, navegação desktop/mobile, conteúdo provisório e os 9 critérios aprovados pelo responsável técnico; textos definitivos do coordenador (Q7) seguem pendentes para a S06 |
-| Sprint ativa | **S04 — Integrantes, vínculos e consentimentos** — **em execução** (autorização expressa de execução autônoma, 30/10/2026) |
+| Situação da S04 | **Executada — aguardando revisão humana** (30/10/2026; PR #23). Critérios de aceite com evidência automatizada; faltam o roteiro de homologação pelo supervisor (DoD) e as autorizações individuais reais (bloqueiam só a publicação dos perfis) |
+| Próxima sprint | **S05 — Blog acadêmico e fluxo editorial** — **não iniciada** (aguarda revisão da S04) |
 | Domínio oficial | **`https://bioeticaps.app`** (ADR-0014) — associado ao projeto `ppgps-portal` na Vercel, DNS e HTTPS ativos, **nenhum deploy servido** (404 `DEPLOYMENT_NOT_FOUND`); ativação pública na S06 |
 | Última atualização | 30/10/2026 |
 | Planejamento vigente | `docs/PLANEJAMENTO_PORTAL_PPGPS.md` **v1.4** (30/10/2026) |
-| ADRs | 0001–0013 **Aceitos** (0013 em 30/10/2026); **0014 Proposto** (domínio oficial; a escolha do domínio é decisão do responsável técnico) |
+| ADRs | 0001–0013 **Aceitos** (0013 em 30/10/2026); **0014 Proposto** (domínio oficial; a escolha do domínio é decisão do responsável técnico). A S04 não exigiu ADR novo (decisões abaixo) |
 
 ## Situação das sprints
 
@@ -27,7 +28,7 @@
 | S01 | Setup técnico, ambientes e pipeline | M1 | **Concluída** (22/10/2026) |
 | S02 | Autenticação, papéis, auditoria, storage, backup e base visual | M1 | **Concluída** (22/10/2026; Sentry e SMTP de homologação adiados para a S06) |
 | S03 | Portal do grupo: identidade, linhas temáticas e homepage v1 | M1 | **Concluída** (30/10/2026; PR #14) |
-| S04 | Integrantes, vínculos e consentimentos | M1 | **Em execução** (30/10/2026) |
+| S04 | Integrantes, vínculos e consentimentos | M1 | **Executada — aguardando revisão humana** (30/10/2026; PR #23) |
 | S05 | Blog acadêmico e fluxo editorial | M1 | Não iniciada |
 | S06 | Reauditoria, conteúdo inicial e lançamento do M1 | M1 | Não iniciada |
 | S07 | Orientações, conclusões acadêmicas e egressos | M2 | Não iniciada |
@@ -36,6 +37,75 @@
 | S10 | Eventos, projetos e impacto social | M2 | Não iniciada |
 | S11 | Consolidação, carga de dados acadêmicos e lançamento do M2 | M2 | Não iniciada |
 
+## Sessão de 30/10/2026 — execução da S04
+
+**Modo:** autônomo, autorizado expressamente pelo responsável técnico (execução integral da S04, política de PRs `AGENTS.md` §11.1). Branch `s04-integrantes-consentimentos`, PR #23. S05 não iniciada. Nenhum deploy de produção; `PRODUCTION_DEPLOY_ENABLED` não definida; branch `production` do Neon não acessada. Nenhum dado pessoal real.
+
+### Feito
+
+- **Modelagem** (migration `20261030_120504_s04_people_memberships_consents`, aditiva/expand; `down` idempotente):
+  - `people`: todos os campos da ficha (nome, citação, variantes, foto, mini-biografia, apresentação, formação, áreas, afiliações em texto, e-mail público opcional, Lattes, ORCID, outros perfis, `visibility`, `archivedAt`) + campos **calculados e somente leitura** `consentStatus`, `consentPublicProfile`, `consentPhoto`, `consentEmail`; ORCID/Lattes normalizados e **únicos**; slugs `orientacoes`/`egressos` reservados; exclusão bloqueada com vínculos/autorizações (arquivamento).
+  - `memberships`: papel do DGP, nível (só e sempre estudantes), linhas temáticas, início/término, `status` calculado, motivo do término, procedência; sem sobreposição do mesmo (pessoa, papel, nível); datas coerentes e não futuras.
+  - `consent-records`: escopos `public_profile`/`photo`/`email`, data, meio, comprovante (documento **não público**), quem colheu, revogação **definitiva**, observações; titular imutável.
+  - `GroupProfile.leaders` → `people` (líder precisa de vínculo ativo de "Líder" e não arquivado); `leadersText` mantido como **transição** (expand/contract; remoção em release futura). `users.person` (opcional, único, só `admin` altera). `media.consentRecord` + `media.publicConsent` (calculado).
+- **Visibilidade (regra única)**: `canViewPublic(person)`/`publicWhere('people'|'memberships')` em `src/lib/content/visibility.ts`, usados no acesso, nas consultas das páginas (sempre como visitante anônimo, inclusive na pré-visualização), no sitemap e no JSON-LD. Foto só com `photo` e mídia vinculada a autorização vigente **da própria pessoa**; e-mail só com `email`; ambos dependem de `public_profile`. Campos administrativos com acesso por campo (nem leitura nem filtro/ordenação por visitante).
+- **Revogação**: hooks de `consent-records` recalculam pessoa e mídias na mesma transação; a atualização da pessoa revalida diretório, perfil, linhas, `/o-grupo`, home e sitemap; 301 para perfis só enquanto públicos (revogação remove).
+- **Site**: `/integrantes` (filtros papel/linha/situação em formulário GET — URL compartilhável, funciona sem JS; ex-integrantes só no filtro próprio; estados vazios), `/integrantes/[slug]` (cabeçalho, linha do tempo, formação, áreas, afiliações, Lattes/ORCID/perfis, e-mail autorizado, JSON-LD `Person` com `sameAs`, sem e-mail), integrantes atuais autorizados em cada linha temática, líderes autorizados em `/o-grupo` (texto de transição se nenhum), seção "Integrantes em destaque" na home, item "Integrantes" no menu padrão e no rodapé. Componentes `PersonCard`, `PersonAvatar`, `MembershipTimeline`, `FilterBar`.
+- **Importação CSV** (`pnpm import:people <csv> [--apply]`): parser RFC 4180 (`;`/`,`), validação linha a linha, pré-visualização, gravação idempotente por ORCID → Lattes → slug (sinalizado), vínculo idempotente por (pessoa, papel, nível, início), transação por pessoa (erro não deixa registro parcial), relatório; **nunca** cria consentimentos/e-mails/fotos; planilhas `*.csv`/`*.xlsx` ignoradas pelo git.
+- **Seed fictício** `pnpm seed:people` (bloqueado em staging e produção): 6 pessoas cobrindo líder com e-mail autorizado, mestrado encerrado + pesquisadora ativa, ex-integrante, sem autorização, revogada e colaboradora externa. `seed:content` passa a atualizar menu e home **somente** se ainda idênticos ao padrão da S03.
+- **Pipelines**: CI (E2E e Lighthouse) e preview executam `seed:people`; Lighthouse inclui `/integrantes` e um perfil; fumaça verifica `/integrantes` 200, `/api/consent-records` 403 e ausência de campos de consentimento em `/api/people`.
+- **Docs**: `docs/privacidade/registro-tratamento.md` (operações T1–T8, bases legais propostas, retenção, modelo da planilha, pendências), README, `AGENTS.md` §3, ficha S04.
+
+### Testes executados (30/10/2026, locais)
+
+| Verificação | Resultado |
+|---|---|
+| lint / format / typecheck | Passou |
+| Unitários | 220 (S04: ORCID/Lattes/e-mail, papel atual, ex-integrante, linha do tempo, sobreposição, consentimentos, `canViewPublic`, diretório e filtros, CSV, sitemap, JSON-LD, revalidação, sincronização); cobertura de linhas 89,8% (`src/lib/people` 98,7%) |
+| Integração | 98 (S04: 26 — acesso por papel, campos calculados imutáveis, exclusão bloqueada, conta↔pessoa só por admin, ORCID inválido, unicidade, Lattes, slugs reservados, regras de vínculo, sobreposição, linha do tempo, visibilidade, e-mail/foto por escopo, revogação + tags revalidadas, filtros proibidos ao visitante, arquivamento, 301 de perfis, líderes, **vazamento** (API, populações, global, mídia, sitemap, diretório), **importação idempotente**, auditoria) |
+| E2E (Playwright + axe) | 67/67 (S04: 21 — diretório, filtros na URL, ex-integrantes, 360 px, perfil e linha do tempo, e-mail e JSON-LD, sem consentimento/revogado fora de página/API/sitemap, slugs reservados, linhas e `/o-grupo`, menu, **consentimento concedido e revogado sem deploy**, **foto concedida e revogada** (imagem e arquivo), painel do editor; 4 rotas novas no axe desktop e celular) |
+| Build sem banco | Passou |
+| Migrations | `migrate`, `migrate:check` (sem drift), `migrate:down` + `migrate` |
+| `pnpm audit --audit-level high` | Passou |
+| Importação real em banco local (fixture fictícia) | 1ª: 3 pessoas, 4 vínculos, 1 erro; 2ª: 0 novos (idempotente) |
+
+### Critérios de aceite da S04
+
+| Critério | Situação | Evidência |
+|---|---|---|
+| ORCID com dígito inválido rejeitado | Atendido | Unitário + integração ("ORCID com dígito verificador inválido é rejeitado") |
+| Sem `public_profile` (inclusive líder) fora de página, diretório, linha, API e sitemap | Atendido | Integração (líder sem consentimento; vazamento) + E2E (sem consentimento e revogado) |
+| Foto e e-mail só com `photo` e `email` | Atendido | Integração + E2E (e-mail da líder; foto concedida/revogada) |
+| Revogar remove o perfil após a revalidação | Atendido | Integração (tags revalidadas) + E2E (404 imediato, diretório e sitemap) |
+| Mestrado encerrado + pesquisadora ativa: linha do tempo correta | Atendido | Integração + E2E (perfil fictício) |
+| Ex-integrante só no filtro "ex-integrantes" | Atendido | Unitário + E2E |
+| Somente editor/admin gerenciam; visitante sem consentimentos/campos administrativos | Atendido | Integração (acesso + vazamento) + fumaça de deploy |
+| Importação reexecutada sem duplicatas | Atendido | Integração + execução local |
+| DoD: supervisor verifica com `editor` de teste cadastro e visibilidade | **Pendente — supervisor** | Roteiro da ficha, passos 1–8 (preview com dados fictícios) |
+
+### Decisões e premissas (sem ADR novo; dentro das ADRs 0004, 0006, 0010 e 0013)
+
+1. Vigência do consentimento = registro sem `revokedAt`; datas de concessão/revogação nunca futuras e revogação definitiva → a visibilidade não depende de relógio nem de job agendado.
+2. Campos calculados em `people`/`media` (sincronizados por hooks na mesma transação) para que o filtro público seja uma consulta simples e indexada.
+3. Leitura pública de pessoas sempre como visitante anônimo, inclusive na pré-visualização (pessoas não têm rascunho).
+4. Vínculo ativo = sem data de término (término não pode ser futuro).
+5. `leadersText` permanece como transição; remoção (contract) em release posterior à primeira publicação com líderes autorizados.
+6. Fotos exigem o vínculo `media.consentRecord` com autorização de foto **da mesma pessoa**; a mídia só é servida ao público com `publicConsent`.
+7. 301 de perfis só para endereços que foram públicos (evita revelar slugs de pessoas não autorizadas).
+8. Importação nunca cria consentimentos; identidade por ORCID → Lattes → slug (último caso sinalizado para conferência).
+
+### Pendências de consentimento e conteúdo (coordenador)
+
+| Item | Necessário para |
+|---|---|
+| Controlador dos dados e canal do titular (Q4) | Publicação dos perfis (S06) |
+| Termo de autorização individual com escopos independentes (perfil, foto, e-mail) | Coleta das autorizações |
+| Lista nominal validada (integrantes e ex-integrantes) com ORCID/Lattes e autorizações individuais | Carga em homologação/produção (`pnpm import:people`) |
+| Indicação dos líderes com autorização (no mínimo os líderes para o M1) | `/o-grupo` e critério do M1 |
+| Prazo de guarda de comprovantes após revogação | Registro de tratamento §3 (T6) |
+| Recoleta do DGP antes da carga | Planilha |
+
+Em homologação **nenhuma** pessoa foi carregada (só entram pessoas com autorização individual registrada; `seed:people` é bloqueado em staging).
 ## Sessão de 30/10/2026 — encerramento da S03 e domínio oficial
 
 **Modo:** autônomo, autorizado expressamente pelo responsável técnico (encerramento da S03, domínio definitivo e execução integral da S04). Nenhum deploy de produção; `PRODUCTION_DEPLOY_ENABLED` não definida; branch `production` do Neon não acessada.

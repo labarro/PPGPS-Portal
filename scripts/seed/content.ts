@@ -14,6 +14,9 @@ import { DEFAULT_NAVIGATION } from '../../src/lib/site/chrome'
 import type { GroupProfile, ResearchLine } from '../../src/payload-types'
 import { groupProfileSeed, researchLinesSeed } from './data/institutional'
 
+/** Menu padrão gravado pela S03 (antes de existir /integrantes). */
+const S03_NAVIGATION_HREFS = ['/', '/o-grupo', '/linhas'].join('|')
+
 async function main(): Promise<void> {
   const env = resolveAppEnv(process.env.APP_ENV)
   if (env === 'production') {
@@ -78,7 +81,28 @@ async function main(): Promise<void> {
     overrideAccess: true,
     depth: 0,
   })
-  if (homepage?.updatedAt && homepage.sections && homepage.sections.length > 0) {
+  const isS03Default =
+    !!homepage?.sections &&
+    homepage.sections.length === DEFAULT_HOME_SECTIONS.length &&
+    homepage.sections.every(
+      (section, index) =>
+        section.kind === DEFAULT_HOME_SECTIONS[index]?.kind &&
+        !section.heading &&
+        !section.intro &&
+        (section.enabled ?? true) ===
+          (section.kind === 'featured-members' ? false : DEFAULT_HOME_SECTIONS[index]?.enabled),
+    )
+  if (homepage?.updatedAt && isS03Default) {
+    // Seções idênticas ao padrão da S03: habilita "Integrantes em destaque" (disponível na S04).
+    // O site só exibe a seção quando houver perfis autorizados.
+    await payload.updateGlobal({
+      slug: 'homepage',
+      data: { sections: DEFAULT_HOME_SECTIONS, _status: 'published' },
+      overrideAccess: true,
+      context,
+    })
+    log('Página inicial padrão da S03 atualizada com "Integrantes em destaque".')
+  } else if (homepage?.updatedAt && homepage.sections && homepage.sections.length > 0) {
     log('Página inicial já configurada; mantida.')
   } else {
     await payload.updateGlobal({
@@ -100,7 +124,17 @@ async function main(): Promise<void> {
     overrideAccess: true,
     depth: 0,
   })
-  if (navigation.items && navigation.items.length > 0) {
+  const currentHrefs = (navigation.items ?? []).map((item) => item.href).join('|')
+  if (currentHrefs === S03_NAVIGATION_HREFS) {
+    // Menu idêntico ao padrão da S03 (nunca editado): recebe o item "Integrantes" (S04).
+    await payload.updateGlobal({
+      slug: 'navigation',
+      data: { items: DEFAULT_NAVIGATION },
+      overrideAccess: true,
+      context,
+    })
+    log('Menu padrão da S03 atualizado com "Integrantes".')
+  } else if (navigation.items && navigation.items.length > 0) {
     log('Menu principal já configurado; mantido.')
   } else {
     await payload.updateGlobal({
@@ -109,7 +143,7 @@ async function main(): Promise<void> {
       overrideAccess: true,
       context,
     })
-    log('Menu principal preenchido (Início, O grupo, Linhas temáticas).')
+    log('Menu principal preenchido (Início, O grupo, Linhas temáticas, Integrantes).')
   }
 
   await payload.destroy()

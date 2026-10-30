@@ -44,6 +44,15 @@ if [[ "$MODE" == "protected" ]]; then
   done
   code=$(status "${auth[@]}" "$URL/api/redirects")
   [[ "$code" == "403" ]] || fail "/api/redirects deveria ser negado ao visitante (recebido $code)"
+  # S04: diretório público e consentimentos nunca públicos.
+  code=$(status "${auth[@]}" "$URL/integrantes")
+  [[ "$code" == "200" ]] || fail "/integrantes deveria responder 200 (recebido $code)"
+  code=$(status "${auth[@]}" "$URL/api/consent-records")
+  [[ "$code" == "403" ]] || fail "/api/consent-records deveria ser negado ao visitante (recebido $code)"
+  people=$(curl -s "${bypass[@]}" "${auth[@]}" "$URL/api/people?limit=100")
+  if grep -qE '"consent(PublicProfile|Photo|Email|Status)"' <<<"$people"; then
+    fail "/api/people expõe campos de consentimento"
+  fi
   home=$(curl -s "${bypass[@]}" "${auth[@]}" "$URL/")
   [[ "$home" == *"Bioética e Promoção da Saúde"* ]] || fail "Nome do grupo ausente na página inicial"
   if grep -qiE 'laborat(ó|o)rio' <<<"$home"; then fail "Menção a laboratório na página inicial (Q6)"; fi

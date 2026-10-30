@@ -1,10 +1,23 @@
 import type { CollectionAfterChangeHook, CollectionBeforeChangeHook, PayloadRequest } from 'payload'
 
 import { type ContentCollection, normalizePath, pathForDocument } from '../lib/content/paths'
+import { canViewPersonPublic, type PersonVisibility } from '../lib/content/visibility'
 
 export const REDIRECTS_COLLECTION = 'redirects'
 
-type SlugDoc = { id?: number | string; slug?: string | null; _status?: string | null }
+type SlugDoc = PersonVisibility & {
+  id?: number | string
+  slug?: string | null
+  _status?: string | null
+}
+
+/**
+ * `people` não tem rascunhos: o endereço "publicado" é o de uma pessoa visível ao público.
+ * Endereços de pessoas não públicas nunca geram redirecionamento (revelariam o novo slug,
+ * derivado do nome, a quem conhece o antigo).
+ */
+const isPublishedSlugDoc = (collection: ContentCollection, doc: SlugDoc | null | undefined) =>
+  collection === 'people' ? canViewPersonPublic(doc) : doc?._status === 'published'
 
 const contextKey = (collection: string, id: number | string | undefined) =>
   `previousPublishedSlug:${collection}:${String(id ?? 'new')}`
@@ -16,13 +29,14 @@ const contextKey = (collection: string, id: number | string | undefined) =>
 export const rememberPublishedSlug =
   (collection: ContentCollection): CollectionBeforeChangeHook =>
   async ({ data, operation, originalDoc, req }) => {
-    if (operation !== 'update' || data?._status !== 'published' || !originalDoc?.id) return data
+    if (operation !== 'update' || !originalDoc?.id) return data
+    if (collection !== 'people' && data?._status !== 'published') return data
     const current = (await req.payload.db.findOne({
       collection,
       req,
       where: { id: { equals: originalDoc.id } },
     })) as SlugDoc | null
-    if (current?._status === 'published' && current.slug) {
+    if (isPublishedSlugDoc(collection, current) && current?.slug) {
       req.context[contextKey(collection, originalDoc.id)] = current.slug
     }
     return data
@@ -39,12 +53,17 @@ export const syncSlugRedirects =
   (collection: ContentCollection): CollectionAfterChangeHook =>
   async ({ doc, req }) => {
     const current = doc as SlugDoc
-    if (current._status !== 'published' || !current.slug) return doc
+    if (!current.slug) return doc
     const key = contextKey(collection, current.id)
     const previousSlug = req.context[key] as string | undefined
     delete req.context[key]
 
     const newPath = normalizePath(pathForDocument(collection, current.slug))
+    if (!isPublishedSlugDoc(collection, current)) {
+      // Pessoa deixou de ser pública (ex.: revogação): remove os 301 que levam ao perfil.
+      if (collection === 'people') await deleteRedirectsTo(req, newPath)
+      return doc
+    }
     await deleteRedirectsFrom(req, newPath)
 
     if (previousSlug && previousSlug !== current.slug) {
@@ -59,6 +78,15 @@ async function deleteRedirectsFrom(req: PayloadRequest, from: string) {
   await req.payload.delete({
     collection: REDIRECTS_COLLECTION,
     where: { from: { equals: from } },
+    overrideAccess: true,
+    req,
+  })
+}
+
+async function deleteRedirectsTo(req: PayloadRequest, to: string) {
+  await req.payload.delete({
+    collection: REDIRECTS_COLLECTION,
+    where: { 'to.url': { equals: to } },
     overrideAccess: true,
     req,
   })

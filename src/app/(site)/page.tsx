@@ -5,19 +5,28 @@ import Link from 'next/link'
 import { GroupFacts } from '@/components/site/group-facts'
 import { InstitutionalReferences } from '@/components/site/institutional-references'
 import { JsonLd } from '@/components/site/json-ld'
+import { type LineRef, PersonCard } from '@/components/site/person-card'
 import { ProvisionalNote } from '@/components/site/provisional-note'
 import { ResearchLinesDiptych } from '@/components/site/research-lines-diptych'
 import { EmptyState } from '@/components/site/empty-state'
 import { DEFAULT_HERO_ACTIONS, resolveHomeSections } from '@/lib/content/homepage'
-import { GROUP_SECTIONS } from '@/lib/content/paths'
+import { GROUP_SECTIONS, MEMBERS_BASE_PATH } from '@/lib/content/paths'
 import { organizationJsonLd } from '@/lib/content/jsonld'
-import { getGroupProfile, getHomepage, listResearchLines } from '@/lib/content/queries'
+import {
+  getGroupProfile,
+  getHomepage,
+  listDirectory,
+  listResearchLines,
+} from '@/lib/content/queries'
 import { metaDescription, pageMetadata } from '@/lib/content/seo'
 import { leadingParagraphs, safeHref } from '@/lib/content/rich-text'
 import { resolveServerUrl } from '@/lib/env/server-url'
+import { byCurrentRole } from '@/lib/people/directory'
 import { getSiteChrome } from '@/lib/site/chrome'
 import { cn } from '@/lib/utils'
 import type { GroupProfile } from '@/payload-types'
+
+const FEATURED_MEMBERS = 6
 
 export async function generateMetadata(): Promise<Metadata> {
   const [profile, chrome] = await Promise.all([getGroupProfile(), getSiteChrome()])
@@ -141,12 +150,21 @@ function SectionHeading({
 }
 
 export default async function HomePage() {
-  const [profile, homepage, lines, chrome] = await Promise.all([
+  const [profile, homepage, lines, chrome, directory] = await Promise.all([
     getGroupProfile(),
     getHomepage(),
     listResearchLines(),
     getSiteChrome(),
+    listDirectory(),
   ])
+  // Integrantes em destaque (S04): atuais e autorizados, por hierarquia do papel.
+  const featured = directory
+    .filter((person) => person.current)
+    .sort(byCurrentRole)
+    .slice(0, FEATURED_MEMBERS)
+  const linesById = new Map<string, LineRef>(
+    lines.map(({ id, name, slug }) => [String(id), { id, name, slug }]),
+  )
 
   const name = profile?.officialName ?? chrome.siteName
   const purpose = homepage?.hero?.purpose?.trim() || profile?.summary || chrome.description
@@ -224,6 +242,28 @@ export default async function HomePage() {
                 <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6 lg:py-20">
                   <SectionHeading id={id} heading={section.heading} intro={section.intro} />
                   <ResearchLinesDiptych lines={lines} className="mt-10" />
+                </div>
+              </section>
+            )
+          case 'featured-members':
+            if (featured.length === 0) return null
+            return (
+              <section key={id} aria-labelledby={id} className="border-t">
+                <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6 lg:py-20">
+                  <SectionHeading id={id} heading={section.heading} intro={section.intro} />
+                  <ul className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                    {featured.map((person) => (
+                      <li key={person.id}>
+                        <PersonCard person={person} lines={linesById} />
+                      </li>
+                    ))}
+                  </ul>
+                  <Link
+                    href={MEMBERS_BASE_PATH}
+                    className="mt-8 inline-flex min-h-11 items-center rounded-sm font-medium text-link underline underline-offset-4 hover:no-underline"
+                  >
+                    Todos os integrantes
+                  </Link>
                 </div>
               </section>
             )

@@ -1,0 +1,6 @@
+nome_completo;nome_citacao;orcid;lattes;papel;nivel_formacao;linhas;inicio;termino;motivo_termino;fonte;data_coleta
+Paula Importada Fictícia;IMPORTADA, P.;0000-0000-0000-0036;;estudante;mestrado;bioetica;01/03/2020;28/02/2022;conclusao;planilha;30/10/2026
+Paula Importada Fictícia;IMPORTADA, P.;0000-0000-0000-0036;;pesquisador;;bioetica|promocao-da-saude;2022-03-01;;;planilha;30/10/2026
+Otávio Planilha Fictício;;;http://lattes.cnpq.br/0000000000000099;colaborador-externo;;promocao-da-saude;2023-05-10;;;planilha;30/10/2026
+Linha Com Erro;;0000-0000-0000-0037;;estudante;;bioetica;2020-01-01;;;planilha;
+Sem Identificador Fictício;;;;tecnico;;;2024-01-15;;;manual;

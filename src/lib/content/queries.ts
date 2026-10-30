@@ -5,10 +5,11 @@ import { cache } from 'react'
 
 import { isAdminOrEditor } from '@/access'
 import { defaultLocale } from '@/lib/i18n/locales'
-import type { GroupProfile, Homepage, Page, ResearchLine, User } from '@/payload-types'
+import { buildDirectory, type DirectoryPerson } from '@/lib/people/directory'
+import type { GroupProfile, Homepage, Page, Person, ResearchLine, User } from '@/payload-types'
 
 import { cachedRead } from './cache'
-import { CACHE_TAGS, pageTag, researchLineTag } from './cache-tags'
+import { CACHE_TAGS, pageTag, personTag, researchLineTag } from './cache-tags'
 import { normalizePath } from './paths'
 import { canViewPublic } from './visibility'
 
@@ -163,6 +164,74 @@ export const listPages = cache(
 )
 
 /**
+ * Diretório de integrantes (S04): SEMPRE como visitante anônimo — mesmo na pré-visualização —
+ * para que nenhuma pessoa sem consentimento `public_profile` vigente apareça. O acesso da
+ * coleção aplica `publicWhere('people')`; vínculos seguem a pessoa; a foto chega somente com
+ * o escopo `photo` (hook `beforeRead`) e mídia liberada.
+ */
+const anonymousArgs = { overrideAccess: false, locale: defaultLocale, draft: false } as const
+
+export const listDirectory = cache(
+  (): Promise<DirectoryPerson[]> =>
+    isBuildPhase()
+      ? Promise.resolve([])
+      : cachedRead(['people', 'directory'], [CACHE_TAGS.people], async () => {
+          const payload = await getPayloadClient()
+          const [people, memberships] = await Promise.all([
+            payload.find({
+              collection: 'people',
+              limit: 1000,
+              depth: 1,
+              pagination: false,
+              select: { fullName: true, slug: true, shortBio: true, photo: true },
+              ...anonymousArgs,
+            }),
+            payload.find({
+              collection: 'memberships',
+              limit: 5000,
+              depth: 0,
+              pagination: false,
+              select: {
+                person: true,
+                role: true,
+                trainingLevel: true,
+                startDate: true,
+                endDate: true,
+                lines: true,
+              },
+              ...anonymousArgs,
+            }),
+          ])
+          return buildDirectory(people.docs, memberships.docs)
+        }).catch((error) => {
+          console.error('[site] Falha ao ler o diretório de integrantes.', error)
+          return []
+        }),
+)
+
+/** Perfil público completo (sempre anônimo; 
+ull sem consentimento vigente). */
+export const getPerson = cache(
+  (slug: string): Promise<Person | null> =>
+    isBuildPhase()
+      ? Promise.resolve(null)
+      : cachedRead(['people', 'slug', slug], [CACHE_TAGS.people, personTag(slug)], async () => {
+          const payload = await getPayloadClient()
+          const result = await payload.find({
+            collection: 'people',
+            where: { slug: { equals: slug } },
+            limit: 1,
+            depth: 1,
+            ...anonymousArgs,
+          })
+          return result.docs[0] ?? null
+        }).catch((error) => {
+          console.error(`[site] Falha ao ler o perfil ${slug}.`, error)
+          return null
+        }),
+)
+
+/**
  * Destino de redirecionamento para um caminho sem conteúdo. O proxy responde 301 antes da
  * página; esta consulta cobre a janela do cache do proxy (a página usa redirecionamento
  * permanente do Next). Leitura interna do servidor: a coleção não é pública.
@@ -191,13 +260,14 @@ export async function getSitemapEntries(): Promise<{
   profileUpdatedAt: string | null
   lines: { slug: string; updatedAt: string }[]
   pages: { slug: string; updatedAt: string }[]
+  people: { slug: string; updatedAt: string }[]
 }> {
-  const empty = { profileUpdatedAt: null, lines: [], pages: [] }
+  const empty = { profileUpdatedAt: null, lines: [], pages: [], people: [] }
   if (isBuildPhase()) return empty
   return cachedRead(['sitemap'], [CACHE_TAGS.sitemap], async () => {
     const payload = await getPayloadClient()
     const anon = { overrideAccess: false, locale: defaultLocale, draft: false } as const
-    const [profile, lines, pages] = await Promise.all([
+    const [profile, lines, pages, people] = await Promise.all([
       payload.findGlobal({ slug: 'group-profile', depth: 0, ...anon }),
       payload.find({
         collection: 'research-lines',
@@ -215,6 +285,15 @@ export async function getSitemapEntries(): Promise<{
         select: { slug: true, updatedAt: true, _status: true },
         ...anon,
       }),
+      // Pessoas: o acesso público já aplica canViewPublic (consentimento vigente).
+      payload.find({
+        collection: 'people',
+        limit: 1000,
+        depth: 0,
+        pagination: false,
+        select: { slug: true, updatedAt: true },
+        ...anon,
+      }),
     ])
     return {
       profileUpdatedAt: profile?.officialName ? (profile.updatedAt ?? null) : null,
@@ -224,6 +303,7 @@ export async function getSitemapEntries(): Promise<{
       pages: pages.docs
         .filter((doc) => canViewPublic('pages', doc))
         .map((doc) => ({ slug: doc.slug, updatedAt: doc.updatedAt })),
+      people: people.docs.map((doc) => ({ slug: doc.slug, updatedAt: doc.updatedAt })),
     }
   })
 }

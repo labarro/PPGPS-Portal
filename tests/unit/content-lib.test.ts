@@ -193,10 +193,11 @@ describe('revalidação por tag', () => {
 })
 
 describe('página inicial: seções ordenáveis e ocultáveis', () => {
-  it('padrão: só as seções disponíveis na S03, na ordem do cadastro', () => {
+  it('padrão: só as seções disponíveis até a S04, na ordem do cadastro', () => {
     expect(resolveHomeSections(null).map((s) => s.kind)).toEqual([
       'about',
       'research-lines',
+      'featured-members',
       'institutional-references',
     ])
     expect(DEFAULT_HOME_SECTIONS.filter((s) => s.enabled).map((s) => s.kind)).toEqual(

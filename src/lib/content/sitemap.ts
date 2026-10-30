@@ -1,11 +1,20 @@
 import type { MetadataRoute } from 'next'
 
-import { GROUP_SECTIONS, FIXED_GROUP_SLUGS, pagePath, researchLinePath } from './paths'
+import {
+  FIXED_GROUP_SLUGS,
+  GROUP_SECTIONS,
+  MEMBERS_BASE_PATH,
+  pagePath,
+  personPath,
+  researchLinePath,
+} from './paths'
 
 export type SitemapEntries = {
   profileUpdatedAt: string | null
   lines: { slug: string; updatedAt: string }[]
   pages: { slug: string; updatedAt: string }[]
+  /** S04: somente perfis com consentimento `public_profile` vigente (acesso público). */
+  people?: { slug: string; updatedAt: string }[]
 }
 
 /**
@@ -52,6 +61,19 @@ export function buildSitemap(entries: SitemapEntries, siteUrl: string): Metadata
       changeFrequency: 'monthly',
       priority: 0.5,
     })
+  }
+
+  const people = entries.people ?? []
+  if (people.length > 0) {
+    items.push({ url: url(MEMBERS_BASE_PATH), changeFrequency: 'weekly', priority: 0.8 })
+    for (const person of people) {
+      items.push({
+        url: url(personPath(person.slug)),
+        lastModified: person.updatedAt,
+        changeFrequency: 'monthly',
+        priority: 0.6,
+      })
+    }
   }
 
   return items

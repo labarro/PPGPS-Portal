@@ -22,7 +22,7 @@ export const LOCK_TIME_MS = 15 * 60 * 1000
 export const SESSION_TTL_SECONDS = 2 * 60 * 60
 
 /**
- * Contas de acesso (S02). Conta ≠ pessoa acadêmica (ADR-0004); `users.person` entra na S04.
+ * Contas de acesso (S02). Conta ≠ pessoa acadêmica (ADR-0004); `users.person` (S04) é opcional e só existe para as duas contas administrativas.
  * Papéis: `admin` (desenvolvedor) e `editor` (coordenador) — ADR-0010, Q5.
  */
 export const Users: CollectionConfig = {

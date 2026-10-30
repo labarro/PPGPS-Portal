@@ -64,3 +64,8 @@ node_modules/
 
 # Lighthouse CI (relatórios locais; no CI viram artefato)
 /.lighthouseci/
+
+# Planilhas de importação (dados pessoais; S04): nunca versionar. Só fixtures fictícias.
+*.csv
+*.xlsx
+!tests/fixtures/*.csv

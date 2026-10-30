@@ -69,6 +69,9 @@ export interface Config {
   collections: {
     'research-lines': ResearchLine;
     pages: Page;
+    people: Person;
+    memberships: Membership;
+    'consent-records': ConsentRecord;
     users: User;
     media: Media;
     documents: Document;
@@ -79,10 +82,18 @@ export interface Config {
     'payload-preferences': PayloadPreference;
     'payload-migrations': PayloadMigration;
   };
-  collectionsJoins: {};
+  collectionsJoins: {
+    people: {
+      memberships: 'memberships';
+      consents: 'consent-records';
+    };
+  };
   collectionsSelect: {
     'research-lines': ResearchLinesSelect<false> | ResearchLinesSelect<true>;
     pages: PagesSelect<false> | PagesSelect<true>;
+    people: PeopleSelect<false> | PeopleSelect<true>;
+    memberships: MembershipsSelect<false> | MembershipsSelect<true>;
+    'consent-records': ConsentRecordsSelect<false> | ConsentRecordsSelect<true>;
     users: UsersSelect<false> | UsersSelect<true>;
     media: MediaSelect<false> | MediaSelect<true>;
     documents: DocumentsSelect<false> | DocumentsSelect<true>;
@@ -298,43 +309,130 @@ export interface CardsBlock {
   blockType: 'cards';
 }
 /**
+ * Integrantes e ex-integrantes do grupo. O perfil só aparece em /integrantes com autorização individual "Perfil público" vigente.
+ *
  * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "users".
+ * via the `definition` "people".
  */
-export interface User {
+export interface Person {
   id: number;
+  fullName: string;
   /**
-   * Usado apenas na saudação dos e-mails do sistema.
+   * Ex.: SILVA, M. A. (como aparece nas publicações).
    */
-  name?: string | null;
+  citationName?: string | null;
   /**
-   * Somente o administrador altera papéis. Toda mudança gera registro "role_change" na auditoria.
+   * Outras formas do nome usadas em publicações e cadastros.
    */
-  roles: ('admin' | 'editor')[];
-  /**
-   * Contas desativadas não entram no painel nem têm permissões.
-   */
-  active?: boolean | null;
-  lastLoginAt?: string | null;
-  updatedAt: string;
-  createdAt: string;
-  email: string;
-  resetPasswordToken?: string | null;
-  resetPasswordExpiration?: string | null;
-  salt?: string | null;
-  hash?: string | null;
-  resetPasswordRequestedAt?: string | null;
-  loginAttempts?: number | null;
-  lockUntil?: string | null;
-  sessions?:
+  nameVariants?:
     | {
-        id: string;
-        createdAt?: string | null;
-        expiresAt: string;
+        name: string;
+        id?: string | null;
       }[]
     | null;
-  password?: string | null;
-  collection: 'users';
+  /**
+   * Só é exibida com autorização "Fotografia" vigente. A mídia deve estar marcada como "contém pessoas identificáveis" e vinculada a uma autorização de foto desta pessoa.
+   */
+  photo?: (number | null) | Media;
+  /**
+   * Uma ou duas frases. Aparece no topo do perfil.
+   */
+  shortBio?: string | null;
+  academicBio?: {
+    root: {
+      type: string;
+      children: {
+        type: any;
+        version: number;
+        [k: string]: unknown;
+      }[];
+      direction: ('ltr' | 'rtl') | null;
+      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+      indent: number;
+      version: number;
+    };
+    [k: string]: unknown;
+  } | null;
+  externalEducation?:
+    | {
+        level: 'bachelor' | 'specialization' | 'masters' | 'doctorate' | 'postdoc' | 'other';
+        year?: number | null;
+        course: string;
+        institution: string;
+        country?: string | null;
+        id?: string | null;
+      }[]
+    | null;
+  /**
+   * Digite cada área e pressione Enter.
+   */
+  expertise?: string[] | null;
+  /**
+   * Referência textual (sem vínculo oficial). Ex.: "Docente" - "PPGPS" - "UniCesumar".
+   */
+  affiliations?:
+    | {
+        positionText: string;
+        institutionText: string;
+        programText?: string | null;
+        url?: string | null;
+        current?: boolean | null;
+        id?: string | null;
+      }[]
+    | null;
+  /**
+   * http://lattes.cnpq.br/<16 dígitos>
+   */
+  lattesUrl?: string | null;
+  /**
+   * 0000-0000-0000-0000 (dígito verificador conferido).
+   */
+  orcid?: string | null;
+  otherProfiles?:
+    | {
+        /**
+         * Ex.: Google Acadêmico, ResearchGate.
+         */
+        label: string;
+        url: string;
+        id?: string | null;
+      }[]
+    | null;
+  /**
+   * Opcional. Só é exibido com autorização "E-mail público" vigente do titular. Nunca informe e-mail sem a opção do titular.
+   */
+  publicEmail?: string | null;
+  /**
+   * Gerado a partir do nome completo. Alterar o endereço de um perfil público cria um redirecionamento 301.
+   */
+  slug: string;
+  /**
+   * Mesmo "Pública", o perfil só aparece no site com autorização "Perfil público" vigente.
+   */
+  visibility: 'public' | 'admin';
+  /**
+   * Arquivar retira o perfil do site sem apagar registros (exclusão lógica).
+   */
+  archivedAt?: string | null;
+  /**
+   * Calculada a partir das autorizações individuais registradas em "Consentimentos".
+   */
+  consentStatus?: ('authorized' | 'partial' | 'revoked' | 'none') | null;
+  consentPublicProfile?: boolean | null;
+  consentPhoto?: boolean | null;
+  consentEmail?: boolean | null;
+  memberships?: {
+    docs?: (number | Membership)[];
+    hasNextPage?: boolean;
+    totalDocs?: number;
+  };
+  consents?: {
+    docs?: (number | ConsentRecord)[];
+    hasNextPage?: boolean;
+    totalDocs?: number;
+  };
+  updatedAt: string;
+  createdAt: string;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -364,9 +462,17 @@ export interface Media {
    */
   sourceNote?: string | null;
   /**
-   * Marque se alguém pode ser reconhecido. Nesse caso a imagem não é exibida publicamente até haver autorização individual registrada (S04).
+   * Marque se alguém pode ser reconhecido. Nesse caso a imagem só é exibida publicamente com autorização de foto vigente vinculada abaixo.
    */
   containsIdentifiablePeople: boolean;
+  /**
+   * Autorização individual com o escopo "Fotografia" (Consentimentos). Sem ela a imagem permanece privada.
+   */
+  consentRecord?: (number | null) | ConsentRecord;
+  /**
+   * Calculado.
+   */
+  publicConsent?: boolean | null;
   prefix?: string | null;
   _objectKey?: string | null;
   updatedAt: string;
@@ -380,6 +486,41 @@ export interface Media {
   height?: number | null;
   focalX?: number | null;
   focalY?: number | null;
+}
+/**
+ * Autorizações individuais dos titulares. Dados administrativos: nunca exibidos no site.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "consent-records".
+ */
+export interface ConsentRecord {
+  id: number;
+  displayTitle?: string | null;
+  /**
+   * Não pode ser alterado depois de salvo.
+   */
+  person: number | Person;
+  /**
+   * Cada escopo é independente: foto e e-mail só são exibidos se houver também "Perfil público".
+   */
+  scopes: ('public_profile' | 'photo' | 'email')[];
+  grantedAt: string;
+  method: 'signed_form' | 'digital_form' | 'email' | 'other';
+  /**
+   * Termo, formulário ou mensagem do titular. Envie em "Documentos" com visibilidade "Administrativa".
+   */
+  evidence?: (number | null) | Document;
+  /**
+   * Ex.: Coordenador do grupo.
+   */
+  collectedBy: string;
+  /**
+   * Ao registrar a revogação, o conteúdo deixa de ser exibido imediatamente. A revogação é definitiva: uma nova autorização exige novo registro.
+   */
+  revokedAt?: string | null;
+  notes?: string | null;
+  updatedAt: string;
+  createdAt: string;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -415,6 +556,87 @@ export interface Document {
   filesize?: number | null;
   width?: number | null;
   height?: number | null;
+}
+/**
+ * Histórico de participação no grupo. Um vínculo encerrado sem outro ativo torna a pessoa ex-integrante.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "memberships".
+ */
+export interface Membership {
+  id: number;
+  displayTitle?: string | null;
+  person: number | Person;
+  /**
+   * Papéis de vínculo do DGP (não são papéis de acesso ao sistema).
+   */
+  role: 'leader' | 'researcher' | 'student' | 'technician' | 'foreign_collaborator' | 'external_collaborator';
+  /**
+   * Obrigatório para estudantes.
+   */
+  trainingLevel?: ('postdoc' | 'doctorate' | 'masters' | 'specialization' | 'undergraduate' | 'other') | null;
+  /**
+   * Bioética, Promoção da Saúde ou ambas.
+   */
+  lines?: (number | ResearchLine)[] | null;
+  startDate: string;
+  /**
+   * Deixe vazio enquanto o vínculo estiver ativo.
+   */
+  endDate?: string | null;
+  endReason?: ('left' | 'training_completed' | 'role_changed' | 'other') | null;
+  /**
+   * Calculada: "Encerrado" quando há data de término.
+   */
+  status?: ('active' | 'ended') | null;
+  source: 'dgp_transcription' | 'manual' | 'spreadsheet';
+  sourceUrl?: string | null;
+  collectedAt?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "users".
+ */
+export interface User {
+  id: number;
+  /**
+   * Usado apenas na saudação dos e-mails do sistema.
+   */
+  name?: string | null;
+  /**
+   * Somente o administrador altera papéis. Toda mudança gera registro "role_change" na auditoria.
+   */
+  roles: ('admin' | 'editor')[];
+  /**
+   * Contas desativadas não entram no painel nem têm permissões.
+   */
+  active?: boolean | null;
+  /**
+   * Liga a conta (coordenador ou desenvolvedor) ao seu registro em "Pessoas". Não cria contas para integrantes (Q5) e não altera permissões.
+   */
+  person?: (number | null) | Person;
+  lastLoginAt?: string | null;
+  updatedAt: string;
+  createdAt: string;
+  email: string;
+  resetPasswordToken?: string | null;
+  resetPasswordExpiration?: string | null;
+  salt?: string | null;
+  hash?: string | null;
+  resetPasswordRequestedAt?: string | null;
+  loginAttempts?: number | null;
+  lockUntil?: string | null;
+  sessions?:
+    | {
+        id: string;
+        createdAt?: string | null;
+        expiresAt: string;
+      }[]
+    | null;
+  password?: string | null;
+  collection: 'users';
 }
 /**
  * Registros somente leitura de criação, edição, exclusão, login e mudança de papel.
@@ -488,6 +710,18 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'pages';
         value: number | Page;
+      } | null)
+    | ({
+        relationTo: 'people';
+        value: number | Person;
+      } | null)
+    | ({
+        relationTo: 'memberships';
+        value: number | Membership;
+      } | null)
+    | ({
+        relationTo: 'consent-records';
+        value: number | ConsentRecord;
       } | null)
     | ({
         relationTo: 'users';
@@ -649,12 +883,109 @@ export interface CardsBlockSelect<T extends boolean = true> {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "people_select".
+ */
+export interface PeopleSelect<T extends boolean = true> {
+  fullName?: T;
+  citationName?: T;
+  nameVariants?:
+    | T
+    | {
+        name?: T;
+        id?: T;
+      };
+  photo?: T;
+  shortBio?: T;
+  academicBio?: T;
+  externalEducation?:
+    | T
+    | {
+        level?: T;
+        year?: T;
+        course?: T;
+        institution?: T;
+        country?: T;
+        id?: T;
+      };
+  expertise?: T;
+  affiliations?:
+    | T
+    | {
+        positionText?: T;
+        institutionText?: T;
+        programText?: T;
+        url?: T;
+        current?: T;
+        id?: T;
+      };
+  lattesUrl?: T;
+  orcid?: T;
+  otherProfiles?:
+    | T
+    | {
+        label?: T;
+        url?: T;
+        id?: T;
+      };
+  publicEmail?: T;
+  slug?: T;
+  visibility?: T;
+  archivedAt?: T;
+  consentStatus?: T;
+  consentPublicProfile?: T;
+  consentPhoto?: T;
+  consentEmail?: T;
+  memberships?: T;
+  consents?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "memberships_select".
+ */
+export interface MembershipsSelect<T extends boolean = true> {
+  displayTitle?: T;
+  person?: T;
+  role?: T;
+  trainingLevel?: T;
+  lines?: T;
+  startDate?: T;
+  endDate?: T;
+  endReason?: T;
+  status?: T;
+  source?: T;
+  sourceUrl?: T;
+  collectedAt?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "consent-records_select".
+ */
+export interface ConsentRecordsSelect<T extends boolean = true> {
+  displayTitle?: T;
+  person?: T;
+  scopes?: T;
+  grantedAt?: T;
+  method?: T;
+  evidence?: T;
+  collectedBy?: T;
+  revokedAt?: T;
+  notes?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "users_select".
  */
 export interface UsersSelect<T extends boolean = true> {
   name?: T;
   roles?: T;
   active?: T;
+  person?: T;
   lastLoginAt?: T;
   updatedAt?: T;
   createdAt?: T;
@@ -686,6 +1017,8 @@ export interface MediaSelect<T extends boolean = true> {
   source?: T;
   sourceNote?: T;
   containsIdentifiablePeople?: T;
+  consentRecord?: T;
+  publicConsent?: T;
   prefix?: T;
   _objectKey?: T;
   updatedAt?: T;
@@ -828,9 +1161,13 @@ export interface GroupProfile {
    */
   summary: string;
   /**
-   * Obrigatório para publicar. Temporário: será substituído pelos perfis autorizados dos líderes na S04. Nomes de pessoas só com autorização.
+   * Pessoas com vínculo ativo de "Líder". Em /o-grupo aparecem somente as que têm autorização "Perfil público" vigente.
    */
-  leadersText: string;
+  leaders?: (number | Person)[] | null;
+  /**
+   * Exibido em /o-grupo enquanto nenhum líder tiver perfil público autorizado. Será removido em release futura (expand/contract). Sem nomes de pessoas sem autorização.
+   */
+  leadersText?: string | null;
   description?: {
     root: {
       type: string;
@@ -1094,6 +1431,7 @@ export interface GroupProfileSelect<T extends boolean = true> {
         id?: T;
       };
   summary?: T;
+  leaders?: T;
   leadersText?: T;
   description?: T;
   objectives?: T;
