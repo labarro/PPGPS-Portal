@@ -36,28 +36,42 @@ describe('securityHeaders', () => {
       expect(headers['Strict-Transport-Security']).toContain('max-age=')
       expect(headers['X-Content-Type-Options']).toBe('nosniff')
       expect(headers['Referrer-Policy']).toBe('strict-origin-when-cross-origin')
-      expect(headers['Content-Security-Policy']).toBe("frame-ancestors 'self'")
+      expect(headers['Content-Security-Policy']).toContain("frame-ancestors 'self'")
     }
   })
 
-  it('envia CSP completa em modo report-only (S02), sem bloquear', () => {
-    const local = asMap('local')['Content-Security-Policy-Report-Only'] ?? ''
+  it('aplica a CSP completa em modo enforce (S06), sem report-only', () => {
+    const local = asMap('local')['Content-Security-Policy'] ?? ''
     expect(local).toContain("default-src 'self'")
     expect(local).toContain("object-src 'none'")
+    expect(local).toContain("base-uri 'self'")
     expect(local).toContain("frame-ancestors 'self'")
     expect(local).not.toContain('upgrade-insecure-requests')
-    expect(asMap('staging')['Content-Security-Policy-Report-Only']).toContain(
-      'upgrade-insecure-requests',
-    )
+    expect(local).not.toContain('unsafe-eval')
+    for (const env of ['local', 'preview', 'staging', 'production'] as const) {
+      expect(asMap(env)['Content-Security-Policy-Report-Only']).toBeUndefined()
+    }
+    const production = asMap('production')['Content-Security-Policy'] ?? ''
+    expect(production).toContain('upgrade-insecure-requests')
+    expect(production).toContain("script-src 'self' 'unsafe-inline'")
+    expect(production).not.toContain('unsafe-eval')
+    expect(production).not.toMatch(/https?:\/\/(?!\*\.sentry\.io)/)
     const withReport = Object.fromEntries(
       securityHeaders('preview', { cspReportUri: 'https://relatorios.example.com/csp' }).map(
         ({ key, value }) => [key, value],
       ),
     )
-    expect(withReport['Content-Security-Policy-Report-Only']).toContain(
+    expect(withReport['Content-Security-Policy']).toContain(
       'report-uri https://relatorios.example.com/csp',
     )
     expect(asMap('production')['Cross-Origin-Opener-Policy']).toBe('same-origin')
+  })
+
+  it("'unsafe-eval' somente no servidor de desenvolvimento", () => {
+    const dev = Object.fromEntries(
+      securityHeaders('local', { development: true }).map(({ key, value }) => [key, value]),
+    )
+    expect(dev['Content-Security-Policy']).toContain("'unsafe-eval'")
   })
 
   it('aplica noindex fora da produção e não na produção', () => {

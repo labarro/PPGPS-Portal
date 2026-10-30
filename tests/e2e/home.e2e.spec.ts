@@ -9,9 +9,11 @@ import {
 } from './helpers'
 
 test.describe('Layout público (S02)', () => {
-  test('carrega em pt-BR com cabeçalhos de segurança, CSP report-only e noindex', async ({
-    page,
-  }) => {
+  test('carrega em pt-BR com cabeçalhos de segurança, CSP enforce e noindex', async ({ page }) => {
+    const violations: string[] = []
+    page.on('console', (message) => {
+      if (/Content Security Policy/i.test(message.text())) violations.push(message.text())
+    })
     const response = await page.goto('/')
     expect(response?.status()).toBe(200)
 
@@ -21,8 +23,11 @@ test.describe('Layout público (S02)', () => {
     expect(headers['referrer-policy']).toBe('strict-origin-when-cross-origin')
     expect(headers['strict-transport-security']).toContain('max-age=')
     expect(headers['content-security-policy']).toContain("frame-ancestors 'self'")
-    expect(headers['content-security-policy-report-only']).toContain("default-src 'self'")
+    expect(headers['content-security-policy']).toContain("default-src 'self'")
+    expect(headers['content-security-policy-report-only']).toBeUndefined()
     expect(headers['x-powered-by']).toBeUndefined()
+    await page.waitForLoadState('networkidle')
+    expect(violations).toEqual([])
 
     await expect(page.locator('html')).toHaveAttribute('lang', 'pt-BR')
   })
