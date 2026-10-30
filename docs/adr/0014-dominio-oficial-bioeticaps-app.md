@@ -2,11 +2,11 @@
 
 | Campo | Valor |
 |---|---|
-| Status | Proposto |
+| Status | **Aceito** |
 | Data | 30/10/2026 |
 | Sprint | S04 (registro); ativação pública na S06 |
 | Autor | Agente |
-| Aprovação | Decisão do domínio: responsável técnico (supervisor), 30/10/2026. Detalhes técnicos deste ADR: pendente (supervisor) |
+| Aprovação | Responsável técnico (supervisor), 30/10/2026 — decisão do domínio e revisão/aprovação expressa deste ADR no encerramento da S04 |
 
 ## Contexto
 

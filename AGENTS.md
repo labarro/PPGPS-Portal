@@ -21,7 +21,7 @@
 | `docs/PLANEJAMENTO_PORTAL_PPGPS.md` (v1.4; nome de arquivo mantido por compatibilidade) | Plano diretor: requisitos, arquitetura, modelagem, permissões, sprints |
 | `docs/PROGRESS.md` | Estado atual, última sprint, decisões, pendências, próximos passos |
 | `docs/sprints/SXX.md` | Escopo fechado da sprint ativa (incluído, **fora de escopo**, critérios, roteiro de homologação) |
-| `docs/adr/` | Decisões arquiteturais: ADR-0001 a 0013 **aceitos** (0013 em 30/10/2026); ADR-0014 (domínio oficial `bioeticaps.app`) proposto |
+| `docs/adr/` | Decisões arquiteturais: ADR-0001 a 0014 **aceitos** (0013 e 0014 em 30/10/2026; 0014 = domínio oficial `bioeticaps.app`) |
 | `docs/operacao/` | Guias operacionais: armazenamento (R2/MinIO) e backup/restauração |
 | `docs/convencoes-git.md` | Branches, commits, PRs, releases e proteção da `main` |
 | `docs/content/inventario.md` | Inventário de conteúdo institucional com fonte e situação de validação |
