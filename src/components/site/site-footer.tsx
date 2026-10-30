@@ -45,6 +45,7 @@ const PORTAL_LINKS: SiteLink[] = [
   { label: 'Objetivos', href: '/o-grupo/objetivos' },
   { label: 'Linhas temáticas', href: '/linhas' },
   { label: 'Integrantes', href: '/integrantes' },
+  { label: 'Blog', href: '/blog' },
   { label: 'Contato', href: '/o-grupo/contato' },
 ]
 

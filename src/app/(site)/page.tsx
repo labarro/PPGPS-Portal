@@ -9,10 +9,12 @@ import { type LineRef, PersonCard } from '@/components/site/person-card'
 import { ProvisionalNote } from '@/components/site/provisional-note'
 import { ResearchLinesDiptych } from '@/components/site/research-lines-diptych'
 import { EmptyState } from '@/components/site/empty-state'
+import { EssayCard } from '@/components/site/essay-card'
 import { DEFAULT_HERO_ACTIONS, resolveHomeSections } from '@/lib/content/homepage'
-import { GROUP_SECTIONS, MEMBERS_BASE_PATH } from '@/lib/content/paths'
+import { BLOG_BASE_PATH, GROUP_SECTIONS, MEMBERS_BASE_PATH } from '@/lib/content/paths'
 import { organizationJsonLd } from '@/lib/content/jsonld'
 import {
+  getFeaturedEssays,
   getGroupProfile,
   getHomepage,
   listDirectory,
@@ -157,6 +159,8 @@ export default async function HomePage() {
     getSiteChrome(),
     listDirectory(),
   ])
+  // Destaques editoriais (S05): fixados na Página inicial ou os 3 ensaios mais recentes.
+  const highlights = await getFeaturedEssays(homepage?.featuredEssays ?? [])
   // Integrantes em destaque (S04): atuais e autorizados, por hierarquia do papel.
   const featured = directory
     .filter((person) => person.current)
@@ -242,6 +246,28 @@ export default async function HomePage() {
                 <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6 lg:py-20">
                   <SectionHeading id={id} heading={section.heading} intro={section.intro} />
                   <ResearchLinesDiptych lines={lines} className="mt-10" />
+                </div>
+              </section>
+            )
+          case 'editorial-highlights':
+            if (highlights.length === 0) return null
+            return (
+              <section key={id} aria-labelledby={id} className="border-t bg-muted">
+                <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6 lg:py-20">
+                  <SectionHeading id={id} heading={section.heading} intro={section.intro} />
+                  <ul className="mt-10 grid gap-6 md:grid-cols-3" data-testid="home-essays">
+                    {highlights.map((essay) => (
+                      <li key={essay.id}>
+                        <EssayCard essay={essay} />
+                      </li>
+                    ))}
+                  </ul>
+                  <Link
+                    href={BLOG_BASE_PATH}
+                    className="mt-8 inline-flex min-h-11 items-center rounded-sm font-medium text-link underline underline-offset-4 hover:no-underline"
+                  >
+                    Todos os ensaios do blog
+                  </Link>
                 </div>
               </section>
             )

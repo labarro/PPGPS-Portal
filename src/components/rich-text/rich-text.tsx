@@ -1,3 +1,4 @@
+import Image from 'next/image'
 import Link from 'next/link'
 import { Fragment, type ReactNode } from 'react'
 
@@ -10,6 +11,7 @@ import {
   type LexicalState,
   linkHref,
   TEXT_FORMAT,
+  uploadImage,
 } from '@/lib/content/rich-text'
 import { cn } from '@/lib/utils'
 
@@ -90,6 +92,32 @@ function renderNode(node: LexicalNode, options: RenderOptions, key: string): Rea
       return renderLink(node, options, key)
     case 'horizontalrule':
       return <hr key={key} />
+    case 'upload': {
+      // S05: imagem da coleção de mídias (alt, crédito e licença obrigatórios); somente se o
+      // visitante puder vê-la (pessoas identificáveis exigem autorização de imagem).
+      const image = uploadImage(node)
+      if (!image) return null
+      return (
+        <figure key={key}>
+          <Image
+            src={image.url}
+            alt={image.alt}
+            width={image.width ?? 1200}
+            height={image.height ?? 800}
+            unoptimized
+            loading="lazy"
+            sizes="(min-width: 768px) 68ch, 100vw"
+          />
+          {image.caption || image.credit ? (
+            <figcaption>
+              {image.caption}
+              {image.caption && image.credit ? ' ' : null}
+              {image.credit ? <span>Crédito: {image.credit}</span> : null}
+            </figcaption>
+          ) : null}
+        </figure>
+      )
+    }
     default:
       // Nó desconhecido/não permitido: só o conteúdo textual dos filhos, sem marcação própria.
       return node.children ? (
@@ -109,7 +137,8 @@ export function RichText({
   baseHeading?: number
 }) {
   const state = data as LexicalState
-  if (!state?.root || isRichTextEmpty(state)) return null
+  const hasImage = (state?.root?.children ?? []).some((node) => node.type === 'upload')
+  if (!state?.root || (isRichTextEmpty(state) && !hasImage)) return null
   return (
     <div className={cn('prose-portal', className)}>
       {renderChildren(state.root, { baseHeading }, 'rt')}

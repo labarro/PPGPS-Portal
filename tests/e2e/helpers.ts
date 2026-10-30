@@ -20,6 +20,12 @@ export const PUBLIC_ROUTES = [
   '/integrantes?situacao=ex-integrantes',
   '/integrantes/marina-ficticia-duarte',
   '/integrantes/helena-exemplar-ficticia',
+  // S05: blog acadêmico (ensaios fictícios do seed:essays).
+  '/blog',
+  '/blog/ensaio-ficticio-autonomia-e-cuidado',
+  '/blog/ensaio-ficticio-arquivado',
+  '/blog/categoria/bioetica',
+  '/blog/tag/autonomia',
 ] as const
 
 export async function expectNoSeriousA11yViolations(page: Page) {

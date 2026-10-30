@@ -10,6 +10,7 @@ import { PersonAvatar } from '@/components/site/person-avatar'
 import type { LineRef } from '@/components/site/person-card'
 import { SectionTitle } from '@/components/site/section-title'
 import { Breadcrumbs } from '@/components/site/breadcrumbs'
+import { EssayCard } from '@/components/site/essay-card'
 import { formatDate } from '@/lib/content/format'
 import { breadcrumbJsonLd, personJsonLd } from '@/lib/content/jsonld'
 import { MEMBERS_BASE_PATH, personPath, RESERVED_PERSON_SLUGS } from '@/lib/content/paths'
@@ -17,6 +18,7 @@ import {
   findRedirectTarget,
   getPerson,
   listDirectory,
+  listEssays,
   listResearchLines,
 } from '@/lib/content/queries'
 import { isRichTextEmpty } from '@/lib/content/rich-text'
@@ -70,6 +72,8 @@ export default async function PersonPage({ params }: Props) {
     notFound()
   }
 
+  // S05: ensaios publicados em que a pessoa (com perfil público) é autora.
+  const essays = (await listEssays({ personId: person.id, limit: 50 })).docs
   const lines = new Map<string, LineRef>(
     lineSummaries.map(({ id, name, slug: lineSlug }) => [String(id), { id, name, slug: lineSlug }]),
   )
@@ -172,6 +176,19 @@ export default async function PersonPage({ params }: Props) {
                     <p className="text-sm text-muted-foreground">
                       {[item.institution, item.country, item.year].filter(Boolean).join(' · ')}
                     </p>
+                  </li>
+                ))}
+              </ul>
+            </section>
+          ) : null}
+
+          {essays.length > 0 ? (
+            <section aria-labelledby="ensaios">
+              <SectionTitle id="ensaios">Ensaios</SectionTitle>
+              <ul className="mt-6 grid gap-5 sm:grid-cols-2" data-testid="person-essays">
+                {essays.map((essay) => (
+                  <li key={essay.id}>
+                    <EssayCard essay={essay} showCover={false} />
                   </li>
                 ))}
               </ul>
