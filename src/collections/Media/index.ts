@@ -1,6 +1,7 @@
-import type { CollectionConfig } from 'payload'
+import type { CollectionBeforeChangeHook, CollectionConfig } from 'payload'
 
-import { adminEditorOrPublic, isAdminOrEditor } from '../../access'
+import { adminEditorOrPublic, fieldIsAdminOrEditor, isAdminOrEditor } from '../../access'
+import { grantsPhoto } from '../../lib/people/consent'
 import { secureUpload } from '../../hooks/upload-security'
 import { IMAGE_MIME_TYPES, LICENSE_OPTIONS, MEDIA_SOURCE_OPTIONS } from '../shared/upload-options'
 
@@ -9,12 +10,30 @@ import { IMAGE_MIME_TYPES, LICENSE_OPTIONS, MEDIA_SOURCE_OPTIONS } from '../shar
  *
  * - Tipos aceitos por magic bytes: JPEG, PNG, WebP, AVIF (até 10 MB). SVG bloqueado.
  * - `alt`, `credit`, `license` e `source` obrigatórios (Q12: origem do material).
- * - Leitura pública somente de imagens SEM pessoas identificáveis. Imagens com pessoas
- *   identificáveis exigem consentimento individual (`media.consentRecord`, S04) e, até lá,
- *   ficam restritas a admin/editor — inclusive o arquivo em `/api/media/file/...`.
+ * - Leitura pública de imagens SEM pessoas identificáveis ou, quando há pessoas
+ *   identificáveis, somente com autorização de foto vigente vinculada (`consentRecord`, S04;
+ *   `publicConsent` é calculado). Sem isso ficam restritas a admin/editor — inclusive o
+ *   arquivo em `/api/media/file/...`. A revogação retira a imagem imediatamente.
  * - Arquivos servidos pela rota do Payload, que aplica este controle de acesso antes de ler
  *   o objeto no bucket privado (ADR-0011).
  */
+
+/** `publicConsent`: imagem com pessoas identificáveis e autorização de foto vigente. */
+export const derivePublicConsent: CollectionBeforeChangeHook = async ({ data, originalDoc, req }) => {
+  const merged = { ...(originalDoc ?? {}), ...data } as Record<string, unknown>
+  const raw = merged.consentRecord
+  const id = raw && typeof raw === 'object' ? (raw as { id?: number }).id : raw
+  if (!merged.containsIdentifiablePeople || id == null) {
+    data.publicConsent = false
+    return data
+  }
+  const record = await req.payload
+    .findByID({ collection: 'consent-records', id: id as number, depth: 0, overrideAccess: true, req })
+    .catch(() => null)
+  data.publicConsent = grantsPhoto(record)
+  return data
+}
+
 export const Media: CollectionConfig = {
   slug: 'media',
   labels: { singular: 'Mídia', plural: 'Mídias' },
@@ -24,13 +43,19 @@ export const Media: CollectionConfig = {
     defaultColumns: ['filename', 'alt', 'credit', 'license', 'containsIdentifiablePeople'],
   },
   access: {
-    read: adminEditorOrPublic({ containsIdentifiablePeople: { not_equals: true } }),
+    read: adminEditorOrPublic({
+      or: [
+        { containsIdentifiablePeople: { not_equals: true } },
+        { publicConsent: { equals: true } },
+      ],
+    }),
     create: isAdminOrEditor,
     update: isAdminOrEditor,
     delete: isAdminOrEditor,
   },
   hooks: {
     beforeOperation: [secureUpload({ accept: IMAGE_MIME_TYPES })],
+    beforeChange: [derivePublicConsent],
   },
   upload: {
     mimeTypes: [...IMAGE_MIME_TYPES],
@@ -92,8 +117,31 @@ export const Media: CollectionConfig = {
       defaultValue: false,
       admin: {
         description:
-          'Marque se alguém pode ser reconhecido. Nesse caso a imagem não é exibida publicamente até haver autorização individual registrada (S04).',
+          'Marque se alguém pode ser reconhecido. Nesse caso a imagem só é exibida publicamente com autorização de foto vigente vinculada abaixo.',
       },
+    },
+    {
+      name: 'consentRecord',
+      type: 'relationship',
+      relationTo: 'consent-records',
+      label: 'Autorização de imagem',
+      access: { read: fieldIsAdminOrEditor },
+      // Sem filtro de revogação: a referência histórica deve continuar válida após revogar.
+      filterOptions: { scopes: { in: ['photo'] } },
+      admin: {
+        condition: (data) => !!data?.containsIdentifiablePeople,
+        description:
+          'Autorização individual com o escopo "Fotografia" (Consentimentos). Sem ela a imagem permanece privada.',
+      },
+    },
+    {
+      name: 'publicConsent',
+      type: 'checkbox',
+      label: 'Liberada por autorização de foto',
+      defaultValue: false,
+      index: true,
+      access: { read: fieldIsAdminOrEditor, create: () => false, update: () => false },
+      admin: { readOnly: true, position: 'sidebar', description: 'Calculado.' },
     },
   ],
 }

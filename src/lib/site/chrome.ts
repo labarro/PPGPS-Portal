@@ -22,11 +22,12 @@ export type SiteChrome = {
   }
 }
 
-/** Menu padrão enquanto o global "Navegação" estiver vazio (rotas existentes na S03). */
+/** Menu padrão enquanto o global "Navegação" estiver vazio (rotas existentes até a S04). */
 export const DEFAULT_NAVIGATION: SiteLink[] = [
   { label: 'Início', href: '/' },
   { label: 'O grupo', href: '/o-grupo' },
   { label: 'Linhas temáticas', href: '/linhas' },
+  { label: 'Integrantes', href: '/integrantes' },
 ]
 
 export const DEFAULT_CHROME: SiteChrome = {

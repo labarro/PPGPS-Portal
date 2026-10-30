@@ -1,9 +1,13 @@
 /**
- * Rotas públicas das entidades da S03 (planejamento 9.2). Fonte única para links, sitemap,
- * redirecionamentos e pré-visualização.
+ * Rotas públicas das entidades da S03 e da S04 (planejamento 9.2). Fonte única para links,
+ * sitemap, redirecionamentos e pré-visualização.
  */
 export const GROUP_BASE_PATH = '/o-grupo'
 export const LINES_BASE_PATH = '/linhas'
+export const MEMBERS_BASE_PATH = '/integrantes'
+
+/** Slugs reservados em /integrantes (rotas futuras de orientações e egressos, S07). */
+export const RESERVED_PERSON_SLUGS: readonly string[] = ['orientacoes', 'egressos']
 
 /** Subpáginas fixas de "O grupo" (rotas próprias; `pages` com o mesmo slug as complementam). */
 export const GROUP_SECTIONS = [
@@ -26,9 +30,12 @@ export const researchLinePath = (slug: string): string => `${LINES_BASE_PATH}/${
 
 export const pagePath = (slug: string): string => `${GROUP_BASE_PATH}/${slug}`
 
-export type ContentCollection = 'research-lines' | 'pages'
+export const personPath = (slug: string): string => `${MEMBERS_BASE_PATH}/${slug}`
+
+export type ContentCollection = 'research-lines' | 'pages' | 'people'
 
 export function pathForDocument(collection: ContentCollection, slug: string): string {
+  if (collection === 'people') return personPath(slug)
   return collection === 'research-lines' ? researchLinePath(slug) : pagePath(slug)
 }
 
@@ -51,7 +58,7 @@ export function normalizePath(path: string): string {
 
 /** Caminhos elegíveis a redirecionamento (somente conteúdo com slug editável). */
 export function isRedirectCandidate(path: string): boolean {
-  return /^\/(linhas|o-grupo)\/[^/]+\/?$/i.test(path)
+  return /^\/(linhas|o-grupo|integrantes)\/[^/]+\/?$/i.test(path)
 }
 
 /** URL externa de referência: http(s) somente (o espelho do DGP só responde em http). */

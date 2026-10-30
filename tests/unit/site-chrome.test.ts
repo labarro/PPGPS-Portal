@@ -55,13 +55,14 @@ describe('dados do layout público (globals)', () => {
     spy.mockRestore()
   })
 
-  it('menu vazio volta ao padrão (Início, O grupo, Linhas temáticas)', async () => {
+  it('menu vazio volta ao padrão (Início, O grupo, Linhas temáticas, Integrantes)', async () => {
     findGlobal.mockResolvedValue({ items: [], links: [], legalLinks: [] })
     const chrome = await getSiteChrome()
     expect(chrome.navigation).toEqual([
       { label: 'Início', href: '/' },
       { label: 'O grupo', href: '/o-grupo' },
       { label: 'Linhas temáticas', href: '/linhas' },
+      { label: 'Integrantes', href: '/integrantes' },
     ])
     expect(chrome.siteName).toBe(DEFAULT_CHROME.siteName)
   })

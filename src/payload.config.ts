@@ -10,9 +10,12 @@ import sharp from 'sharp'
 import { fileURLToPath } from 'url'
 
 import { AuditLogs } from './collections/AuditLogs'
+import { ConsentRecords } from './collections/ConsentRecords'
 import { Documents } from './collections/Documents'
 import { Media } from './collections/Media'
+import { Memberships } from './collections/Memberships'
 import { Pages } from './collections/Pages'
+import { People } from './collections/People'
 import { redirectsPluginConfig } from './collections/Redirects'
 import { ResearchLines } from './collections/ResearchLines'
 import { Users } from './collections/Users'
@@ -50,11 +53,20 @@ export default buildConfig({
       titleSuffix: ' — Portal Bioética e Promoção da Saúde',
     },
   },
-  collections: withAudit([ResearchLines, Pages, Users, Media, Documents, AuditLogs]).map(
-    (collection) =>
-      collection.slug === Users.slug
-        ? { ...collection, endpoints: [sentryTestEndpoint] }
-        : collection,
+  collections: withAudit([
+    ResearchLines,
+    Pages,
+    People,
+    Memberships,
+    ConsentRecords,
+    Users,
+    Media,
+    Documents,
+    AuditLogs,
+  ]).map((collection) =>
+    collection.slug === Users.slug
+      ? { ...collection, endpoints: [sentryTestEndpoint] }
+      : collection,
   ),
   globals: withGlobalAudit([GroupProfile, Homepage, Navigation, Footer, SiteSettings]),
   editor: lexicalEditor(),

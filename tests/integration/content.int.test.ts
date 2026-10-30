@@ -154,17 +154,17 @@ describe('S03 — conteúdo do grupo', () => {
       expect((await restJson('GET', '/redirects', { token: editorToken })).status).toBe(200)
     })
 
-    it('publicar o perfil exige o texto de liderança; rascunho não exige', async () => {
+    it('publicar o perfil exige líder (ou texto de transição); rascunho não exige', async () => {
       const published = await restJson('POST', '/globals/group-profile', {
         token: editorToken,
-        body: { leadersText: '', _status: 'published' },
+        body: { leaders: [], leadersText: '', _status: 'published' },
       })
       expect(published.status).toBe(400)
-      expect(JSON.stringify(published.json)).toMatch(/leadersText|Liderança/)
+      expect(JSON.stringify(published.json)).toMatch(/leaders|líder/i)
 
       const draft = await restJson('POST', '/globals/group-profile?draft=true', {
         token: editorToken,
-        body: { leadersText: '', _status: 'draft' },
+        body: { leaders: [], leadersText: '', _status: 'draft' },
       })
       expect(draft.status).toBe(200)
       await publishSeedProfile()

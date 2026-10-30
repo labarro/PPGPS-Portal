@@ -4,7 +4,7 @@ import { isRedirectCandidate, normalizePath } from './paths'
  * Consulta de redirecionamentos usada pelo proxy (antes de qualquer página), para responder
  * com 301/302 reais — o Next só emite 307/308 a partir de páginas. Consulta mínima e somente
  * leitura na tabela `redirects` (plugin de redirects), com cache curto em memória:
- * - só para caminhos com slug editável (`/linhas/*`, `/o-grupo/*`);
+ * - só para caminhos com slug editável (`/linhas/*`, `/o-grupo/*`, `/integrantes/*`);
  * - qualquer falha deixa a requisição seguir normalmente (a página tem um fallback).
  */
 export type RedirectHit = { to: string; status: 301 | 302 }

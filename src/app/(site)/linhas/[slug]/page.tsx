@@ -6,14 +6,21 @@ import { RichText } from '@/components/rich-text/rich-text'
 import { EmptyState } from '@/components/site/empty-state'
 import { JsonLd } from '@/components/site/json-ld'
 import { PageHeader } from '@/components/site/page-header'
+import { type LineRef, PersonCard } from '@/components/site/person-card'
 import { ProvisionalNote } from '@/components/site/provisional-note'
 import { breadcrumbJsonLd } from '@/lib/content/jsonld'
-import { researchLinePath } from '@/lib/content/paths'
-import { findRedirectTarget, getResearchLine, listResearchLines } from '@/lib/content/queries'
+import { MEMBERS_BASE_PATH, researchLinePath } from '@/lib/content/paths'
+import {
+  findRedirectTarget,
+  getResearchLine,
+  listDirectory,
+  listResearchLines,
+} from '@/lib/content/queries'
 import { isRichTextEmpty } from '@/lib/content/rich-text'
 import { metaDescription, pageMetadata } from '@/lib/content/seo'
 import { SLUG_PATTERN } from '@/lib/content/slug'
 import { resolveServerUrl } from '@/lib/env/server-url'
+import { byCurrentRole, filtersToQuery, membersOfLine } from '@/lib/people/directory'
 
 type Props = { params: Promise<{ slug: string }> }
 
@@ -42,6 +49,11 @@ export default async function ResearchLinePage({ params }: Props) {
 
   const others = lines.filter((item) => item.slug !== line.slug)
   const path = researchLinePath(line.slug)
+  // Somente integrantes atuais com perfil autorizado e vínculo ativo nesta linha (S04).
+  const members = membersOfLine(await listDirectory(), line.id).sort(byCurrentRole)
+  const linesById = new Map<string, LineRef>(
+    lines.map(({ id, name, slug: lineSlug }) => [String(id), { id, name, slug: lineSlug }]),
+  )
 
   return (
     <>
@@ -77,6 +89,32 @@ export default async function ResearchLinePage({ params }: Props) {
           ) : (
             <RichText data={line.description} />
           )}
+
+          {members.length > 0 ? (
+            <section aria-labelledby="integrantes-linha" className="mt-14">
+              <h2
+                id="integrantes-linha"
+                className="font-serif text-2xl leading-snug font-semibold text-primary sm:text-3xl"
+              >
+                Integrantes nesta linha
+              </h2>
+              <ul className="mt-6 grid gap-4 sm:grid-cols-2" data-testid="line-members">
+                {members.map((person) => (
+                  <li key={person.id}>
+                    <PersonCard person={person} lines={linesById} />
+                  </li>
+                ))}
+              </ul>
+              <p className="mt-4">
+                <Link
+                  href={`${MEMBERS_BASE_PATH}${filtersToQuery({ line: line.slug })}`}
+                  className="inline-flex min-h-11 items-center rounded-sm font-medium text-link underline underline-offset-4 hover:no-underline"
+                >
+                  Ver no diretório de integrantes
+                </Link>
+              </p>
+            </section>
+          ) : null}
         </div>
 
         <aside className="flex flex-col gap-8 text-sm">

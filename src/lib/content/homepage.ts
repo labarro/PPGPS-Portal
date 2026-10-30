@@ -14,9 +14,8 @@ export const HOME_SECTION_OPTIONS = [
   },
   {
     value: 'featured-members',
-    label: 'Integrantes em destaque (disponível na S04)',
+    label: 'Integrantes em destaque',
     defaultHeading: 'Integrantes',
-    availableFrom: 'S04',
   },
   {
     value: 'recent-publications',
@@ -51,7 +50,7 @@ export const HOME_SECTION_OPTIONS = [
 
 export type HomeSectionKind = (typeof HOME_SECTION_OPTIONS)[number]['value']
 
-/** Seções que o site sabe exibir nesta versão (S03). */
+/** Seções que o site sabe exibir nesta versão (S04). */
 export const AVAILABLE_SECTIONS: readonly HomeSectionKind[] = HOME_SECTION_OPTIONS.filter(
   (option) => !('availableFrom' in option),
 ).map((option) => option.value)
