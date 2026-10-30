@@ -2,11 +2,11 @@
 
 | Campo | Valor |
 |---|---|
-| Status | Proposto |
+| Status | **Aceito** |
 | Data | 30/10/2026 |
 | Sprint | S05 |
 | Autor | Agente |
-| Aprovação | Pendente (responsável técnico) |
+| Aprovação | Responsável técnico (supervisor), 30/10/2026 — revisão e aprovação expressas no encerramento da S05 |
 
 ## Contexto
 
