@@ -59,6 +59,7 @@
 
 ### Q3 — Domínio e hospedagem
 - **Resposta:** hospedagem própria, independente do site institucional; domínio próprio a ser adquirido futuramente.
+- **Atualização (30/10/2026, responsável técnico):** domínio definido e registrado — `https://bioeticaps.app` (ADR-0014). Ativação pública na S06.
 - **Efeito:** mantém a estratégia de provedores externos (ADR-0003 e ADR-0009). O ADR de produção na S06 decide plano e custos. Até haver domínio, usam-se endereços do provedor. A política de privacidade informa a possibilidade de processamento fora do Brasil.
 
 ### Q4 — Dados pessoais

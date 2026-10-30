@@ -3,6 +3,7 @@ import { type NextRequest, NextResponse } from 'next/server'
 import { lookupRedirect } from './lib/content/redirect-db'
 import type { RedirectHit } from './lib/content/redirect-lookup'
 import { isProduction, isProtectedNonProduction, resolveAppEnv } from './lib/env/app-env'
+import { PRODUCTION_HOST, PRODUCTION_SITE_URL } from './lib/env/server-url'
 import { isAuthorized, readBasicAuthCredentials } from './lib/security/basic-auth'
 import { NOINDEX_VALUE } from './lib/security/headers'
 
@@ -46,6 +47,15 @@ export async function handleProxy(request: NextRequest, lookup: Lookup): Promise
         )
       }
     }
+  }
+
+  // Produção (ADR-0014): `www.bioeticaps.app` → apex canônico. Nunca fora da produção.
+  if (isProduction(env) && request.nextUrl.hostname.toLowerCase() === `www.${PRODUCTION_HOST}`) {
+    const target = new URL(
+      `${request.nextUrl.pathname}${request.nextUrl.search}`,
+      PRODUCTION_SITE_URL,
+    )
+    return NextResponse.redirect(target, 308)
   }
 
   const redirect = await findRedirect(request, lookup)

@@ -73,11 +73,14 @@
       "unrs-resolver"
     ],
     "overrides": {
-      "dompurify": "^3.4.16"
+      "dompurify": "^3.4.16",
+      "undici@>=7.0.0 <7.30.1": "^7.30.1",
+      "happy-dom": "^21.0.4"
     },
     "auditConfig": {
       "ignoreGhsas": [
-        "GHSA-vfj7-8cjw-p6xm"
+        "GHSA-vfj7-8cjw-p6xm",
+        "GHSA-x8rm-f576-gq67"
       ]
     }
   },

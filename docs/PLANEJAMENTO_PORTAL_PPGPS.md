@@ -4,8 +4,8 @@
 >
 > | Item | Valor |
 > |---|---|
-> | Versão do documento | **1.3** |
-> | Data da versão | 22/10/2026 |
+> | Versão do documento | **1.4** |
+> | Data da versão | 30/10/2026 |
 > | Situação | Planejamento v1.2 aprovado pelo responsável técnico como base (22/10/2026). Respostas do coordenador às Q1–Q12 incorporadas (seção 32; ADR-0010). Publicação do portal autorizada como iniciativa do grupo; **uso de logotipos institucionais não autorizado**; dados pessoais exigem registro individual por titular (Q4) |
 > | Execução prevista | Agente de IA (Claude Code ou similar), sob supervisão de um desenvolvedor responsável |
 > | Idioma do MVP | Português (inglês planejado para a V2) |
@@ -32,6 +32,14 @@
 | 1.1 | 19/10/2026 | Revisão técnica: marcos M1/M2, blog antecipado, renumeração de sprints, egressos remodelados, pipeline de migrations/ambientes/backup, estimativas, segurança progressiva |
 | 1.2 | 20/10/2026 | **Correção de escopo:** o portal passa a ser exclusivo do grupo de pesquisa "Bioética e Promoção da Saúde" e de suas atividades/laboratório, e não do PPGPS inteiro. Detalhes abaixo |
 | 1.3 | 22/10/2026 | **Respostas do coordenador (Q1–Q12) e aprovações do responsável técnico:** nome e identidade visual, publicação como iniciativa do grupo sem aviso ostensivo, apenas dois usuários administrativos, foco em Bioética e Promoção da Saúde, laboratório fora do escopo atual. Detalhes abaixo |
+| 1.4 | 30/10/2026 | **Domínio oficial:** `https://bioeticaps.app` definido pelo responsável técnico como domínio definitivo de produção (já associado ao projeto na Vercel); ativação pública mantida na S06. Detalhes abaixo |
+
+**Alterações da versão 1.4** (escopo, stack, arquitetura, marcos e sprints inalterados; decisão em ADR-0014)
+
+1. **Domínio (Q3):** `https://bioeticaps.app` (apex, HTTPS) é o domínio definitivo planejado para produção; deixa de ser "aquisição futura". Registrado pelo responsável técnico em registrador terceiro, com DNS na Vercel e associado ao projeto `ppgps-portal` (seções 1, 24.1, 24.2, 25.1 e 32).
+2. **URLs por ambiente:** produção usa `bioeticaps.app` para canônica, metadados, sitemap, robots e e-mails; homologação continua em `ppgps-portal-staging.vercel.app` e previews no endereço do deploy. O domínio de produção nunca é URL base de outro ambiente (seção 24.2).
+3. **Lançamento:** adicionar o domínio à Vercel não autoriza publicar. A ativação pública permanece na **S06**, com autorização do responsável técnico e confirmação do coordenador; até lá não há deploy de produção.
+4. **S03 concluída** e ADR-0013 aceito (30/10/2026).
 
 **Alterações da versão 1.3** (stack Next.js + Payload CMS 3 + PostgreSQL + Cloudflare R2, arquitetura técnica, ambientes, marcos, módulos acadêmicos e sequência de sprints preservados; decisões em ADR-0010)
 
@@ -1480,7 +1488,7 @@ Numeração e ordem mantidas. Ajustes:
 | S03 | Duas linhas temáticas (Bioética, Promoção da Saúde); linhas do DGP como referência histórica (`GroupProfile.dgpResearchLines`); sem página do laboratório; nome de exibição da Q2 |
 | S04 | Sem edição de perfil por integrantes; consentimento individual mantido apesar da autorização do grupo (Q4) |
 | S05 | Fluxo editorial operado por coordenador e desenvolvedor; autores sem conta; notificações opcionais |
-| S06 | Sem aviso ostensivo; `/sobre-o-portal` com nota discreta; domínio próprio opcional (Q3); arquivar o registro escrito das respostas |
+| S06 | Sem aviso ostensivo; `/sobre-o-portal` com nota discreta; ativação do domínio `bioeticaps.app` (v1.4, ADR-0014); arquivar o registro escrito das respostas |
 | S07 | Cadastro só por `editor`/`admin`; sem área interna |
 | S08 | Cadastro por DOI só por `editor`/`admin`; aderência a linha temática |
 | S09 | Sem mudança funcional |
@@ -1844,6 +1852,7 @@ As fichas detalhadas serão criadas em `docs/sprints/` antes de cada execução,
 | Componente | Serviço | Plano | Observações |
 |---|---|---|---|
 | Hospedagem do app | Vercel | Hobby (gratuito) | Uso pessoal/não comercial; adequado para desenvolvimento e homologação. Para produção, ver seção 25 |
+| Domínio de produção | `bioeticaps.app` (DNS na Vercel) | Registrado pelo responsável técnico (v1.4) | Associado ao projeto; **sem deploy servido até a S06** (ADR-0014). Homologação: `ppgps-portal-staging.vercel.app` |
 | Banco | Neon Postgres | Free | 1 GB por projeto, 100 CU-h/projeto, **10 branches por projeto**, scale-to-zero (latência no primeiro acesso), histórico de 6 h |
 | Arquivos e backups | Cloudflare R2 | Free | 10 GB, egress gratuito; buckets separados por ambiente e para backups |
 | Cópia de backup fora do provedor principal | Backblaze B2 ou armazenamento institucional | Gratuito até ~10 GB [ESTIMADO] | Diversificação de provedor (seção 24.5) |
@@ -1864,6 +1873,7 @@ As fichas detalhadas serão criadas em `docs/sprints/` antes de cada execução,
 | E-mail | Mailpit/console | Capturado (sem envio) | Capturado ou restrito a domínios autorizados | Envio real |
 | Segredos | `.env` local | Conjunto "preview" | Conjunto "staging" | Conjunto "production", acesso restrito ao supervisor |
 | Acesso | — | Autenticação básica + `noindex` | Autenticação básica + `noindex` | Público (admin autenticado) |
+| URL base | `http://localhost:3000` | Endereço do deploy (`VERCEL_URL`) | `https://ppgps-portal-staging.vercel.app` | `https://bioeticaps.app` (a partir da S06; ADR-0014) |
 | Integrações externas | Respostas gravadas | Respostas gravadas ou sandbox | APIs reais com identificação de homologação | APIs reais |
 
 **Regras de isolamento**
@@ -1971,7 +1981,7 @@ O app roda como Node padrão (`next start`) com Docker. Caso a Vercel se torne i
 | Vercel Pro (1 assento) | US$ 20 [VERIFICADO], incluindo crédito de uso |
 | Neon Launch (compute com scale-to-zero, ~1–2 GB) | US$ 3–15 [ESTIMADO]; base US$ 0,106/CU-h e US$ 0,35/GB-mês [VERIFICADO] |
 | R2 (≤ 10 GB) | US$ 0–1 [ESTIMADO] |
-| Domínio próprio `.com.br` (a adquirir, Q3) | ≈ R$ 40/ano [ESTIMADO] |
+| Domínio próprio `bioeticaps.app` (registrado pelo responsável técnico, v1.4) | Renovação anual a cargo do responsável técnico (valor não informado) |
 | E-mail, Sentry, uptime | US$ 0 (planos gratuitos) [ESTIMADO] |
 | **Total** | **≈ US$ 25–40/mês** [ESTIMADO] |
 
@@ -2321,7 +2331,7 @@ decisões tomadas e sugestões para a próxima sprint (sem implementá-las).
 |---|---|---|---|---|
 | Q1 | Publicação | Iniciativa do grupo; sem aviso ostensivo de não oficial | Respondida com ressalvas | Exigência de comunicação à UniCesumar não abordada (risco R17) |
 | Q2 | Nome e identidade | "Grupo de Pesquisa em Bioética e Promoção da Saúde - Unicesumar"; azul-marinho e branco; sem presumir uso de logotipos | Respondida | Nome curto para títulos [PREMISSA] |
-| Q3 | Domínio e hospedagem | Hospedagem própria, independente do site institucional; domínio a adquirir | Respondida com ressalvas | Domínio; plano de produção (ADR na S06) |
+| Q3 | Domínio e hospedagem | Hospedagem própria, independente do site institucional; domínio definido em 30/10/2026: `bioeticaps.app` (v1.4, ADR-0014) | Respondida com ressalvas | Plano de produção (ADR na S06) |
 | Q4 | Dados pessoais | Publicação de informações dos integrantes autorizada pelo grupo | Respondida com ressalvas | Controlador, canal do titular, termo individual, regra de orientações concluídas |
 | Q5 | Integrantes e acesso | Site público sem login; só coordenador e desenvolvedor no admin; integrantes como registros | Respondida com ressalvas | Lista nominal; ORCID/Lattes |
 | Q6 | Laboratório | Existe, mas não deve ser incluído agora | Respondida | — |

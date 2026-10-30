@@ -2,7 +2,7 @@
 
 Portal acadêmico do **Grupo de Pesquisa em Bioética e Promoção da Saúde - Unicesumar** (DGP/CNPq), publicado como iniciativa do grupo, com foco em Bioética e Promoção da Saúde. Não é site oficial da UniCesumar nem do PPGPS. O nome do repositório (`PPGPS-Portal`) é apenas técnico.
 
-> Situação: **S00 e S01 concluídas**; **S02 executada** (autenticação, papéis, auditoria, storage R2, e-mail, Sentry, backup e base visual) — ver [`docs/PROGRESS.md`](./docs/PROGRESS.md). Planejamento **v1.3**.
+> Situação: **S00–S03 concluídas**; **S04** (integrantes, vínculos e consentimentos) em execução — ver [`docs/PROGRESS.md`](./docs/PROGRESS.md). Planejamento **v1.4**. Domínio oficial de produção: **`https://bioeticaps.app`** (ativação pública na S06; [ADR-0014](./docs/adr/0014-dominio-oficial-bioeticaps-app.md)).
 
 Stack: Next.js 16 (App Router) + Payload CMS 3 + PostgreSQL 18 (Neon nos ambientes publicados), TypeScript estrito, pnpm. Versões fixadas no [ADR-0007](./docs/adr/0007-versoes-fixadas.md).
 
@@ -75,13 +75,15 @@ O CI (`migrations-check.yml`) falha se houver schema sem migration, tipos desatu
 | Local | Docker | `pnpm dev` | — |
 | Preview (PR) | `preview/pr-N` (de `seed`, expira em 7 dias) | `preview-db.yml` | Autenticação básica + `noindex` |
 | Homologação | `staging` | `deploy-staging.yml` (merge na `main`) — `ppgps-portal-staging.vercel.app` | Autenticação básica + `noindex` |
-| Produção | `production` | `deploy-production.yml` (tag `vX.Y.Z`, disparo pelo dono do repositório e variável `PRODUCTION_DEPLOY_ENABLED=true`, **não definida** até a S06) | Público (a partir da S06) |
+| Produção | `production` | `deploy-production.yml` (tag `vX.Y.Z`, disparo pelo dono do repositório e variável `PRODUCTION_DEPLOY_ENABLED=true`, **não definida** até a S06) | Público em `https://bioeticaps.app` (a partir da S06) |
+
+URLs absolutas (canônica, sitemap, robots, JSON-LD, e-mails) vêm de `SERVER_URL`; em produção o padrão é `https://bioeticaps.app`, e esse domínio é ignorado fora da produção (`src/lib/env/server-url.ts`). Em produção, `www.bioeticaps.app` redireciona (308) para o apex. O domínio já está associado ao projeto na Vercel, mas **nenhum deploy é servido nele até a S06** — nunca crie alias de preview/homologação para ele nem rode `vercel deploy --prod` manualmente.
 
 Migrations rodam sempre em job próprio, com `concurrency` por ambiente, **antes** do deploy. O deploy automático por Git da Vercel está desativado. Detalhes: [ADR-0005](./docs/adr/0005-ambientes-migrations-rollback.md) e [ADR-0009](./docs/adr/0009-neon-vercel-deploy-controlado.md).
 
 ### Configuração do GitHub (supervisor)
 
-Variáveis do repositório (*Settings → Secrets and variables → Actions → Variables*): `NEON_PROJECT_ID`, `VERCEL_ORG_ID`, `VERCEL_PROJECT_ID`, `STAGING_DOMAIN`, `R2_ACCOUNT_ID`, `R2_ENDPOINT`, `R2_REGION`, `BACKUP_AGE_RECIPIENT` (chave pública age); opcional `EMAIL_SMTP_IS_SANDBOX`.
+Variáveis do repositório (*Settings → Secrets and variables → Actions → Variables*): `NEON_PROJECT_ID`, `VERCEL_ORG_ID`, `VERCEL_PROJECT_ID`, `STAGING_DOMAIN`, `R2_ACCOUNT_ID`, `R2_ENDPOINT`, `R2_REGION`, `BACKUP_AGE_RECIPIENT` (chave pública age); opcionais `EMAIL_SMTP_IS_SANDBOX` e `PRODUCTION_DOMAIN` (padrão `bioeticaps.app`).
 
 | GitHub Environment | Segredos |
 |---|---|
@@ -95,7 +97,7 @@ Cada ambiente usa valores **distintos** de `PAYLOAD_SECRET` e de autenticação 
 
 - [`AGENTS.md`](./AGENTS.md) — regras do projeto (agentes e pessoas)
 - [`docs/PROGRESS.md`](./docs/PROGRESS.md) — estado atual e próximos passos
-- [`docs/PLANEJAMENTO_PORTAL_PPGPS.md`](./docs/PLANEJAMENTO_PORTAL_PPGPS.md) — plano diretor (v1.3)
+- [`docs/PLANEJAMENTO_PORTAL_PPGPS.md`](./docs/PLANEJAMENTO_PORTAL_PPGPS.md) — plano diretor (v1.4)
 - [`docs/sprints/`](./docs/sprints/) — fichas das sprints S00–S11
 - [`docs/adr/`](./docs/adr/) — decisões arquiteturais
 - [`docs/convencoes-git.md`](./docs/convencoes-git.md) — branches, commits e releases

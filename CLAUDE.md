@@ -4,7 +4,7 @@
 
 ## Escopo em uma frase
 
-Portal do **"Grupo de Pesquisa em Bioética e Promoção da Saúde - Unicesumar"**, publicado como iniciativa do grupo, com foco em Bioética e Promoção da Saúde. **Não** é portal do PPGPS nem da UniCesumar, que são apenas referências textuais (planejamento v1.3, ADR-0006, ADR-0010).
+Portal do **"Grupo de Pesquisa em Bioética e Promoção da Saúde - Unicesumar"**, publicado como iniciativa do grupo, com foco em Bioética e Promoção da Saúde. **Não** é portal do PPGPS nem da UniCesumar, que são apenas referências textuais (planejamento v1.4, ADR-0006, ADR-0010). Domínio oficial de produção: **`https://bioeticaps.app`** (ADR-0014), com ativação pública somente na S06.
 
 ## Ordem de leitura ao iniciar qualquer sessão
 
@@ -42,6 +42,7 @@ Não dependa do histórico de conversas anteriores; se algo não está nos arqui
 
 - Nada de Prisma, GraphQL público ou `dangerouslySetInnerHTML` com rich text.
 - Nada de migrations no `next build`; nada de `push` de schema fora do banco local.
+- Nada de `vercel deploy --prod`, alias ou URL base com `bioeticaps.app` fora do pipeline de produção da S06.
 - Nada de dados reais de pessoas em fixtures; nenhum perfil público sem consentimento (inclusive docentes e líderes).
 - Nada de coleções `programs`/`research-groups`, papéis `group_manager`/`researcher` ou chave de grupo nas entidades (grupo único = global `GroupProfile`).
 - Toda coleção nova com dados não públicos exige teste de vazamento.

@@ -136,3 +136,29 @@ describe('proxy (redirecionamentos 301 do plugin de redirects)', () => {
     expect(response.headers.get('X-Robots-Tag')).toBeNull()
   })
 })
+
+describe('proxy (domínio oficial, ADR-0014)', () => {
+  const at = (url: string) => new NextRequest(url)
+
+  it('produção redireciona www.bioeticaps.app para o apex com 308, preservando caminho e query', async () => {
+    vi.stubEnv('APP_ENV', 'production')
+    const response = await proxy(at('https://www.bioeticaps.app/linhas/bioetica?x=1'))
+    expect(response.status).toBe(308)
+    expect(response.headers.get('location')).toBe('https://bioeticaps.app/linhas/bioetica?x=1')
+    expect(noRedirect).not.toHaveBeenCalled()
+  })
+
+  it('produção não redireciona o apex', async () => {
+    vi.stubEnv('APP_ENV', 'production')
+    expect((await proxy(at('https://bioeticaps.app/'))).status).toBe(200)
+  })
+
+  it('fora da produção não redireciona por host e mantém autenticação e noindex', async () => {
+    vi.stubEnv('APP_ENV', 'staging')
+    vi.stubEnv('BASIC_AUTH_USER', 'revisor')
+    vi.stubEnv('BASIC_AUTH_PASSWORD', 'segredo')
+    const response = await proxy(at('https://www.bioeticaps.app/'))
+    expect(response.status).toBe(401)
+    expect(response.headers.get('X-Robots-Tag')).toBe(NOINDEX_VALUE)
+  })
+})

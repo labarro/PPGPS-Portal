@@ -32,7 +32,7 @@ O responsável técnico determinou incorporar as respostas sem mudar a stack (Ne
 3. **Identidade visual (Q2):** azul-marinho e branco como cores-base, definidas em tokens próprios com contraste AA verificado. A marca é tipográfica (wordmark) até existir logotipo próprio aprovado.
 4. **Hospedagem e domínio (Q3)**
    - Hospedagem própria, independente do site institucional; sem infraestrutura da UniCesumar.
-   - Domínio próprio a adquirir no futuro. Até lá, homologação e produção usam endereços do provedor.
+   - Domínio próprio a adquirir no futuro. Até lá, homologação e produção usam endereços do provedor. **Atualização de 30/10/2026 (ADR-0014):** domínio definido — `https://bioeticaps.app`.
    - O ADR de hospedagem de produção continua na S06.
 5. **Dados pessoais (Q4)**
    - A manifestação do coordenador de que a publicação de informações dos integrantes está autorizada é registrada como **autorização do grupo**.
