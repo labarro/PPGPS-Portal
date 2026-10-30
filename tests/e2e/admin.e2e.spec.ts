@@ -37,6 +37,8 @@ test.describe.serial('Painel administrativo', () => {
 
     await page.goto('/admin')
     await expect(page).toHaveURL(/\/admin\/create-first-user/)
+    // Formulário só depois da hidratação: preenchido antes, o envio pode não ocorrer.
+    await page.waitForLoadState('networkidle')
     await page.locator('#field-email').fill(firstUser.email)
     await page.locator('#field-password').fill(firstUser.password)
     await page.locator('#field-confirm-password').fill(firstUser.password)

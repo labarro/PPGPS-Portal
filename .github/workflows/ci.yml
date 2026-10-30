@@ -138,6 +138,13 @@ jobs:
           done
           cat /tmp/next.log
           exit 1
+      # Aquecimento: uma requisição por rota antes da medição (compilação sob demanda do servidor
+      # e cache de dados), para medir a página como o visitante a recebe, não o primeiro acesso.
+      - name: Aquecimento das rotas medidas
+        run: |
+          for url in $(jq -r '.ci.collect.url[]' lighthouserc.json); do
+            curl -fsS -o /dev/null "$url"
+          done
       # Relatórios só em disco (artefato do run): nada é enviado a serviços externos.
       # `is-crawlable` é ignorado: fora da produção o site é `noindex` de propósito.
       - name: Lighthouse CI (acessibilidade e SEO ≥ 0,90; orçamentos de JS e terceiros)
@@ -148,11 +155,11 @@ jobs:
           {
             echo '### Lighthouse (mobile)'
             echo ''
-            echo '| Página | Desempenho | Acessibilidade | Boas práticas | SEO | JS (bytes) |'
-            echo '|---|---|---|---|---|---|'
+            echo '| Página | Desempenho | Acessibilidade | Boas práticas | SEO | JS (bytes) | LCP (ms) | TBT (ms) | CPU (benchmarkIndex) |'
+            echo '|---|---|---|---|---|---|---|---|---|'
             for f in .lighthouseci/lhr-*.json; do
               [ -f "$f" ] || continue
-              jq -r '[.finalDisplayedUrl, .categories.performance.score, .categories.accessibility.score, .categories["best-practices"].score, .categories.seo.score, ([.audits["resource-summary"].details.items[] | select(.resourceType=="script") | .transferSize] | first)] | "| \(.[0]) | \(.[1]) | \(.[2]) | \(.[3]) | \(.[4]) | \(.[5]) |"' "$f"
+              jq -r '[.finalDisplayedUrl, .categories.performance.score, .categories.accessibility.score, .categories["best-practices"].score, .categories.seo.score, ([.audits["resource-summary"].details.items[] | select(.resourceType=="script") | .transferSize] | first), (.audits["largest-contentful-paint"].numericValue | floor), (.audits["total-blocking-time"].numericValue | floor), .environment.benchmarkIndex] | "| \(.[0]) | \(.[1]) | \(.[2]) | \(.[3]) | \(.[4]) | \(.[5]) | \(.[6]) | \(.[7]) | \(.[8]) |"' "$f"
             done
           } | tee -a "$GITHUB_STEP_SUMMARY"
       - uses: actions/upload-artifact@v7
@@ -175,6 +182,13 @@ jobs:
       - uses: actions/checkout@v7
       - uses: ./.github/actions/setup
       - run: pnpm build
+      # S05: sem DSN público, o SDK do Sentry não pode entrar no JavaScript do navegador.
+      - name: JavaScript do navegador sem SDK do Sentry (build sem DSN)
+        run: |
+          if grep -l -i 'sentry' .next/static/chunks/*.js; then
+            echo '::error::SDK do Sentry presente no JavaScript do navegador sem DSN configurado.'
+            exit 1
+          fi
 
   gitleaks:
     name: Gitleaks (segredos)

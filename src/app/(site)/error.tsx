@@ -1,12 +1,12 @@
 'use client'
 
-import * as Sentry from '@sentry/nextjs'
 import { TriangleAlertIcon } from 'lucide-react'
 import Link from 'next/link'
 import { useEffect } from 'react'
 
 import { EmptyState } from '@/components/site/empty-state'
 import { Button, buttonVariants } from '@/components/ui/button'
+import { captureClientException } from '@/lib/observability/client-capture'
 
 /** Erro inesperado (planejamento 16.6): sem detalhes técnicos para o visitante. */
 export default function SiteError({
@@ -17,7 +17,7 @@ export default function SiteError({
   reset: () => void
 }) {
   useEffect(() => {
-    Sentry.captureException(error)
+    captureClientException(error)
   }, [error])
 
   return (
