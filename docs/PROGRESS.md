@@ -14,11 +14,12 @@
 | Situação da S02 | **Concluída** (22/10/2026). Exceções formais: validação externa do **Sentry** e do **SMTP de homologação** adiadas para a S06 por decisão do responsável técnico (não são testes aprovados) |
 | Situação da S03 | **Concluída** (30/10/2026; PR #14). Revisão visual/funcional, navegação desktop/mobile, conteúdo provisório e os 9 critérios aprovados pelo responsável técnico; textos definitivos do coordenador (Q7) seguem pendentes para a S06 |
 | Situação da S04 | **Concluída** (30/10/2026; PRs #23 e #24). Roteiro de homologação executado e os 8 critérios aprovados pelo responsável técnico; autorizações individuais reais e dados do grupo seguem pendentes (bloqueiam só a publicação dos perfis, S06) |
-| Próxima sprint | **S05 — Blog acadêmico e fluxo editorial** — **não iniciada** (aguarda nova instrução do responsável técnico) |
+| Situação da S05 | **Executada — aguardando revisão humana** (30/10/2026; PR da branch `s05-blog-editorial`) |
+| Próxima sprint | **S06 — Reauditoria, conteúdo inicial e lançamento do M1** — **não iniciada** (somente com autorização do responsável técnico) |
 | Domínio oficial | **`https://bioeticaps.app`** (ADR-0014) — associado ao projeto `ppgps-portal` na Vercel, DNS e HTTPS ativos, **nenhum deploy servido** (404 `DEPLOYMENT_NOT_FOUND`); ativação pública na S06 |
 | Última atualização | 30/10/2026 |
 | Planejamento vigente | `docs/PLANEJAMENTO_PORTAL_PPGPS.md` **v1.4** (30/10/2026) |
-| ADRs | 0001–0014 **Aceitos** (0013 e 0014 em 30/10/2026). A S04 não exigiu ADR novo |
+| ADRs | 0001–0014 **Aceitos** (0013 e 0014 em 30/10/2026); **0015 Proposto** (S05: fluxo editorial e publicação agendada) |
 
 ## Situação das sprints
 
@@ -29,7 +30,7 @@
 | S02 | Autenticação, papéis, auditoria, storage, backup e base visual | M1 | **Concluída** (22/10/2026; Sentry e SMTP de homologação adiados para a S06) |
 | S03 | Portal do grupo: identidade, linhas temáticas e homepage v1 | M1 | **Concluída** (30/10/2026; PR #14) |
 | S04 | Integrantes, vínculos e consentimentos | M1 | **Concluída** (30/10/2026; PRs #23 e #24) |
-| S05 | Blog acadêmico e fluxo editorial | M1 | Não iniciada |
+| S05 | Blog acadêmico e fluxo editorial | M1 | **Executada — aguardando revisão humana** (30/10/2026) |
 | S06 | Reauditoria, conteúdo inicial e lançamento do M1 | M1 | Não iniciada |
 | S07 | Orientações, conclusões acadêmicas e egressos | M2 | Não iniciada |
 | S08 | Catálogo de publicações do grupo | M2 | Não iniciada |
@@ -37,6 +38,55 @@
 | S10 | Eventos, projetos e impacto social | M2 | Não iniciada |
 | S11 | Consolidação, carga de dados acadêmicos e lançamento do M2 | M2 | Não iniciada |
 
+## Sessão de 30/10/2026 — execução da S05
+
+**Modo:** autônomo, autorizado expressamente pelo responsável técnico (execução integral da S05; política de PRs `AGENTS.md` §11.1). Branch `s05-blog-editorial`. S06 **não iniciada**. Nenhum deploy de produção; `PRODUCTION_DEPLOY_ENABLED` não definida; branch `production` do Neon não acessada. Somente dados fictícios.
+
+### Feito
+
+- **Modelagem** (migration `20261030_161821_s05_essays_categories_tags_jobs`, aditiva; `down` idempotente; os novos valores do enum da auditoria são mantidos no `down` porque a auditoria é imutável):
+  - `essays` com rascunhos/versões: título, subtítulo, resumo, capa (`media`), texto (Lexical restrito), **autoria** (array ordenado = `EssayAuthor`: integrante `people` ou convidado externo com nome e minibio; papel autor/coautor/convidado), **referências estruturadas** (autores, título, fonte, editora, ano, DOI normalizado, URL, acesso em), `nature` obrigatória, `developmentStage`, `category` (1), `tags`, licença, nota de correção, SEO, checklist editorial, anotações internas, histórico editorial, `workflowStatus`, `publishedAt`, `scheduledAt`, `revisedAt`, `archivedAt`, `readingTime` (calculado), `submittedBy/At`, `approvedBy/At`, `publishedBy`, `archivedBy`.
+  - `categories` (principal, ordem) e `tags`; leitura pública; exclusão bloqueada quando em uso; slug alterado → 301.
+  - Fila de jobs do Payload (`payload_jobs`, tarefa `publishScheduledEssays`) restrita ao `admin`.
+  - `SiteSettings.editorial` (licença padrão, complemento do aviso), `Homepage.featuredEssays` (até 3 fixados), seção "Destaques do blog" disponível.
+- **Fluxo editorial** (ADR-0015, Proposto): máquina de estados pura (`src/lib/editorial/workflow.ts`); serviço único de transição + `POST /api/essays/:id/transition`; hook impõe as regras em toda gravação (REST, Local API, restauração de versão, job); conteúdo editável só em Rascunho/Devolvido; comentário obrigatório na devolução; checklist completo para aprovar; agendamento ≥ 1 min no futuro; correção de texto publicado como nova versão (o original continua no ar); arquivamento/restauração; exclusão de publicados bloqueada; auditoria `approve`/`publish`/`workflow` com o autor da ação.
+- **Agendamento**: visibilidade pela data (independe do job); job do Payload a cada minuto (`autoRun` fora da Vercel); `GET /api/essays/publish-due` com `CRON_SECRET` para cron externo (S06); conclusão ao abrir o ensaio no painel.
+- **Editor acadêmico**: títulos h2–h4, listas, citações, links (inclusive entre ensaios), sobrescrito/subscrito, imagens da coleção `media` (alt, crédito, licença e autorização obrigatórios); higienização no servidor (`sanitizeLexical`: estilos, nós desconhecidos/HTML colado e links `javascript:` removidos); alerta editorial sobre dados de pacientes e terceiros; painel com "Ações editoriais" e sem botão "Publicar" genérico.
+- **Site**: `/blog` (paginação `?pagina=`), `/blog/[slug]` (selo, autoria com link só para perfis autorizados, data, tempo de leitura, referências, tags, convidados, nota de correção, aviso de natureza + ausência de revisão por pares + não representação institucional + licença, relacionados; arquivado com aviso e `noindex`), `/blog/categoria/[slug]`, `/blog/tag/[slug]`, `/blog/rss.xml`, `/blog/atom.xml`, imagem OG (`next/og`), JSON-LD `BlogPosting`, destaques na home, seção "Ensaios" no perfil, "Blog" no menu padrão e no rodapé, sitemap com blog/ensaios/categorias/tags.
+- **Seeds**: `seed:content` cria as categorias Bioética e Promoção da Saúde (Q7) e atualiza menu/home padrão; `pnpm seed:essays` (fictícios: 2 publicados, 1 arquivado, 1 agendado para 2099, 1 rascunho; bloqueado em staging/produção) usando o próprio serviço de transição.
+- **Pipelines**: CI (E2E/Lighthouse) e preview executam `seed:essays`; Lighthouse inclui `/blog` e um ensaio (boas práticas e desempenho ≥ 0,90 no ensaio); fumaça verifica blog/RSS/Atom 200, `/api/essays/publish-due` 401, `/api/payload-jobs` 403 e ausência de campos internos em `/api/essays`.
+- **Docs**: ADR-0015, `docs/operacao/fluxo-editorial.md`, registro de tratamento (T9, T10), README, `AGENTS.md` §3, `.env.example` (`PAYLOAD_JOBS_AUTORUN`, `CRON_SECRET`), ficha S05.
+
+### Testes executados (30/10/2026, locais)
+
+| Verificação | Resultado |
+|---|---|
+| lint / format / typecheck | Passou |
+| Unitários | 251 (S05: 31 — máquina de estados, transições válidas/inválidas, comentário, checklist, agendamento com relógio controlado, efeitos/histórico, tempo de leitura, completude, aviso/licença, DOI/referências, higienização, visibilidade, rotas/301, revalidação, sitemap, RSS/Atom, JSON-LD, paginação, segredo do cron, render de imagem e XSS); cobertura de linhas 86,3% (`src/lib/editorial` 93,8%) |
+| Integração | 114 (S05: 16 — acesso por papel e conta inativa, criação sempre em rascunho, rascunho → publicado rejeitado por endpoint/PATCH, completude, fluxo completo com auditoria de aprovador e publicador, restauração de versão bloqueada, exclusão, agendamento com relógio controlado + job + idempotência, cancelamento, ação sobre agendado vencido, endpoint do cron, arquivamento/restauração fora de listagens/RSS/sitemap, correção com nova versão + 301, XSS, taxonomia, **vazamento**) |
+| E2E (Playwright + axe) | 87/87 (S05: 10 — listagens, página do ensaio, OG, arquivado/agendado/rascunho, categoria/tag, RSS/Atom/sitemap, home e perfil, celular, **fluxo completo com agendamento real de ~1 min**, XSS no navegador, painel do editor; 5 rotas novas no axe desktop e 360 px) |
+| Build (`next build`) | Passou |
+| Migrations | `migrate` em banco limpo (`ppgps_test` recriado), `migrate:check` sem drift, `migrate:down` + `migrate` |
+| Lighthouse mobile (local, `next start`) | `/blog/ensaio-ficticio-autonomia-e-cuidado`: desempenho **0,93**, acessibilidade **1,00**, boas práticas **1,00**, SEO **1,00**; `/blog` 0,94/1,00/1,00/1,00; demais rotas ≥ 0,92 e 1,00 nas outras categorias; JS ~202 KB |
+| `pnpm audit --audit-level high` | Passou (1 baixa e 1 moderada já conhecidas) |
+
+### Decisões e premissas (ADR-0015, Proposto)
+
+1. `schedulePublish` nativo do Payload não é usado (publicaria rascunhos sem aprovação).
+2. A visibilidade pública usa `publishedAt <= agora`; o job só mantém a situação editorial coerente.
+3. Notificações por e-mail (RF-114, opcional) **não implementadas** (sem SMTP externo; não bloqueia).
+4. Aprovação pela mesma pessoa que enviou é permitida (dois usuários), com aviso no painel [SUGESTÃO do planejamento].
+5. Licença padrão sugerida CC BY-NC-ND 4.0 (configurável; confirmação na política editorial — Q8).
+
+### Pendências (coordenador / etapas futuras)
+
+| Item | Etapa |
+|---|---|
+| Política editorial (temas, tom, conflitos de interesse, licença padrão, termo de cessão) — Q8 | Antes do M1 (S06) |
+| Ensaios iniciais reais (≥ 3) e autores, com autorização | S06 |
+| Cron externo gratuito para concluir agendamentos em homologação/produção (`CRON_SECRET`) | S06 (com autorização) |
+| Aceite do ADR-0015 | Supervisor |
+| Roteiro de homologação da ficha (passos 1–8) — DoD | Supervisor |
 ## Sessão de 30/10/2026 — auditoria dos PRs do Dependabot (manutenção técnica)
 
 **Modo:** manutenção autorizada pelo responsável técnico; sem funcionalidades, sem migrations, sem deploy de produção; S05 não iniciada. Estado verificado diretamente no GitHub: 10 PRs abertos (#3–#6, #16–#18, #20, #21, #25); #19 já fechado pelo Dependabot (substituído pelo #25).

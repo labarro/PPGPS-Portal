@@ -20,7 +20,7 @@
 - O coordenador informou (Q4, 22/10/2026) que a publicação de informações dos integrantes está autorizada pelo grupo, e (Q12) que há autorização para usar fotografias e materiais do grupo.
 - Essas manifestações ficam registradas como **contexto**. **Não** substituem o consentimento individual de cada titular, registrado por escopo em `consent-records` (planejamento 17.2; AGENTS.md §9.3).
 
-## 3. Operações de tratamento (S04)
+## 3. Operações de tratamento (S04–S05)
 
 | # | Operação | Titulares | Dados | Finalidade | Base legal proposta [PREMISSA a validar juridicamente] | Onde | Retenção |
 |---|---|---|---|---|---|---|---|
@@ -31,6 +31,8 @@
 | T5 | E-mail público | Titulares com escopo `email` vigente | E-mail informado pelo titular | Contato acadêmico | **Consentimento individual** (`email`) | Perfil público (nunca no JSON-LD) | Até a revogação |
 | T6 | Registro das autorizações | Mesmos de T1 | Escopos, data, meio, comprovante (documento privado), quem colheu, revogação, observações | Prova do consentimento e controle da visibilidade | Cumprimento de obrigação de demonstrar o consentimento (art. 8º, §2º) | `consent-records`, `documents` (visibilidade administrativa) | Enquanto o dado tratado existir e pelo prazo necessário à defesa em eventual questionamento **[EM ABERTO — definir prazo com o coordenador]** |
 | T7 | Contas administrativas | Coordenador e desenvolvedor | E-mail, nome de exibição, papel, último acesso; vínculo opcional à própria pessoa (`users.person`) | Acesso e auditoria | Execução das atividades do grupo / legítimo interesse [PREMISSA] | `users`, `audit-logs` | Enquanto a função durar; auditoria por 2 anos [PREMISSA, planejamento 13.3] |
+| T9 | Autoria de ensaios (S05) | Integrantes cadastrados e autores convidados externos | Nome publicado; minibiografia (somente convidados); vínculo interno com people (integrantes) | Atribuição de autoria no blog | Consentimento/autorização do autor ao enviar o texto à coordenação [PREMISSA: termo de cessão — política editorial, Q8]; link para o perfil só com public_profile vigente | essays.authors, /blog, RSS, JSON-LD | Enquanto o ensaio existir (arquivamento mantém a autoria) |
+| T10 | Revisão editorial interna (S05) | Coordenador e desenvolvedor | Quem enviou, aprovou, publicou e arquivou; comentários de revisão; anotações internas | Fluxo editorial e auditoria | Legítimo interesse / execução das atividades do grupo [PREMISSA] | essays (campos internos, nunca públicos), udit-logs | Como o ensaio; auditoria por 2 anos |
 | T8 | Importação de planilha | Pessoas da planilha validada pelo coordenador | Colunas do modelo (§6) | Carga inicial sem digitação manual | Como T1 (nenhuma publicação sem consentimento) | `scripts/import/people.ts` | Arquivo da planilha fora do repositório (`*.csv` ignorado pelo git); apagar após a carga |
 
 ## 4. Regras técnicas que garantem o registro (verificadas por testes)
@@ -44,6 +46,7 @@
 7. Exclusão física de pessoa com vínculos/autorizações é bloqueada (arquivamento); auditoria imutável de criação, edição e exclusão.
 8. Fixtures, seeds e testes usam **somente dados fictícios** (`example.com`, ORCIDs fora das faixas emitidas). O seed fictício é bloqueado em homologação e produção.
 9. Consentimentos, comprovantes e auditoria **não** são copiados para fora da produção (ADR-0005).
+10. **Ensaios (S05):** autores sem public_profile aparecem só pelo nome publicado (sem link, sem id do cadastro na API pública); comentários de revisão, checklist, anotações internas e responsáveis pelo fluxo nunca saem em respostas públicas; o editor exibe alerta contra dados de pacientes, participantes de pesquisa e terceiros, e o checklist de aprovação exige a confirmação de ausência desses dados.
 
 ## 5. Transferência internacional
 
