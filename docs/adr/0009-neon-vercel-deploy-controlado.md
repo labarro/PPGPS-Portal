@@ -8,6 +8,8 @@
 | Autor | Agente |
 | Aprovação | Responsável técnico (supervisor), 22/10/2026 — aprovação expressa dos ADRs 0001–0009 |
 
+> **Nota de 30/10/2026 (ADR-0014):** domínio de produção `bioeticaps.app` associado ao projeto `ppgps-portal`. Domínios personalizados ficam fora da *Vercel Authentication* (`all_except_custom_domains`); por isso o domínio nunca é alias de preview/homologação.
+
 ## Contexto
 
 O ADR-0005 define quatro ambientes isolados, branches Neon `main`/`staging`/`seed` + efêmeros por PR, migrations em job dedicado e deploy automático de produção da Vercel desativado. Na S01 o supervisor criou o projeto Neon `ppgps-portal` (`fragrant-wildflower-16512089`, org `org-icy-morning-44249588`, região `aws-sa-east-1`, PostgreSQL 18, plano Free) com a branch padrão **`production`**, e indicou as instruções do Neon `neon init -y ... --services postgres` e `neon deploy`.

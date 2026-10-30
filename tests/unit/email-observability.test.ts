@@ -8,7 +8,7 @@ import {
   resetPasswordUrl,
 } from '@/lib/email/templates'
 import { maskEmail, resolveEmailTransport } from '@/lib/email/transport'
-import { resolveServerUrl } from '@/lib/env/server-url'
+import { isProductionHost, PRODUCTION_SITE_URL, resolveServerUrl } from '@/lib/env/server-url'
 import { scrubEvent, scrubText } from '@/lib/observability/scrub'
 import { sentryOptions } from '@/lib/observability/sentry-options'
 
@@ -97,6 +97,45 @@ describe('URL pública do ambiente (nunca do cabeçalho Host)', () => {
       'https://app-abc.vercel.app',
     )
     expect(resolveServerUrl({ PORT: '3100' })).toBe('http://localhost:3100')
+  })
+
+  it('produção usa o domínio oficial e nunca VERCEL_URL (ADR-0014)', () => {
+    expect(resolveServerUrl({ APP_ENV: 'production', VERCEL_URL: 'app-abc.vercel.app' })).toBe(
+      PRODUCTION_SITE_URL,
+    )
+    expect(PRODUCTION_SITE_URL).toBe('https://bioeticaps.app')
+    expect(resolveServerUrl({ APP_ENV: 'production', SERVER_URL: 'https://bioeticaps.app/' })).toBe(
+      'https://bioeticaps.app',
+    )
+  })
+
+  it.each(['staging', 'preview', 'local', undefined])(
+    'fora da produção (%s) o domínio de produção é ignorado como URL base',
+    (appEnv) => {
+      expect(
+        resolveServerUrl({
+          APP_ENV: appEnv,
+          SERVER_URL: 'https://bioeticaps.app',
+          VERCEL_URL: 'app-abc.vercel.app',
+        }),
+      ).toBe('https://app-abc.vercel.app')
+      expect(resolveServerUrl({ APP_ENV: appEnv, VERCEL_URL: 'www.bioeticaps.app' })).toBe(
+        'http://localhost:3000',
+      )
+      expect(
+        resolveServerUrl({
+          APP_ENV: appEnv,
+          SERVER_URL: 'https://ppgps-portal-staging.vercel.app',
+        }),
+      ).toBe('https://ppgps-portal-staging.vercel.app')
+    },
+  )
+
+  it('reconhece o host de produção e subdomínios', () => {
+    expect(isProductionHost('https://www.bioeticaps.app/x?y')).toBe(true)
+    expect(isProductionHost('BIOETICAPS.APP:443')).toBe(true)
+    expect(isProductionHost('bioeticaps.app.example.com')).toBe(false)
+    expect(isProductionHost('notbioeticaps.app')).toBe(false)
   })
 })
 

@@ -11,6 +11,8 @@
 
 > **Nota de 22/10/2026 (ADR-0010, Q3):** o coordenador definiu hospedagem própria, independente do site institucional, e domínio próprio a adquirir no futuro. A alternativa "infraestrutura da UniCesumar" deixa de ser plano B. A decisão de produção continua na S06.
 
+> **Nota de 30/10/2026 (ADR-0014):** o domínio definitivo de produção é `https://bioeticaps.app`, já associado ao projeto na Vercel e sem deploy servido; ativação pública na S06.
+
 ## Contexto
 
 O projeto não tem orçamento aprovado para infraestrutura (RNF-14: operar em planos gratuitos até o lançamento). Desenvolvimento, previews e homologação precisam de banco Postgres com *branching* (previews isolados), armazenamento S3 compatível e CI. A hospedagem de produção depende de validação com os responsáveis do grupo (Q3 do planejamento v1.2: domínio e aceitação de hospedagem externa com dados possivelmente fora do Brasil). Revisado em 20/10/2026 para o escopo do grupo (ADR-0006), sem mudança na decisão.

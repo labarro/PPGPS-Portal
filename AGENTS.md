@@ -18,10 +18,10 @@
 
 | Documento | Papel |
 |---|---|
-| `docs/PLANEJAMENTO_PORTAL_PPGPS.md` (v1.3; nome de arquivo mantido por compatibilidade) | Plano diretor: requisitos, arquitetura, modelagem, permissões, sprints |
+| `docs/PLANEJAMENTO_PORTAL_PPGPS.md` (v1.4; nome de arquivo mantido por compatibilidade) | Plano diretor: requisitos, arquitetura, modelagem, permissões, sprints |
 | `docs/PROGRESS.md` | Estado atual, última sprint, decisões, pendências, próximos passos |
 | `docs/sprints/SXX.md` | Escopo fechado da sprint ativa (incluído, **fora de escopo**, critérios, roteiro de homologação) |
-| `docs/adr/` | Decisões arquiteturais: ADR-0001 a 0010 **aceitos** (22/10/2026); ADR-0011 (auth, auditoria, R2, e-mail, observabilidade) e ADR-0012 (backup) propostos na S02 |
+| `docs/adr/` | Decisões arquiteturais: ADR-0001 a 0013 **aceitos** (0013 em 30/10/2026); ADR-0014 (domínio oficial `bioeticaps.app`) proposto |
 | `docs/operacao/` | Guias operacionais: armazenamento (R2/MinIO) e backup/restauração |
 | `docs/convencoes-git.md` | Branches, commits, PRs, releases e proteção da `main` |
 | `docs/content/inventario.md` | Inventário de conteúdo institucional com fonte e situação de validação |
@@ -34,7 +34,7 @@
 3. Este `AGENTS.md`.
 4. Ficha da sprint ativa (`docs/sprints/SXX.md`) — define **o que** entra na sprint.
 5. ADRs com status **Aceito** — prevalecem sobre detalhes técnicos do planejamento quando forem posteriores a ele.
-6. Planejamento v1.3 — requisitos e visão de produto.
+6. Planejamento v1.4 — requisitos e visão de produto.
 
 Se houver conflito real entre fontes do mesmo nível ou dúvida de regra de negócio: **pare, registre a dúvida em `docs/PROGRESS.md` e pergunte ao supervisor.** Se autorizado a seguir, registre a premissa adotada.
 
@@ -171,7 +171,7 @@ pnpm lint && pnpm typecheck && pnpm test && pnpm test:e2e && pnpm build
 | Local | Postgres em Docker | MinIO | Fixtures **fictícias** | Desenvolvedor/agente |
 | Preview (por PR) | Branch Neon efêmero `preview/pr-N` criado de `seed` | `ppgps-preview/pr-N/` (expira em 7 dias) | Fictícios + institucionais públicos verificados | Autenticação básica + `noindex` |
 | Homologação (`staging`) | Branch Neon `staging` | `ppgps-staging` | Conteúdo real em revisão, sem consentimentos/comprovantes/auditoria da produção | Autenticação básica + `noindex` |
-| Produção | Branch Neon `main` | `ppgps-prod` (objetos imutáveis) | Dados reais | Público (admin autenticado) |
+| Produção | Branch Neon `main` | `ppgps-prod` (objetos imutáveis) | Dados reais | Público (admin autenticado) em `https://bioeticaps.app` (ativação na S06) |
 
 **Proibições absolutas para agentes:**
 
@@ -179,6 +179,7 @@ pnpm lint && pnpm typecheck && pnpm test && pnpm test:e2e && pnpm build
 - Nunca copiar dados de produção para outro ambiente (cópias sanitizadas só por script versionado e com aprovação do supervisor).
 - Nunca enviar e-mail real fora da produção (e-mails capturados em local/preview/homologação).
 - Nunca remover `noindex`/autenticação básica de ambientes não produtivos.
+- **Domínio oficial `bioeticaps.app` (ADR-0014):** nunca usá-lo como URL base, alias ou destino de redirecionamento de local, preview ou homologação; nunca associá-lo a deploys não produtivos. Homologação permanece em `https://ppgps-portal-staging.vercel.app`. A ativação pública é exclusiva da S06.
 - Deploy de produção só por release (`vX.Y.Z`) aprovada manualmente pelo supervisor.
 
 ---

@@ -4,7 +4,8 @@ name: Deploy de produção (release aprovada)
 # PRODUCTION_DEPLOY_ENABLED=true e, quando o plano permitir, aprovação manual no GitHub
 # Environment `production` (revisores obrigatórios). Agentes nunca disparam este fluxo.
 # Ordem (ADR-0005): ponto de restauração -> migrate (trava de concorrência) -> deploy -> fumaça.
-# Publicação pública só a partir da S06 (domínio, remoção de noindex, decisão de hospedagem).
+# Publicação pública só a partir da S06 (ativação de https://bioeticaps.app — ADR-0014 —,
+# remoção de noindex na produção, decisão de hospedagem).
 on:
   push:
     tags: ['v*.*.*']
@@ -121,6 +122,8 @@ jobs:
           APP_ENV: production
           DATABASE_URL: ${{ secrets.DATABASE_URL_POOLED }}
           PAYLOAD_SECRET: ${{ secrets.PAYLOAD_SECRET }}
+          # Domínio oficial (ADR-0014). Ativação pública somente na S06.
+          SERVER_URL: ${{ vars.PRODUCTION_DOMAIN != '' && format('https://{0}', vars.PRODUCTION_DOMAIN) || 'https://bioeticaps.app' }}
         run: bash scripts/ci/vercel-deploy.sh production
       - name: Fumaça pós-deploy
         run: bash scripts/ci/smoke-deployment.sh "${{ steps.deploy.outputs.deployment_url }}" production

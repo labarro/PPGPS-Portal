@@ -12,11 +12,12 @@
 | Situação da S00 | **Concluída** (22/10/2026) |
 | Situação da S01 | **Concluída** (22/10/2026) |
 | Situação da S02 | **Concluída** (22/10/2026). Exceções formais: validação externa do **Sentry** e do **SMTP de homologação** adiadas para a S06 por decisão do responsável técnico (não são testes aprovados) |
-| Situação da S03 | **Executada — aguardando revisão humana** (22/10/2026; PR #14). Todos os critérios de aceite com evidência automatizada; falta a revisão de conteúdo/navegação pelo supervisor (DoD) e os textos do coordenador (Q7, bloqueiam só a publicação) |
-| Próxima sprint | **S04 — Integrantes, vínculos e consentimentos** — **não iniciada** (aguarda a revisão da S03 e o protocolo do `AGENTS.md` §11) |
-| Última atualização | 22/10/2026 |
-| Planejamento vigente | `docs/PLANEJAMENTO_PORTAL_PPGPS.md` **v1.3** (22/10/2026) |
-| ADRs | 0001–0012 **Aceitos**; **0013 Proposto** (S03: renderização, cache por tag e 301) |
+| Situação da S03 | **Concluída** (30/10/2026; PR #14). Revisão visual/funcional, navegação desktop/mobile, conteúdo provisório e os 9 critérios aprovados pelo responsável técnico; textos definitivos do coordenador (Q7) seguem pendentes para a S06 |
+| Sprint ativa | **S04 — Integrantes, vínculos e consentimentos** — **em execução** (autorização expressa de execução autônoma, 30/10/2026) |
+| Domínio oficial | **`https://bioeticaps.app`** (ADR-0014) — associado ao projeto `ppgps-portal` na Vercel, DNS e HTTPS ativos, **nenhum deploy servido** (404 `DEPLOYMENT_NOT_FOUND`); ativação pública na S06 |
+| Última atualização | 30/10/2026 |
+| Planejamento vigente | `docs/PLANEJAMENTO_PORTAL_PPGPS.md` **v1.4** (30/10/2026) |
+| ADRs | 0001–0013 **Aceitos** (0013 em 30/10/2026); **0014 Proposto** (domínio oficial; a escolha do domínio é decisão do responsável técnico) |
 
 ## Situação das sprints
 
@@ -25,8 +26,8 @@
 | S00 | Descoberta, regras do projeto e inventário | M1 | **Concluída** (22/10/2026) |
 | S01 | Setup técnico, ambientes e pipeline | M1 | **Concluída** (22/10/2026) |
 | S02 | Autenticação, papéis, auditoria, storage, backup e base visual | M1 | **Concluída** (22/10/2026; Sentry e SMTP de homologação adiados para a S06) |
-| S03 | Portal do grupo: identidade, linhas temáticas e homepage v1 | M1 | **Executada — aguardando revisão humana** (22/10/2026; PR #14) |
-| S04 | Integrantes, vínculos e consentimentos | M1 | Não iniciada |
+| S03 | Portal do grupo: identidade, linhas temáticas e homepage v1 | M1 | **Concluída** (30/10/2026; PR #14) |
+| S04 | Integrantes, vínculos e consentimentos | M1 | **Em execução** (30/10/2026) |
 | S05 | Blog acadêmico e fluxo editorial | M1 | Não iniciada |
 | S06 | Reauditoria, conteúdo inicial e lançamento do M1 | M1 | Não iniciada |
 | S07 | Orientações, conclusões acadêmicas e egressos | M2 | Não iniciada |
@@ -35,6 +36,55 @@
 | S10 | Eventos, projetos e impacto social | M2 | Não iniciada |
 | S11 | Consolidação, carga de dados acadêmicos e lançamento do M2 | M2 | Não iniciada |
 
+## Sessão de 30/10/2026 — encerramento da S03 e domínio oficial
+
+**Modo:** autônomo, autorizado expressamente pelo responsável técnico (encerramento da S03, domínio definitivo e execução integral da S04). Nenhum deploy de produção; `PRODUCTION_DEPLOY_ENABLED` não definida; branch `production` do Neon não acessada.
+
+### Aprovações do responsável técnico (declaração expressa em 30/10/2026)
+
+| Item | Registro |
+|---|---|
+| Revisão visual e funcional da S03 | Realizada e aprovada |
+| Navegação desktop e dispositivos móveis | Aprovada |
+| Conteúdo provisório | Revisado e adequado à etapa atual (textos definitivos do coordenador continuam pendentes para a S06) |
+| 9 critérios de aceite da S03 | Aprovados, com as evidências automatizadas da sessão de 22/10/2026 |
+| ADR-0013 | **Aprovado** → status `Aceito` |
+| S03 | **Concluída** (30/10/2026) |
+
+### `main` e workflows (verificado em 30/10/2026, sem reexecutar testes)
+
+`main` = `1728a50` (sem alterações desde 22/10). Último CI `39868928617`, Verificação de migrations `39868928576` e Deploy de homologação `39868928439`: **sucesso**. Backups diários agendados de 23/10 a 30/10: **sucesso** (8 execuções). PRs abertos: apenas Dependabot (#3–#6, #16–#21), não mesclados — atualizações maiores fora do escopo (decisão do supervisor).
+
+### Domínio `bioeticaps.app` — verificação (somente leitura)
+
+| Item | Resultado |
+|---|---|
+| Associação na Vercel | Escopo `labarros-projects`, projeto **`ppgps-portal`**; domínio `verified: true`, sem redirecionamento nem branch Git (alvo *production*) |
+| DNS | Nameservers `ns1/ns2.vercel-dns.com` (pretendidos = atuais); apex `A` → Vercel; `www` resolve para a Vercel, mas **não** está adicionado ao projeto |
+| HTTPS | Certificados Vercel de 29/10/2026 para `bioeticaps.app` e `*.bioeticaps.app` (90 dias, renovação automática). A rede local do agente tem inspeção TLS (Fortinet), por isso a validação foi feita de fora (check-host.net): HTTPS funcional, `http://` → 308 para `https://` |
+| Deployment servido | **Nenhum** — `https://bioeticaps.app/` e `https://www.bioeticaps.app/` → **404 `DEPLOYMENT_NOT_FOUND`** |
+| Alvo *production* do projeto | Um único deploy de produção, de 20/10/2026 (setup da S01, CLI manual), **com falha de build** — sem artefato servível |
+| Exposição antecipada | **Nenhuma** (nenhum conteúdo, painel, API ou dado acessível pelo domínio) |
+| Observação de segurança | `ssoProtection = all_except_custom_domains`: domínios personalizados não têm *Vercel Authentication*; o domínio nunca pode ser alias de preview/homologação (regra adicionada ao `AGENTS.md` §7) |
+
+### Preparação do domínio (código)
+
+- `resolveServerUrl`: em `APP_ENV=production` usa `SERVER_URL` ou `https://bioeticaps.app` (nunca `VERCEL_URL`); fora da produção, `bioeticaps.app` em `SERVER_URL`/`VERCEL_URL` é **ignorado**. Canônica, Open Graph, `metadataBase`, sitemap, robots e JSON-LD herdam a regra.
+- Proxy: somente em produção, `www.bioeticaps.app` → 308 para o apex (caminho e query preservados). Fora da produção nada muda (autenticação básica + `noindex`).
+- `deploy-production.yml` passa `SERVER_URL=https://bioeticaps.app` (sobrescrevível por `PRODUCTION_DOMAIN`); a trava `PRODUCTION_DEPLOY_ENABLED` permanece.
+- Homologação continua em `https://ppgps-portal-staging.vercel.app` (`STAGING_DOMAIN`); previews inalterados.
+
+### Documentação atualizada
+
+Planejamento **v1.4** (histórico e seções 24.1, 24.2, 25.1, 19.5/S06, 32), ADR-0013 (Aceito), **ADR-0014** (novo, Proposto), notas em ADR-0003, ADR-0009 e ADR-0010, `AGENTS.md` (§1, §1.1, §7), `CLAUDE.md`, `README.md`, `.env.example`, `docs/sprints/S04.md`, `docs/sprints/S06.md`, `docs/content/questoes-institucionais.md` (Q3).
+
+### Pendências do domínio (S06)
+
+1. Ativação pública somente com autorização do responsável técnico e confirmação do coordenador.
+2. Adicionar `www.bioeticaps.app` ao projeto (redirecionamento para o apex) — o proxy já redireciona em produção.
+3. Remover o deploy de produção com falha de 20/10/2026 (opcional; não é servido).
+4. Search Console e conferência do certificado fora da rede local.
+5. Aceite do ADR-0014.
 ## Sessão de 22/10/2026 — execução da S03
 
 **Modo:** autônomo, autorizado expressamente pelo supervisor (execução integral da S03 e política de PRs, `AGENTS.md` §11.1). Branch `s03-portal-grupo`, PR #14. S04 não iniciada. Nenhum deploy de produção; `PRODUCTION_DEPLOY_ENABLED` não definida; branch `production` do Neon não acessada.
@@ -83,7 +133,7 @@
 | `sitemap.xml` só com publicado | Atendido | Integração + E2E |
 | Rascunhos fora das páginas e da API pública | Atendido | Teste de vazamento (integração) + E2E |
 | Lighthouse mobile ≥ 90 (acessibilidade e SEO) em `/` e `/o-grupo` | Atendido | Local 1,00/1,00; job Lighthouse CI verde |
-| DoD: supervisor revisa conteúdo e navegação (desktop e mobile) | **Pendente — supervisor** | Roteiro da ficha, passos 1–9 |
+| DoD: supervisor revisa conteúdo e navegação (desktop e mobile) | **Atendido** (30/10/2026) | Aprovação expressa do responsável técnico |
 
 ### Decisões e premissas
 
@@ -124,7 +174,7 @@ Depois de publicados no painel, desmarcar "Contém textos provisórios" (perfil)
 
 ### Pendências técnicas / backlog
 
-- Aceite do ADR-0013 pelo supervisor.
+- ~~Aceite do ADR-0013 pelo supervisor~~ — **feito** (30/10/2026).
 - Roteiro de homologação da ficha (passos 1–9) pelo supervisor, em desktop e celular; para editar em homologação é preciso criar a conta `admin`/`editor` real (o banco `staging` não tem usuários).
 - Revisar o orçamento de JS e o desempenho mobile no runner (0,75–0,9) na S06, junto com a hospedagem (cache de CDN para HTML).
 - `unstable_cache` é API legada no Next 16: migrar para `'use cache'` em sprint dedicada.
@@ -424,7 +474,7 @@ O CI da `main` após o PR #8 (run `39822648395`) **falhou** no `pnpm audit`: vul
 | Fonte e escopo dos dados de orientações | Q10 | S07 |
 | Nome curto para títulos de página [PREMISSA "Bioética e Promoção da Saúde", em uso desde a S03] | Q2 | S06 |
 | Exigência de comunicação à UniCesumar (não abordada; risco residual R17) | Q1 | Decisão do coordenador antes da S06 |
-| Domínio próprio | Q3 | S06 (opcional; pode usar endereço do provedor) |
+| ~~Domínio próprio~~ — definido: `bioeticaps.app` (ADR-0014); ativação | Q3 | S06 |
 | Identificação nominal do coordenador nos registros | — | S06 |
 
 ### Ações manuais do supervisor
