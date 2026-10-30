@@ -14,7 +14,7 @@
 | Situação da S02 | **Concluída** (22/10/2026). Exceções formais: validação externa do **Sentry** e do **SMTP de homologação** adiadas para a S06 por decisão do responsável técnico (não são testes aprovados) |
 | Situação da S03 | **Concluída** (30/10/2026; PR #14). Revisão visual/funcional, navegação desktop/mobile, conteúdo provisório e os 9 critérios aprovados pelo responsável técnico; textos definitivos do coordenador (Q7) seguem pendentes para a S06 |
 | Situação da S04 | **Concluída** (30/10/2026; PRs #23 e #24). Roteiro de homologação executado e os 8 critérios aprovados pelo responsável técnico; autorizações individuais reais e dados do grupo seguem pendentes (bloqueiam só a publicação dos perfis, S06) |
-| Situação da S05 | **Executada — aguardando revisão humana** (30/10/2026; PR da branch `s05-blog-editorial`) |
+| Situação da S05 | **Executada — aguardando revisão humana** (30/10/2026; PR #34 mesclado em `8f08cf6`; homologação atualizada) |
 | Próxima sprint | **S06 — Reauditoria, conteúdo inicial e lançamento do M1** — **não iniciada** (somente com autorização do responsável técnico) |
 | Domínio oficial | **`https://bioeticaps.app`** (ADR-0014) — associado ao projeto `ppgps-portal` na Vercel, DNS e HTTPS ativos, **nenhum deploy servido** (404 `DEPLOYMENT_NOT_FOUND`); ativação pública na S06 |
 | Última atualização | 30/10/2026 |
@@ -70,6 +70,19 @@
 | Lighthouse mobile (local, `next start`) | `/blog/ensaio-ficticio-autonomia-e-cuidado`: desempenho **0,93**, acessibilidade **1,00**, boas práticas **1,00**, SEO **1,00**; `/blog` 0,94/1,00/1,00/1,00; demais rotas ≥ 0,92 e 1,00 nas outras categorias; JS ~202 KB |
 | `pnpm audit --audit-level high` | Passou (1 baixa e 1 moderada já conhecidas) |
 
+### Critérios de aceite da S05
+
+| Critério | Situação | Evidência |
+|---|---|---|
+| Visitante/sem papel não alteram; transições só por editor/admin; aprovador e publicador na auditoria | Atendido | Integração (acesso, conta inativa, auditoria `approve`/`publish`) + E2E (API do visitante 401/403) |
+| Transições inválidas rejeitadas (rascunho → publicado) | Atendido | Unitário (matriz completa) + integração (endpoint, PATCH publicado, PATCH de campo) + E2E |
+| Agendado publicado após a data, na home e no RSS | Atendido | Integração com relógio controlado + job; E2E com agendamento real (~1 min) na home, blog, categoria, tag, RSS e perfil |
+| Arquivado 200 com aviso, fora de listagens, RSS e sitemap | Atendido | Integração + E2E |
+| Selo de natureza e aviso de ausência de revisão por pares em todo ensaio | Atendido | E2E (página, cartões, arquivado) |
+| Script/estilo no conteúdo não executa (XSS) | Atendido | Unitário (higienização e render) + integração + E2E no navegador |
+| Lighthouse mobile ≥ 90 nas 4 categorias na página do ensaio | **Parcial** | Local 0,93/1,00/1,00/1,00; runner do CI 0,76/1,00/1,00/1,00 (desempenho como aviso) |
+| DoD: roteiro de homologação pelo supervisor | Pendente | — |
+
 ### Decisões e premissas (ADR-0015, Proposto)
 
 1. `schedulePublish` nativo do Payload não é usado (publicaria rascunhos sem aprovação).
@@ -78,10 +91,23 @@
 4. Aprovação pela mesma pessoa que enviou é permitida (dois usuários), com aviso no painel [SUGESTÃO do planejamento].
 5. Licença padrão sugerida CC BY-NC-ND 4.0 (configurável; confirmação na política editorial — Q8).
 
+### Merge e homologação (PR #34)
+
+| Verificação | Resultado |
+|---|---|
+| CI do PR #34 | **Todos verdes** na 1ª execução: lint/tipos, unitários, integração, E2E + axe, build sem banco, Lighthouse, gitleaks, audit, banco limpo/drift/down-up, preview (banco `preview/pr-34` com migrations e seeds fictícios; deploy e fumaça) |
+| Lighthouse no runner do CI (mobile) | Página do ensaio: desempenho **0,76**, acessibilidade **1,00**, boas práticas **1,00**, SEO **1,00**; `/blog` 0,81/1,00/1,00/1,00; demais rotas 0,59–0,88 em desempenho (LCP do título em fonte serifada ~3,8 s e TBT 270–520 ms no runner; mesma variação registrada na S03/S04). Desempenho no runner é **aviso**; a medição local (`next start`) deu 0,93 |
+| Merge | Squash (`8f08cf6`) |
+| Workflows da `main` | CI `41105139115`, Verificação de migrations `41105139198`, Deploy de homologação `41105139215`: **sucesso** |
+| Homologação | Migration aplicada em `staging` e `seed`; `seed:content` criou as categorias Bioética e Promoção da Saúde e atualizou menu (Blog) e página inicial padrão; **nenhum ensaio carregado** (`seed:essays` bloqueado em staging); fumaça OK (blog, RSS, Atom 200; `/api/essays/publish-due` 401; `/api/payload-jobs` 403; sem campos internos em `/api/essays`) |
+| Verificação externa (30/10/2026) | Homologação exige autenticação (proteção da Vercel + básica); `https://bioeticaps.app` continua **404 `DEPLOYMENT_NOT_FOUND`** |
+| Produção | Nenhum deploy; `deploy-production.yml` sem execuções; `PRODUCTION_DEPLOY_ENABLED` não definida; branch `production` do Neon não acessada |
+
 ### Pendências (coordenador / etapas futuras)
 
 | Item | Etapa |
 |---|---|
+| Critério de Lighthouse ≥ 90 na página do ensaio: atendido na medição local; no runner do CI o desempenho foi 0,76 (aviso) — confirmação pelo supervisor | Revisão da S05 / S06 (desempenho e hospedagem) |
 | Política editorial (temas, tom, conflitos de interesse, licença padrão, termo de cessão) — Q8 | Antes do M1 (S06) |
 | Ensaios iniciais reais (≥ 3) e autores, com autorização | S06 |
 | Cron externo gratuito para concluir agendamentos em homologação/produção (`CRON_SECRET`) | S06 (com autorização) |
