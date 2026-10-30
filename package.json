@@ -29,6 +29,7 @@
     "seed": "cross-env NODE_OPTIONS=--no-deprecation payload run scripts/seed/index.ts",
     "seed:content": "cross-env NODE_OPTIONS=--no-deprecation payload run scripts/seed/content.ts",
     "seed:people": "cross-env NODE_OPTIONS=--no-deprecation payload run scripts/seed/people.ts",
+    "seed:essays": "cross-env NODE_OPTIONS=--no-deprecation payload run scripts/seed/essays.ts",
     "import:people": "cross-env NODE_OPTIONS=--no-deprecation payload run scripts/import/people.ts --",
     "lint": "eslint .",
     "format": "prettier --write .",

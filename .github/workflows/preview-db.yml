@@ -105,6 +105,8 @@ jobs:
           pnpm seed:content
           # Integrantes FICTÍCIOS (S04) para o roteiro de homologação; bloqueado em staging/produção.
           pnpm seed:people
+          # Ensaios FICTÍCIOS (S05): publicados, arquivado, agendado e rascunho; bloqueado em staging/produção.
+          pnpm seed:essays
 
       - name: Verificação real do bucket R2 de preview (objeto de 64 bytes, removido)
         if: steps.config.outputs.enabled == 'true' && steps.config.outputs.vercel == 'true'
