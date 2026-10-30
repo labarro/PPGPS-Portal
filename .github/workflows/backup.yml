@@ -35,7 +35,7 @@ jobs:
         run: |
           [[ -n "$DATABASE_URL" ]] || { echo "::error::DATABASE_URL ausente no ambiente staging"; exit 1; }
           [[ "$BACKUP_AGE_RECIPIENT" == age1* ]] || { echo "::error::BACKUP_AGE_RECIPIENT (variável) ausente"; exit 1; }
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
       - name: Backup criptografado (pg_dump 18 + age no contêiner postgres:18)
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
@@ -48,7 +48,7 @@ jobs:
           ls -l out
       - id: names
         run: echo "base=$(basename out/*.dump.age .dump.age)" >> "$GITHUB_OUTPUT"
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: backup-staging
           path: out/
@@ -74,11 +74,11 @@ jobs:
           else
             echo "enabled=true" >> "$GITHUB_OUTPUT"
           fi
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
         if: steps.config.outputs.enabled == 'true'
       - uses: ./.github/actions/setup
         if: steps.config.outputs.enabled == 'true'
-      - uses: actions/download-artifact@v5
+      - uses: actions/download-artifact@v8
         if: steps.config.outputs.enabled == 'true'
         with:
           name: backup-staging

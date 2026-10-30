@@ -40,7 +40,7 @@ jobs:
     env:
       DATABASE_URL: postgres://ci:ci@localhost:5432/ppgps_migrations
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
       - uses: ./.github/actions/setup
       - name: Segredo efêmero do Payload
         run: echo "PAYLOAD_SECRET=$(openssl rand -hex 32)" >> "$GITHUB_ENV"

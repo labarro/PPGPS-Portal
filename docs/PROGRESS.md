@@ -37,6 +37,26 @@
 | S10 | Eventos, projetos e impacto social | M2 | Não iniciada |
 | S11 | Consolidação, carga de dados acadêmicos e lançamento do M2 | M2 | Não iniciada |
 
+## Sessão de 30/10/2026 — auditoria dos PRs do Dependabot (manutenção técnica)
+
+**Modo:** manutenção autorizada pelo responsável técnico; sem funcionalidades, sem migrations, sem deploy de produção; S05 não iniciada. Estado verificado diretamente no GitHub: 10 PRs abertos (#3–#6, #16–#18, #20, #21, #25); #19 já fechado pelo Dependabot (substituído pelo #25).
+
+**Método:** os PRs foram abertos sobre uma `main` anterior aos PRs #22/#23 e conflitariam entre si no `pnpm-lock.yaml`. As atualizações compatíveis foram aplicadas juntas no branch `chore-deps-2026-10` (PR de manutenção), testadas localmente e no CI; os PRs do Dependabot foram fechados como substituídos, com link.
+
+| PR | Dependência | De → para | Tipo | Compatibilidade / changelog | Testes | Decisão |
+|---|---|---|---|---|---|---|
+| #17 | `payload` + 8 `@payloadcms/*` | 3.91.0 → 3.92.0 | minor | Peers: Next `>=16.3.3 <17`, React `^19` — compatíveis. Sem *drift* de schema (nenhuma migration nova), tipos e import map inalterados. Traz `undici` 7.30.1 (corrige as 4 GHSA altas antes tratadas por override) | Local + CI do PR de manutenção | Substituído (incluído) |
+| #18 | `next`, `eslint-config-next` / `react`, `react-dom` / `@types/react*` | 16.4.2 → 16.4.3 / 19.2.6 → 19.3.1 / 19.2 → 19.3 | patch / minor / minor | Dentro dos peers do Payload 3.92 (`^19.2.1`) e do Next (`^19`) | Local + CI | Substituído (incluído) |
+| #25 | grupo dev: `@playwright/test`, `eslint-config-next`, `postcss`, `prettier`, `vite-tsconfig-paths` | 1.58.2→1.64.1, 16.4.2→16.4.3, 8.5.31→8.5.32, 3.6.2→3.9.10, 6.0.5→6.1.1 | minor/patch | CI do Dependabot falhou só em formatação: Prettier 3.9 reformata 3 arquivos (somente indentação; `git diff -w` sem mudança de lógica) — reformatação incluída | Local + CI | Substituído (incluído) |
+| #20 | `dotenv` | 16.4.7 → 18.0.9 | **major** | Uso restrito a `import 'dotenv/config'` (testes e script local do MinIO). v17/v18 mudam só mensagens de log (stderr, sem dicas; `dotenv/config` silencioso a partir da 18.0.4); API inalterada; `engines` Node ≥ 12. A falha de `pnpm audit` no PR era de 26/10 (vulnerabilidades já tratadas no PR #22), não do dotenv | Local + CI (unit, integração e E2E usam `dotenv/config`) | Substituído (incluído) |
+| #4 | `actions/checkout` | v5 → v7 | **major** | v6: runtime Node 24; v7: módulo ESM, sem mudança de entradas | CI completo (todos os jobs usam) | Substituído (incluído) |
+| #5 | `actions/upload-artifact` | v4 → v7 | **major** | v5–v6: Node 24 (runner ≥ 2.327.1 — hospedado pelo GitHub); v7: ESM | CI (relatórios E2E/Lighthouse) | Substituído (incluído) |
+| #16 | `actions/download-artifact` | v5 → v8 | **major** | Node 24; v8: ESM e erro em divergência de hash (comportamento desejado no backup) | `backup.yml` validado na próxima execução agendada/manual | Substituído (incluído) |
+| #6 | `actions/github-script` | v8 → v9 | **major** | Quebra só `require('@actions/github')`; o script do preview usa apenas `github`/`context` injetados | Comentário do preview no próprio PR de manutenção | Substituído (incluído) |
+| #3 | `gitleaks/gitleaks-action` | v2 → v3 | **major** | Somente runtime Node 20 → 24; entradas/saídas inalteradas. O GitHub removeu o Node 20 dos runners (aviso do próprio projeto) | Job Gitleaks no CI | Substituído (incluído) |
+| #21 | `@types/node` | 24.19.2 → 26.6.5 | **major** | Incompatível com o runtime fixado (Node 24 LTS em `.nvmrc`/`engines`): exporia tipos de APIs inexistentes no Node 24 | — | **Fechado** com justificativa; regra no `dependabot.yml` ignora versões maiores de `@types/node` até a troca do runtime |
+
+**Vulnerabilidades após a manutenção** (`pnpm audit`): nenhuma alta/crítica. Remanescentes conhecidas: `esbuild` (moderada, GHSA-67mh-4wv8-2f99, só no `drizzle-kit` de desenvolvimento do `@payloadcms/db-postgres`; servidor de desenvolvimento do esbuild não é usado), `deepmerge` (baixa, sem correção publicada) e `graphql-scalars` (alta, GHSA-x8rm-f576-gq67, **ignorada** desde o PR #22: escalar `PhoneNumber` do GraphQL, que está desabilitado e sem rota — risco residual nulo enquanto o GraphQL permanecer desligado). Os overrides de `undici` e `happy-dom` foram mantidos (inócuos; revisar quando o Payload/Vitest os superarem).
 ## Sessão de 30/10/2026 — encerramento formal da S04
 
 **Modo:** documental (sem funcionalidades, migrations ou deploy), autorizado pelo responsável técnico. S05 **não iniciada**.

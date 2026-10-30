@@ -50,7 +50,7 @@ jobs:
             echo "vercel=false" >> "$GITHUB_OUTPUT"
           fi
 
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
         if: steps.config.outputs.enabled == 'true'
       - uses: ./.github/actions/setup
         if: steps.config.outputs.enabled == 'true'
@@ -160,7 +160,7 @@ jobs:
 
       - name: Comentar no PR
         if: steps.config.outputs.enabled == 'true'
-        uses: actions/github-script@v8
+        uses: actions/github-script@v9
         env:
           DEPLOY_URL: ${{ steps.deploy.outputs.deployment_url }}
           BRANCH_ID: ${{ steps.neon.outputs.branch_id }}
@@ -200,7 +200,7 @@ jobs:
           neon branches delete "$NEON_BRANCH" --project-id "$NEON_PROJECT_ID"
           echo "Branch $NEON_BRANCH removido."
 
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
       - uses: ./.github/actions/setup
       - name: Remover arquivos do PR no bucket de preview (prefixo pr-N)
         env:
