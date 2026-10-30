@@ -13,12 +13,12 @@
 | Situação da S01 | **Concluída** (22/10/2026) |
 | Situação da S02 | **Concluída** (22/10/2026). Exceções formais: validação externa do **Sentry** e do **SMTP de homologação** adiadas para a S06 por decisão do responsável técnico (não são testes aprovados) |
 | Situação da S03 | **Concluída** (30/10/2026; PR #14). Revisão visual/funcional, navegação desktop/mobile, conteúdo provisório e os 9 critérios aprovados pelo responsável técnico; textos definitivos do coordenador (Q7) seguem pendentes para a S06 |
-| Situação da S04 | **Executada — aguardando revisão humana** (30/10/2026; PR #23). Critérios de aceite com evidência automatizada; faltam o roteiro de homologação pelo supervisor (DoD) e as autorizações individuais reais (bloqueiam só a publicação dos perfis) |
-| Próxima sprint | **S05 — Blog acadêmico e fluxo editorial** — **não iniciada** (aguarda revisão da S04) |
+| Situação da S04 | **Concluída** (30/10/2026; PRs #23 e #24). Roteiro de homologação executado e os 8 critérios aprovados pelo responsável técnico; autorizações individuais reais e dados do grupo seguem pendentes (bloqueiam só a publicação dos perfis, S06) |
+| Próxima sprint | **S05 — Blog acadêmico e fluxo editorial** — **não iniciada** (aguarda nova instrução do responsável técnico) |
 | Domínio oficial | **`https://bioeticaps.app`** (ADR-0014) — associado ao projeto `ppgps-portal` na Vercel, DNS e HTTPS ativos, **nenhum deploy servido** (404 `DEPLOYMENT_NOT_FOUND`); ativação pública na S06 |
 | Última atualização | 30/10/2026 |
 | Planejamento vigente | `docs/PLANEJAMENTO_PORTAL_PPGPS.md` **v1.4** (30/10/2026) |
-| ADRs | 0001–0013 **Aceitos** (0013 em 30/10/2026); **0014 Proposto** (domínio oficial; a escolha do domínio é decisão do responsável técnico). A S04 não exigiu ADR novo (decisões abaixo) |
+| ADRs | 0001–0014 **Aceitos** (0013 e 0014 em 30/10/2026). A S04 não exigiu ADR novo |
 
 ## Situação das sprints
 
@@ -28,7 +28,7 @@
 | S01 | Setup técnico, ambientes e pipeline | M1 | **Concluída** (22/10/2026) |
 | S02 | Autenticação, papéis, auditoria, storage, backup e base visual | M1 | **Concluída** (22/10/2026; Sentry e SMTP de homologação adiados para a S06) |
 | S03 | Portal do grupo: identidade, linhas temáticas e homepage v1 | M1 | **Concluída** (30/10/2026; PR #14) |
-| S04 | Integrantes, vínculos e consentimentos | M1 | **Executada — aguardando revisão humana** (30/10/2026; PR #23) |
+| S04 | Integrantes, vínculos e consentimentos | M1 | **Concluída** (30/10/2026; PRs #23 e #24) |
 | S05 | Blog acadêmico e fluxo editorial | M1 | Não iniciada |
 | S06 | Reauditoria, conteúdo inicial e lançamento do M1 | M1 | Não iniciada |
 | S07 | Orientações, conclusões acadêmicas e egressos | M2 | Não iniciada |
@@ -37,6 +37,37 @@
 | S10 | Eventos, projetos e impacto social | M2 | Não iniciada |
 | S11 | Consolidação, carga de dados acadêmicos e lançamento do M2 | M2 | Não iniciada |
 
+## Sessão de 30/10/2026 — encerramento formal da S04
+
+**Modo:** documental (sem funcionalidades, migrations ou deploy), autorizado pelo responsável técnico. S05 **não iniciada**.
+
+### Aprovações do responsável técnico (declaração expressa em 30/10/2026)
+
+| Item | Registro |
+|---|---|
+| Roteiro de homologação da S04 | Realizado pelo responsável técnico; funcionamento validado |
+| 8 critérios de aceite da S04 | Aprovados; as evidências automatizadas da sessão de execução (30/10/2026) permanecem válidas. Nenhum teste novo foi executado nesta sessão para o encerramento |
+| ADR-0014 (domínio oficial `https://bioeticaps.app`) | Revisado e **aprovado** → status `Aceito` |
+| S04 | **Concluída** (30/10/2026) |
+
+### Verificações (30/10/2026)
+
+- PRs #22 (`4199c70`), #23 (`93eb029`) e #24 (`e24987e`): **MERGED**.
+- Workflows da `main` em `e24987e`: CI, Verificação de migrations e Deploy de homologação — **sucesso**.
+
+### Pendências preservadas (etapas futuras; escopo inalterado)
+
+| Pendência | Etapa |
+|---|---|
+| Controlador dos dados e canal do titular/privacidade (Q4) | S06 (páginas legais e publicação dos perfis) |
+| Termo de autorização individual (perfil, foto, e-mail) e autorizações colhidas | S06 |
+| Lista nominal validada de integrantes/ex-integrantes (ORCID/Lattes) e carga em homologação/produção; recoleta do DGP | S06 |
+| Líderes com autorização individual (mínimo para o M1) | S06 |
+| Prazo de guarda de comprovantes após revogação | S06 (registro de tratamento) |
+| Textos definitivos do grupo e das linhas (Q7), contato institucional, nome curto | S06 |
+| Ativação pública de `bioeticaps.app` (checklist do ADR-0014) | S06 |
+| *Contract* de `GroupProfile.leadersText` | Release posterior à primeira publicação com líderes autorizados |
+| Sentry, SMTP e limite de upload da Vercel (exceções da S02) | S06 |
 ## Sessão de 30/10/2026 — execução da S04
 
 **Modo:** autônomo, autorizado expressamente pelo responsável técnico (execução integral da S04, política de PRs `AGENTS.md` §11.1). Branch `s04-integrantes-consentimentos`, PR #23. S05 não iniciada. Nenhum deploy de produção; `PRODUCTION_DEPLOY_ENABLED` não definida; branch `production` do Neon não acessada. Nenhum dado pessoal real.
@@ -81,7 +112,7 @@
 | Ex-integrante só no filtro "ex-integrantes" | Atendido | Unitário + E2E |
 | Somente editor/admin gerenciam; visitante sem consentimentos/campos administrativos | Atendido | Integração (acesso + vazamento) + fumaça de deploy |
 | Importação reexecutada sem duplicatas | Atendido | Integração + execução local |
-| DoD: supervisor verifica com `editor` de teste cadastro e visibilidade | **Pendente — supervisor** | Roteiro da ficha, passos 1–8 (preview com dados fictícios) |
+| DoD: supervisor verifica com `editor` de teste cadastro e visibilidade | **Atendido** (30/10/2026) | Roteiro de homologação executado e aprovado pelo responsável técnico |
 
 ### Decisões e premissas (sem ADR novo; dentro das ADRs 0004, 0006, 0010 e 0013)
 
@@ -111,8 +142,8 @@
 
 ### Pendências técnicas / backlog (S04)
 
-- Roteiro de homologação da ficha (passos 1–8) pelo supervisor no preview (dados fictícios) — DoD.
-- Aceite do ADR-0014.
+- ~~Roteiro de homologação da ficha (passos 1–8) pelo supervisor — DoD~~ — **feito** (30/10/2026).
+- ~~Aceite do ADR-0014~~ — **feito** (30/10/2026).
 - *Contract* de `GroupProfile.leadersText` em release posterior à primeira publicação com líderes autorizados.
 - PRs do Dependabot (#3–#6, #16–#21) seguem abertos: atualizações maiores (Payload 3.92, Next/React, dotenv 18, @types/node 26, actions) — avaliar em sprint dedicada (`AGENTS.md` §2). As vulnerabilidades altas novas foram tratadas por overrides no PR #22 (undici, happy-dom; GHSA de graphql-scalars ignorado com GraphQL desabilitado).
 ### Pendências de consentimento e conteúdo (coordenador)
@@ -167,7 +198,7 @@ Em homologação **nenhuma** pessoa foi carregada (só entram pessoas com autori
 
 ### Documentação atualizada
 
-Planejamento **v1.4** (histórico e seções 24.1, 24.2, 25.1, 19.5/S06, 32), ADR-0013 (Aceito), **ADR-0014** (novo, Proposto), notas em ADR-0003, ADR-0009 e ADR-0010, `AGENTS.md` (§1, §1.1, §7), `CLAUDE.md`, `README.md`, `.env.example`, `docs/sprints/S04.md`, `docs/sprints/S06.md`, `docs/content/questoes-institucionais.md` (Q3).
+Planejamento **v1.4** (histórico e seções 24.1, 24.2, 25.1, 19.5/S06, 32), ADR-0013 (Aceito), **ADR-0014** (novo; Aceito em 30/10/2026 no encerramento da S04), notas em ADR-0003, ADR-0009 e ADR-0010, `AGENTS.md` (§1, §1.1, §7), `CLAUDE.md`, `README.md`, `.env.example`, `docs/sprints/S04.md`, `docs/sprints/S06.md`, `docs/content/questoes-institucionais.md` (Q3).
 
 ### Pendências do domínio (S06)
 
@@ -175,7 +206,7 @@ Planejamento **v1.4** (histórico e seções 24.1, 24.2, 25.1, 19.5/S06, 32), AD
 2. Adicionar `www.bioeticaps.app` ao projeto (redirecionamento para o apex) — o proxy já redireciona em produção.
 3. Remover o deploy de produção com falha de 20/10/2026 (opcional; não é servido).
 4. Search Console e conferência do certificado fora da rede local.
-5. Aceite do ADR-0014.
+5. ~~Aceite do ADR-0014~~ — **feito** (30/10/2026).
 ## Sessão de 22/10/2026 — execução da S03
 
 **Modo:** autônomo, autorizado expressamente pelo supervisor (execução integral da S03 e política de PRs, `AGENTS.md` §11.1). Branch `s03-portal-grupo`, PR #14. S04 não iniciada. Nenhum deploy de produção; `PRODUCTION_DEPLOY_ENABLED` não definida; branch `production` do Neon não acessada.
@@ -558,8 +589,8 @@ O CI da `main` após o PR #8 (run `39822648395`) **falhou** no `pnpm audit`: vul
 | Item | Origem | Necessário até |
 |---|---|---|
 | Registro escrito das respostas do coordenador arquivado (referência em §1) | S00/Q1–Q12 | S06 |
-| Controlador dos dados, canal do titular, termo de autorização individual, regra de orientações concluídas | Q4 | S04 (publicação dos perfis) |
-| Lista nominal de integrantes e ex-integrantes com autorizações individuais, ORCID e Lattes | Q4/Q5 | S04/S06 |
+| Controlador dos dados, canal do titular, termo de autorização individual (publicação dos perfis); regra de orientações concluídas | Q4 | S06 (perfis); S07 (orientações) |
+| Lista nominal de integrantes e ex-integrantes com autorizações individuais, ORCID e Lattes (carga via `pnpm import:people`) | Q4/Q5 | S06 |
 | Textos de apresentação, objetivos e histórico do grupo e dos eixos temáticos (hoje provisórios no portal, ver sessão da S03) | Q7 | Publicação do M1 (S06) |
 | Política editorial e ensaios iniciais (≥ 3) | Q8 | S05/S06 |
 | Fonte e escopo dos dados de orientações | Q10 | S07 |
