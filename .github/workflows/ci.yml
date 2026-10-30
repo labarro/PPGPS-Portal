@@ -90,8 +90,8 @@ jobs:
         run: echo "PAYLOAD_SECRET=$(openssl rand -hex 32)" >> "$GITHUB_ENV"
       - name: Migrations (job separado do build)
         run: pnpm migrate && pnpm migrate:status
-      - name: Conteúdo institucional da S03 (seed idempotente)
-        run: pnpm seed:content
+      - name: Conteúdo institucional (S03) e integrantes fictícios (S04), seeds idempotentes
+        run: pnpm seed:content && pnpm seed:people
       - run: pnpm build
       - run: pnpm exec playwright install --with-deps chromium
       - run: pnpm test:e2e
@@ -126,8 +126,8 @@ jobs:
       - uses: ./.github/actions/test-services
       - name: Segredo efêmero do Payload
         run: echo "PAYLOAD_SECRET=$(openssl rand -hex 32)" >> "$GITHUB_ENV"
-      - name: Migrations e conteúdo institucional (seed)
-        run: pnpm migrate && pnpm seed:content
+      - name: Migrations, conteúdo institucional e integrantes fictícios (seeds)
+        run: pnpm migrate && pnpm seed:content && pnpm seed:people
       - run: pnpm build
       - name: Servidor de produção local (porta 3100)
         run: |

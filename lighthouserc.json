@@ -6,7 +6,9 @@
         "http://localhost:3100/o-grupo",
         "http://localhost:3100/o-grupo/historico",
         "http://localhost:3100/linhas",
-        "http://localhost:3100/linhas/bioetica"
+        "http://localhost:3100/linhas/bioetica",
+        "http://localhost:3100/integrantes",
+        "http://localhost:3100/integrantes/marina-ficticia-duarte"
       ],
       "numberOfRuns": 1,
       "settings": {
