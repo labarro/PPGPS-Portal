@@ -172,6 +172,7 @@ jobs:
           BASIC_AUTH_USER: ${{ secrets.BASIC_AUTH_USER }}
           BASIC_AUTH_PASSWORD: ${{ secrets.BASIC_AUTH_PASSWORD }}
           VERCEL_AUTOMATION_BYPASS_SECRET: ${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET }}
+          EXPECT_MAINTENANCE: ${{ github.event.inputs.maintenance == 'true' && 'true' || '' }}
         run: bash scripts/ci/smoke-deployment.sh "${{ steps.deploy.outputs.deployment_url }}" protected
       - name: Apontar domínio fixo de homologação
         if: steps.config.outputs.enabled == 'true' && vars.STAGING_DOMAIN != ''
@@ -198,4 +199,5 @@ jobs:
           BASIC_AUTH_USER: ${{ secrets.BASIC_AUTH_USER }}
           BASIC_AUTH_PASSWORD: ${{ secrets.BASIC_AUTH_PASSWORD }}
           VERCEL_AUTOMATION_BYPASS_SECRET: ${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET }}
+          EXPECT_MAINTENANCE: ${{ github.event.inputs.maintenance == 'true' && 'true' || '' }}
         run: bash scripts/ci/smoke-deployment.sh "https://${{ vars.STAGING_DOMAIN }}" protected
