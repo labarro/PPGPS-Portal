@@ -15,11 +15,12 @@
 | Situação da S03 | **Concluída** (30/10/2026; PR #14). Revisão visual/funcional, navegação desktop/mobile, conteúdo provisório e os 9 critérios aprovados pelo responsável técnico; textos definitivos do coordenador (Q7) seguem pendentes para a S06 |
 | Situação da S04 | **Concluída** (30/10/2026; PRs #23 e #24). Roteiro de homologação executado e os 8 critérios aprovados pelo responsável técnico; autorizações individuais reais e dados do grupo seguem pendentes (bloqueiam só a publicação dos perfis, S06) |
 | Situação da S05 | **Concluída** (30/10/2026; PRs #34, #35, #36 e PR de encerramento). Homologação manual e ADR-0015 aprovados pelo responsável técnico; Lighthouse ≥ 0,90 nas 4 categorias comprovado no runner do CI |
-| Próxima sprint | **S06 — Reauditoria, conteúdo inicial e lançamento do M1** — **não iniciada** (somente com autorização do responsável técnico) |
-| Domínio oficial | **`https://bioeticaps.app`** (ADR-0014) — associado ao projeto `ppgps-portal` na Vercel, DNS e HTTPS ativos, **nenhum deploy servido** (404 `DEPLOYMENT_NOT_FOUND`); ativação pública na S06 |
-| Última atualização | 30/10/2026 |
+| Situação da S06 | **Em execução** — portal **publicado** em `https://bioeticaps.app` (release `v1.0.1`, 31/10/2026 UTC) com a estrutura aprovada; critérios de conteúdo do M1 pendentes do coordenador (ver `docs/qualidade/relatorio-m1.md`) |
+| Próxima sprint | S07 — somente após a conclusão da S06 |
+| Domínio oficial | **`https://bioeticaps.app`** (ADR-0014) — **no ar** desde 31/10/2026 (`www` → 308 para o apex); `PRODUCTION_DEPLOY_ENABLED=true` |
+| Última atualização | 31/10/2026 |
 | Planejamento vigente | `docs/PLANEJAMENTO_PORTAL_PPGPS.md` **v1.4** (30/10/2026) |
-| ADRs | 0001–0015 **Aceitos** (0015 — fluxo editorial e publicação agendada — em 30/10/2026) |
+| ADRs | 0001–0015 **Aceitos**; **0016 (hospedagem de produção) Proposto** |
 
 ## Situação das sprints
 
@@ -31,12 +32,121 @@
 | S03 | Portal do grupo: identidade, linhas temáticas e homepage v1 | M1 | **Concluída** (30/10/2026; PR #14) |
 | S04 | Integrantes, vínculos e consentimentos | M1 | **Concluída** (30/10/2026; PRs #23 e #24) |
 | S05 | Blog acadêmico e fluxo editorial | M1 | **Concluída** (30/10/2026; PRs #34–#36) |
-| S06 | Reauditoria, conteúdo inicial e lançamento do M1 | M1 | Não iniciada |
+| S06 | Reauditoria, conteúdo inicial e lançamento do M1 | M1 | **Em execução** (portal publicado; conteúdo pendente) |
 | S07 | Orientações, conclusões acadêmicas e egressos | M2 | Não iniciada |
 | S08 | Catálogo de publicações do grupo | M2 | Não iniciada |
 | S09 | Importação em lote, deduplicação e busca global | M2 | Não iniciada |
 | S10 | Eventos, projetos e impacto social | M2 | Não iniciada |
 | S11 | Consolidação, carga de dados acadêmicos e lançamento do M2 | M2 | Não iniciada |
+
+## Sessão de 30–31/10/2026 — execução da S06 e lançamento do M1
+
+**Modo:** autônomo, com autorização expressa e escrita do responsável técnico (30/10/2026). Ele declarou:
+
+- aprovação das S00–S05 pelo coordenador (prof. Lucas);
+- ciência e autorização do lançamento pelo coordenador;
+- **autorização do deploy de produção e da publicação em `https://bioeticaps.app`**.
+
+Registro em `questoes-institucionais.md` §1. Orçamento: R$ 0. Política de PRs: `AGENTS.md` §11.1.
+
+### Feito
+
+**Código (PR #38, squash `41001c3`; sem migration):**
+
+- páginas legais editáveis:
+  - `/privacidade`, `/acessibilidade` e `/sobre-o-portal` (texto padrão versionado, sem dados inventados);
+  - nota discreta de responsabilidade e link do programa;
+  - rodapé e sitemap;
+- CSP em *enforce*;
+- modo de manutenção (`MAINTENANCE_MODE`);
+- `first-register` bloqueado em produção;
+- `pnpm users:bootstrap-admin`;
+- remetente SMTP no formato `Nome <e-mail>`;
+- testes de vazamento global, marca e páginas legais.
+
+**Pipeline de produção (PRs #38–#41):**
+
+- `deploy-production.yml`, nesta ordem: ponto de restauração → migrate → `seed:content` (opt-in, sem pessoas/ensaios) → conta admin → R2 → deploy → fumaça no domínio (aguarda a atribuição);
+- `backup.yml` com produção (30 dias);
+- `restore-check.yml` com `label`;
+- `production-cron.yml`: disponibilidade, certificado, agendador e fumaça sob demanda;
+- fumaça de homologação verifica manutenção e páginas legais.
+
+**Documentação:** ADR-0016 (Proposto), 7 runbooks em `docs/runbooks/`, `docs/guias/guia-do-editor.md`, `docs/qualidade/relatorio-m1.md`.
+
+**Infraestrutura:**
+
+- GitHub:
+  - ambiente `production` (somente tags `v*.*.*`) e `production-cron` (somente `main`);
+  - segredos de banco, `PAYLOAD_SECRET`, `CRON_SECRET` e `BOOTSTRAP_ADMIN_EMAIL` gerados pelo agente, sem exibição;
+  - `PRODUCTION_DATABASE_URL` no ambiente `backups`;
+  - `PRODUCTION_DEPLOY_ENABLED=true`.
+- Neon: nova chave de API `github-actions-production-ppgps` (id 3483757); branch `production` estava vazia antes da carga.
+- Fornecidos pelo responsável técnico: `VERCEL_TOKEN`, R2 (bucket de produção e token restrito), Sentry e SMTP (Resend).
+- Vercel:
+  - `www.bioeticaps.app` adicionado (308 → apex);
+  - deploy de produção com falha de 20/10/2026 removido.
+
+### Lançamento
+
+| Etapa | Resultado |
+|---|---|
+| `v1.0.0` (run `41155303411`) | Parou antes do deploy: `r2-smoke` recusava buckets de produção (proteção da S02) → PR #40 (opt-in explícito) |
+| `v1.0.1` (run `41156459727`) | Parou antes do deploy: `NoSuchBucket` (nome do bucket no segredo) → corrigido pelo responsável técnico |
+| `v1.0.1` (run `41157393442`) | **Deploy publicado** em `bioeticaps.app`; a fumaça falhou por 404 momentâneo (atribuição do domínio logo após o `--prod`) → PR #41 (espera de até 3 min) |
+| Fumaça completa no CI (run `41158557956`) | **Verde**. Confirmados também manualmente: 27 rotas/APIs com status esperados, `www`/`http` 308, robots e sitemap no domínio, canônica, sem `noindex`, 0 `<img>`, `/api/people` e `/api/essays` com 0 documentos |
+| Pontos de restauração | `predeploy-v1.0.1-41156459727`, `predeploy-v1.0.1-41157393442` |
+| Conteúdo em produção | Perfil do grupo e 2 linhas (textos **provisórios** sinalizados), páginas legais, menu/home, categorias. **Nenhuma pessoa e nenhum ensaio** (sem autorizações individuais nem ensaios reais) |
+
+### Verificações
+
+| Verificação | Resultado |
+|---|---|
+| Local (PR #38) | lint, typecheck, unit 264, integração 114, **E2E 102/102 contra `next start`** (CSP enforce), build, `migrate:check` sem drift |
+| CI dos PRs #38–#41 | Todos verdes (incluindo Lighthouse, migrations, preview) |
+| Ensaio de rollback em homologação | Alias → deploy da S05 em 2,9 s; retorno em 3,0 s (`vercel inspect`) |
+| Ensaio do modo de manutenção em homologação | Run `41154796846`: escrita 503 e aviso; run `41155075798`: normal (escrita negada, sem aviso) |
+| Backup de produção pós-carga | Run `41157755772`: `production-20261031T015739Z.dump.age` (485 786 bytes) no `ppgps-backups` |
+| Restauração cronometrada | Run `41157882170`: **240 s**, 0 tabelas divergentes, branch temporário removido |
+| SMTP de produção | Recuperação de senha disparada; e-mail recebido e senha definida pelo responsável técnico |
+| Sentry | Erro forçado registrado no Sentry real **sem** dados pessoais (verificado pelo responsável técnico) |
+
+### Critérios de aceite da S06
+
+| Critério | Situação |
+|---|---|
+| M1 (18.4): textos revisados, 2 linhas, perfis autorizados (mín. líderes), ≥ 3 ensaios, páginas legais | **Parcial**: 2 linhas e páginas legais publicadas; textos provisórios; **0 perfis e 0 ensaios** (pendentes do coordenador) |
+| Vazamento global automatizado | **Atendido** (E2E `s06-launch`) |
+| Marca automatizada + nota de responsabilidade | **Atendido** |
+| Restauração pós-carga dentro do RTO | **Atendido** (240 s) |
+| Rollback ensaiado em homologação | **Atendido** |
+| Registro escrito arquivado + confirmação de publicação | **Parcial**: confirmação registrada; referência do arquivamento do original pendente |
+| Coordenador publica ensaio e atualiza perfil sem ajuda | **Pendente** (conta `editor` a criar) |
+| Sentry real sem PII | **Atendido** |
+| E-mail capturado em homologação (1 h) + SMTP de produção | **Parcial**: produção funcional; captura em homologação não comprovada (`staging` sem SMTP sandbox) |
+
+### Pendências e próximos passos
+
+Lista completa em `docs/qualidade/relatorio-m1.md` §3.
+
+**Coordenador:**
+
+- textos Q7;
+- autorizações individuais e lista de integrantes;
+- ensaios e política editorial;
+- controlador/canal do titular e e-mail do grupo.
+
+**Supervisor:**
+
+- conta `editor` e treinamento;
+- teclado/NVDA;
+- sandbox SMTP em homologação;
+- Search Console;
+- referência do arquivamento;
+- aceite do ADR-0016;
+- verificação de 7 dias (a partir de 07/11/2026).
+
+**Manutenção:** `pnpm/action-setup@v4` (aviso de Node 20).
 
 ## Sessão de 30/10/2026 — encerramento da S05 e auditoria do repositório público
 

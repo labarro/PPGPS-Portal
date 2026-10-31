@@ -68,6 +68,14 @@ Preços e limites revisados em 30/10/2026 nas páginas públicas dos provedores 
   - Search Console (verificação de domínio pelo supervisor);
   - revisar este ADR antes do M2 (S11) e se o uso deixar de ser não comercial.
 
+## Registro da implantação (31/10/2026)
+
+- Release `v1.0.1` publicada (run `41157393442`).
+- Duas correções durante o lançamento:
+  - a verificação do R2 de produção passou a exigir opt-in explícito (`R2_SMOKE_ALLOW_PRODUCTION`, PR #40);
+  - a fumaça passou a aguardar a atribuição do domínio (PR #41).
+- Backup e restauração de produção comprovados: 240 s.
+
 ## Referências
 
 - Planejamento v1.4: seções 24.4–24.6 e 25; ficha `docs/sprints/S06.md`.
