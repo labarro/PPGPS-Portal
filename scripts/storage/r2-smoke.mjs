@@ -33,7 +33,11 @@ const fail = (message) => {
 if (!S3_ENDPOINT || !S3_BUCKET || !S3_ACCESS_KEY_ID || !S3_SECRET_ACCESS_KEY) {
   fail('configuração incompleta (S3_ENDPOINT, S3_BUCKET, S3_ACCESS_KEY_ID, S3_SECRET_ACCESS_KEY)')
 }
-if (/backup|prod/i.test(S3_BUCKET)) fail(`bucket "${S3_BUCKET}" não é permitido neste teste`)
+if (/backup/i.test(S3_BUCKET)) fail(`bucket "${S3_BUCKET}" não é permitido neste teste`)
+// Produção (S06): somente com opt-in explícito do pipeline de deploy de produção.
+if (/prod/i.test(S3_BUCKET) && process.env.R2_SMOKE_ALLOW_PRODUCTION !== 'true') {
+  fail(`bucket "${S3_BUCKET}" de produção exige R2_SMOKE_ALLOW_PRODUCTION=true`)
+}
 
 const client = new S3Client({
   endpoint: S3_ENDPOINT,
