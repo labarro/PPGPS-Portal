@@ -5,7 +5,8 @@
  * Faixa gratuita do R2: 1 mi classe A + 10 mi classe B/mês; nunca usar em laço ou carga.
  *
  * Verifica: escrita, leitura, URL assinada (download), bucket privado (acesso sem assinatura
- * negado), exclusão. Nunca imprime credenciais. Recusa buckets de backup e de produção.
+ * negado), exclusão. Nunca imprime credenciais. Recusa buckets de backup; o de produção só com
+ * R2_SMOKE_ALLOW_PRODUCTION=true (deploy-production.yml, S06).
  * Variáveis: S3_ENDPOINT, S3_BUCKET, S3_ACCESS_KEY_ID, S3_SECRET_ACCESS_KEY, S3_REGION, S3_PREFIX.
  */
 import { randomBytes, randomUUID } from 'node:crypto'
@@ -32,7 +33,11 @@ const fail = (message) => {
 if (!S3_ENDPOINT || !S3_BUCKET || !S3_ACCESS_KEY_ID || !S3_SECRET_ACCESS_KEY) {
   fail('configuração incompleta (S3_ENDPOINT, S3_BUCKET, S3_ACCESS_KEY_ID, S3_SECRET_ACCESS_KEY)')
 }
-if (/backup|prod/i.test(S3_BUCKET)) fail(`bucket "${S3_BUCKET}" não é permitido neste teste`)
+if (/backup/i.test(S3_BUCKET)) fail(`bucket "${S3_BUCKET}" não é permitido neste teste`)
+// Produção (S06): somente com opt-in explícito do pipeline de deploy de produção.
+if (/prod/i.test(S3_BUCKET) && process.env.R2_SMOKE_ALLOW_PRODUCTION !== 'true') {
+  fail(`bucket "${S3_BUCKET}" de produção exige R2_SMOKE_ALLOW_PRODUCTION=true`)
+}
 
 const client = new S3Client({
   endpoint: S3_ENDPOINT,
