@@ -463,10 +463,13 @@ describe('rotas, cache, sitemap e JSON-LD de pessoas', () => {
       'https://exemplo.test/',
       'https://exemplo.test/integrantes',
       'https://exemplo.test/integrantes/ana',
+      'https://exemplo.test/privacidade',
+      'https://exemplo.test/acessibilidade',
+      'https://exemplo.test/sobre-o-portal',
     ])
     expect(
       buildSitemap({ profileUpdatedAt: null, lines: [], pages: [] }, 'https://x.test'),
-    ).toHaveLength(1)
+    ).toHaveLength(4)
   })
 
   it('JSON-LD Person com sameAs e sem e-mail', () => {

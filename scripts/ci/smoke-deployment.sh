@@ -70,10 +70,66 @@ if [[ "$MODE" == "protected" ]]; then
   [[ "$home" == *"Bioética e Promoção da Saúde"* ]] || fail "Nome do grupo ausente na página inicial"
   if grep -qiE 'laborat(ó|o)rio' <<<"$home"; then fail "Menção a laboratório na página inicial (Q6)"; fi
 else
-  code=$(status "$URL/")
+  # S06: produção pública no domínio oficial (ADR-0014). Sem noindex, CSP aplicada, rotas do M1,
+  # páginas legais, APIs administrativas fechadas e cadastro do primeiro usuário bloqueado.
+  headers=$(curl -s -D - -o /dev/null "$URL/" | tr -d '\r')
+  code=$(awk 'NR==1{print $2}' <<<"$headers")
   [[ "$code" == "200" ]] || fail "Produção: esperado 200 e recebido $code"
+  if grep -qi '^x-robots-tag:.*noindex' <<<"$headers"; then fail "Produção com X-Robots-Tag noindex"; fi
+  grep -qi "^content-security-policy:.*default-src 'self'" <<<"$headers" || fail "CSP (enforce) ausente"
+  grep -qi '^strict-transport-security:' <<<"$headers" || fail "HSTS ausente"
+  if grep -qi '^content-security-policy-report-only:' <<<"$headers"; then fail "CSP ainda em report-only"; fi
+
+  for path in /o-grupo /o-grupo/historico /o-grupo/objetivos /o-grupo/referencias-institucionais \
+    /o-grupo/contato /linhas /integrantes /blog /blog/rss.xml /blog/atom.xml \
+    /privacidade /acessibilidade /sobre-o-portal /sitemap.xml /robots.txt; do
+    code=$(status "$URL$path")
+    [[ "$code" == "200" ]] || fail "$path deveria responder 200 (recebido $code)"
+  done
+  code=$(status -L "$URL/admin")
+  [[ "$code" == "200" ]] || fail "/admin deveria responder 200 (recebido $code)"
+
   code=$(status "$URL/api/graphql")
   [[ "$code" == "404" ]] || fail "/api/graphql deveria retornar 404 (recebido $code)"
+  for path in /api/users /api/audit-logs /api/consent-records /api/redirects /api/payload-jobs; do
+    code=$(status "$URL$path")
+    [[ "$code" == "403" || "$code" == "401" ]] || fail "$path deveria ser negado ao visitante (recebido $code)"
+  done
+  code=$(status "$URL/api/essays/publish-due")
+  [[ "$code" == "401" ]] || fail "/api/essays/publish-due deveria exigir autenticação (recebido $code)"
+  code=$(status -X POST -H 'Content-Type: application/json' -d '{}' "$URL/api/users/first-register")
+  [[ "$code" == "403" ]] || fail "Cadastro do primeiro usuário deveria estar bloqueado (recebido $code)"
+  people=$(curl -s "$URL/api/people?limit=100")
+  if grep -qE '"consent(PublicProfile|Photo|Email|Status)"' <<<"$people"; then
+    fail "/api/people expõe campos de consentimento"
+  fi
+
+  robots=$(curl -s "$URL/robots.txt")
+  grep -q "Sitemap: ${URL}/sitemap.xml" <<<"$robots" || fail "robots.txt sem o sitemap do domínio oficial"
+  if grep -qE '^Disallow: /$' <<<"$robots"; then fail "robots.txt bloqueia todo o site na produção"; fi
+  sitemap=$(curl -s "$URL/sitemap.xml")
+  grep -q "<loc>${URL}/</loc>" <<<"$sitemap" || fail "sitemap sem a página inicial do domínio oficial"
+  if grep -q 'vercel.app' <<<"$sitemap"; then fail "sitemap aponta para vercel.app"; fi
+
+  home=$(curl -s "$URL/")
+  [[ "$home" == *"Bioética e Promoção da Saúde"* ]] || fail "Nome do grupo ausente na página inicial"
+  [[ "$home" == *"rel=\"canonical\" href=\"${URL}"* ]] || fail "Canônica não aponta para ${URL}"
+  if grep -qiE 'laborat(ó|o)rio' <<<"$home"; then fail "Menção a laboratório na página inicial (Q6)"; fi
+  if grep -qiE '<img[^>]+(unicesumar|ppgps|cnpq|logo)' <<<"$home"; then fail "Logotipo institucional na página inicial"; fi
+  about=$(curl -s "$URL/sobre-o-portal")
+  [[ "$about" == *"data-testid=\"responsibility-note\""* ]] || fail "/sobre-o-portal sem a nota de responsabilidade"
+  if [[ "${EXPECT_MAINTENANCE:-}" == "true" ]]; then
+    [[ "$home" == *"data-testid=\"maintenance-notice\""* ]] || fail "Modo de manutenção não sinalizado"
+  elif [[ "$home" == *"data-testid=\"maintenance-notice\""* ]]; then
+    fail "Aviso de manutenção ativo sem solicitação"
+  fi
+
+  # www → apex (308), quando o domínio da URL for o oficial.
+  host="${URL#https://}"
+  if [[ "$host" != www.* ]]; then
+    loc=$(curl -s -o /dev/null -w '%{http_code} %{redirect_url}' "https://www.${host}/o-grupo?x=1" || true)
+    [[ "$loc" =~ ^30[178]\ https://${host}/o-grupo\?x=1$ ]] || echo "::warning::www.${host} não redireciona para o apex ($loc)"
+  fi
 fi
 
 echo "Fumaça OK ($MODE): $URL"

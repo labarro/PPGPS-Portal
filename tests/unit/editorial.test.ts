@@ -592,10 +592,13 @@ describe('rotas, cache, sitemap, feeds e SEO do blog', () => {
       'https://portal.example.org/blog/e1',
       'https://portal.example.org/blog/categoria/bioetica',
       'https://portal.example.org/blog/tag/autonomia',
+      'https://portal.example.org/privacidade',
+      'https://portal.example.org/acessibilidade',
+      'https://portal.example.org/sobre-o-portal',
     ])
     expect(
       buildSitemap({ profileUpdatedAt: null, lines: [], pages: [], essays: [] }, 'https://x.org'),
-    ).toHaveLength(1)
+    ).toHaveLength(4)
   })
 
   const item: FeedItem = {

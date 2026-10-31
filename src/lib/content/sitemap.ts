@@ -6,6 +6,8 @@ import {
   essayPath,
   FIXED_GROUP_SLUGS,
   GROUP_SECTIONS,
+  isLegalPageSlug,
+  LEGAL_PAGES,
   MEMBERS_BASE_PATH,
   pagePath,
   personPath,
@@ -63,7 +65,7 @@ export function buildSitemap(entries: SitemapEntries, siteUrl: string): Metadata
   }
 
   for (const page of entries.pages) {
-    if (FIXED_GROUP_SLUGS.includes(page.slug)) continue
+    if (FIXED_GROUP_SLUGS.includes(page.slug) || isLegalPageSlug(page.slug)) continue
     items.push({
       url: url(pagePath(page.slug)),
       lastModified: page.updatedAt,
@@ -120,6 +122,16 @@ export function buildSitemap(entries: SitemapEntries, siteUrl: string): Metadata
         priority: 0.4,
       })
     }
+  }
+
+  // S06: páginas legais sempre existem (página do CMS ou texto padrão).
+  for (const legal of LEGAL_PAGES) {
+    items.push({
+      url: url(legal.href),
+      lastModified: pageBySlug.get(legal.slug)?.updatedAt,
+      changeFrequency: 'yearly',
+      priority: 0.3,
+    })
   }
 
   return items

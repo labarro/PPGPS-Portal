@@ -31,7 +31,10 @@ const nextConfig: NextConfig = {
     return [
       {
         source: '/:path*',
-        headers: securityHeaders(appEnv, { cspReportUri: process.env.CSP_REPORT_URI || null }),
+        headers: securityHeaders(appEnv, {
+          cspReportUri: process.env.CSP_REPORT_URI || null,
+          development: process.env.NODE_ENV === 'development',
+        }),
       },
     ]
   },

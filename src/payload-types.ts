@@ -229,7 +229,7 @@ export interface Page {
   id: number;
   title: string;
   /**
-   * Endereço em /o-grupo/<slug>. Os slugs historico, objetivos, referencias-institucionais, contato complementam as páginas fixas de "O grupo". Alterar o slug de uma página publicada cria um redirecionamento 301.
+   * Endereço em /o-grupo/<slug>. Os slugs historico, objetivos, referencias-institucionais, contato complementam as páginas fixas de "O grupo". Páginas legais: privacidade (/privacidade), acessibilidade (/acessibilidade), sobre-o-portal (/sobre-o-portal) — não altere esses slugs. Alterar o slug de uma página publicada cria um redirecionamento 301.
    */
   slug: string;
   /**

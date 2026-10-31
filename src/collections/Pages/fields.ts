@@ -1,7 +1,7 @@
 import type { Field } from 'payload'
 
 import { PAGE_BLOCKS } from '../../blocks'
-import { FIXED_GROUP_SLUGS } from '../../lib/content/paths'
+import { FIXED_GROUP_SLUGS, LEGAL_PAGES } from '../../lib/content/paths'
 import { slugField } from '../shared/slug-field'
 
 export const pageFields: Field[] = [
@@ -15,7 +15,7 @@ export const pageFields: Field[] = [
   },
   slugField(
     'title',
-    `Endereço em /o-grupo/<slug>. Os slugs ${FIXED_GROUP_SLUGS.join(', ')} complementam as páginas fixas de "O grupo". Alterar o slug de uma página publicada cria um redirecionamento 301.`,
+    `Endereço em /o-grupo/<slug>. Os slugs ${FIXED_GROUP_SLUGS.join(', ')} complementam as páginas fixas de "O grupo". Páginas legais: ${LEGAL_PAGES.map((p) => `${p.slug} (${p.href})`).join(', ')} — não altere esses slugs. Alterar o slug de uma página publicada cria um redirecionamento 301.`,
   ),
   {
     name: 'summary',

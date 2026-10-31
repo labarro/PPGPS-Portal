@@ -29,9 +29,27 @@ export const FIXED_GROUP_SLUGS: readonly string[] = GROUP_SECTIONS.map((s) => s.
   Boolean,
 )
 
+/**
+ * S06 (RF-021): páginas legais em rotas de primeiro nível. O conteúdo é editável no CMS
+ * (coleção `pages` com o mesmo slug); sem página publicada, a rota usa o texto padrão.
+ */
+export const LEGAL_PAGES = [
+  { slug: 'privacidade', label: 'Privacidade', href: '/privacidade' },
+  { slug: 'acessibilidade', label: 'Acessibilidade', href: '/acessibilidade' },
+  { slug: 'sobre-o-portal', label: 'Sobre o portal', href: '/sobre-o-portal' },
+] as const
+
+export type LegalPageSlug = (typeof LEGAL_PAGES)[number]['slug']
+
+export const LEGAL_PAGE_SLUGS: readonly string[] = LEGAL_PAGES.map((page) => page.slug)
+
+export const isLegalPageSlug = (slug: string): slug is LegalPageSlug =>
+  LEGAL_PAGE_SLUGS.includes(slug)
+
 export const researchLinePath = (slug: string): string => `${LINES_BASE_PATH}/${slug}`
 
-export const pagePath = (slug: string): string => `${GROUP_BASE_PATH}/${slug}`
+export const pagePath = (slug: string): string =>
+  isLegalPageSlug(slug) ? `/${slug}` : `${GROUP_BASE_PATH}/${slug}`
 
 export const personPath = (slug: string): string => `${MEMBERS_BASE_PATH}/${slug}`
 
