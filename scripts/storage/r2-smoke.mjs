@@ -5,7 +5,8 @@
  * Faixa gratuita do R2: 1 mi classe A + 10 mi classe B/mês; nunca usar em laço ou carga.
  *
  * Verifica: escrita, leitura, URL assinada (download), bucket privado (acesso sem assinatura
- * negado), exclusão. Nunca imprime credenciais. Recusa buckets de backup e de produção.
+ * negado), exclusão. Nunca imprime credenciais. Recusa buckets de backup; o de produção só com
+ * R2_SMOKE_ALLOW_PRODUCTION=true (deploy-production.yml, S06).
  * Variáveis: S3_ENDPOINT, S3_BUCKET, S3_ACCESS_KEY_ID, S3_SECRET_ACCESS_KEY, S3_REGION, S3_PREFIX.
  */
 import { randomBytes, randomUUID } from 'node:crypto'
