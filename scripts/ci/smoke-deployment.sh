@@ -86,6 +86,13 @@ if [[ "$MODE" == "protected" ]]; then
 else
   # S06: produção pública no domínio oficial (ADR-0014). Sem noindex, CSP aplicada, rotas do M1,
   # páginas legais, APIs administrativas fechadas e cadastro do primeiro usuário bloqueado.
+  # Logo após `vercel deploy --prod`, o domínio pode levar alguns segundos para ser atribuído.
+  for attempt in $(seq 1 18); do
+    code=$(status "$URL/")
+    [[ "$code" == "200" ]] && break
+    echo "Aguardando o domínio ($attempt/18): HTTP $code"
+    sleep 10
+  done
   headers=$(curl -s -D - -o /dev/null "$URL/" | tr -d '\r')
   code=$(awk 'NR==1{print $2}' <<<"$headers")
   [[ "$code" == "200" ]] || fail "Produção: esperado 200 e recebido $code"
