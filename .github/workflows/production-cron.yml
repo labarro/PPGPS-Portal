@@ -10,6 +10,11 @@ on:
   schedule:
     - cron: '*/30 * * * *'
   workflow_dispatch:
+    inputs:
+      full_smoke:
+        description: 'Executar também a fumaça completa de produção (sem deploy)'
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -47,6 +52,17 @@ jobs:
           days=$(( ( $(date -d "$end" +%s) - $(date +%s) ) / 86400 ))
           echo "Certificado expira em $end ($days dias)"
           (( days >= 14 )) || { echo "::error::Certificado expira em $days dias"; exit 1; }
+
+  full-smoke:
+    name: Fumaça completa (domínio oficial)
+    if: vars.PRODUCTION_DEPLOY_ENABLED == 'true' && github.event.inputs.full_smoke == 'true'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    env:
+      URL: ${{ vars.PRODUCTION_DOMAIN != '' && format('https://{0}', vars.PRODUCTION_DOMAIN) || 'https://bioeticaps.app' }}
+    steps:
+      - uses: actions/checkout@v7
+      - run: bash scripts/ci/smoke-deployment.sh "$URL" production
 
   publish-due:
     name: Concluir publicações agendadas
