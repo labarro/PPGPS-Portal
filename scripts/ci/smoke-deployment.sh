@@ -69,6 +69,20 @@ if [[ "$MODE" == "protected" ]]; then
   home=$(curl -s "${bypass[@]}" "${auth[@]}" "$URL/")
   [[ "$home" == *"Bioética e Promoção da Saúde"* ]] || fail "Nome do grupo ausente na página inicial"
   if grep -qiE 'laborat(ó|o)rio' <<<"$home"; then fail "Menção a laboratório na página inicial (Q6)"; fi
+  # S06: páginas legais e modo de manutenção (escrita anônima: 503 em manutenção, 403 fora dela).
+  for path in /privacidade /acessibilidade /sobre-o-portal; do
+    code=$(status "${auth[@]}" "$URL$path")
+    [[ "$code" == "200" ]] || fail "$path deveria responder 200 (recebido $code)"
+  done
+  code=$(status "${auth[@]}" -X POST -H 'Content-Type: application/json' -d '{}' "$URL/api/pages")
+  if [[ "${EXPECT_MAINTENANCE:-}" == "true" ]]; then
+    [[ "$code" == "503" ]] || fail "Manutenção: escrita deveria receber 503 (recebido $code)"
+    [[ "$home" == *"data-testid=\"maintenance-notice\""* ]] || fail "Aviso de manutenção ausente"
+    echo "Modo de manutenção verificado (escrita 503, aviso no site)."
+  else
+    [[ "$code" == "403" || "$code" == "401" ]] || fail "Escrita anônima deveria ser negada (recebido $code)"
+    if [[ "$home" == *"data-testid=\"maintenance-notice\""* ]]; then fail "Aviso de manutenção ativo sem solicitação"; fi
+  fi
 else
   # S06: produção pública no domínio oficial (ADR-0014). Sem noindex, CSP aplicada, rotas do M1,
   # páginas legais, APIs administrativas fechadas e cadastro do primeiro usuário bloqueado.
