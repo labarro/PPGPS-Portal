@@ -2,7 +2,7 @@ import Link from 'next/link'
 
 import type { SiteChrome } from '@/lib/site/chrome'
 
-import { MobileNav } from './mobile-nav'
+import { MOBILE_SECONDARY_LINKS, MobileNav } from './mobile-nav'
 import { NavLinks } from './nav-links'
 
 /**
@@ -13,14 +13,14 @@ import { NavLinks } from './nav-links'
 export function SiteHeader({ chrome }: { chrome: SiteChrome }) {
   return (
     <header className="sticky top-0 z-40 border-b-4 border-b-primary bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/85">
-      <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-3 sm:px-6">
+      <div className="mx-auto flex max-w-6xl items-center justify-between gap-3 px-4 py-2.5 sm:px-6 md:gap-4 md:py-3">
         <Link
           href="/"
           aria-label={`${chrome.siteName} — página inicial`}
-          className="group min-w-0 rounded-sm text-primary"
+          className="group flex min-h-11 min-w-0 items-center rounded-sm text-primary"
           data-testid="wordmark"
         >
-          <span className="block font-serif text-lg leading-tight font-semibold tracking-tight group-hover:underline md:hidden">
+          <span className="block font-serif text-[1.0625rem] leading-snug font-semibold tracking-tight text-pretty group-hover:underline min-[400px]:text-lg md:hidden">
             {chrome.shortName}
           </span>
           <span className="hidden max-w-xl font-serif text-xl leading-snug font-semibold tracking-tight text-balance group-hover:underline md:block">
@@ -28,11 +28,15 @@ export function SiteHeader({ chrome }: { chrome: SiteChrome }) {
           </span>
         </Link>
 
-        <nav aria-label="Menu principal" className="hidden md:block">
+        <nav aria-label="Menu principal" className="hidden lg:block">
           <NavLinks items={chrome.navigation} orientation="horizontal" />
         </nav>
 
-        <MobileNav items={chrome.navigation} siteName={chrome.siteName} />
+        <MobileNav
+          items={chrome.navigation}
+          secondary={MOBILE_SECONDARY_LINKS}
+          siteName={chrome.siteName}
+        />
       </div>
     </header>
   )

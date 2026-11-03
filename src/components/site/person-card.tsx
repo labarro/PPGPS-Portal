@@ -37,14 +37,14 @@ export function PersonCard({
   return (
     <article
       className={cn(
-        'group relative flex h-full gap-4 rounded-lg border bg-background p-5 transition-colors focus-within:border-primary hover:border-primary',
+        'group relative flex h-full gap-3.5 rounded-lg border bg-background p-4 transition-colors sm:gap-4 sm:p-5 focus-within:border-primary hover:border-primary',
         className,
       )}
       data-testid="person-card"
     >
       <PersonAvatar name={person.fullName} photo={person.photo} />
       <div className="min-w-0">
-        <Heading className="font-serif text-xl leading-snug font-semibold text-primary">
+        <Heading className="font-serif text-lg leading-snug font-semibold text-primary sm:text-xl">
           <Link
             href={personPath(person.slug)}
             className="rounded-sm underline-offset-4 after:absolute after:inset-0 hover:underline"

@@ -19,7 +19,7 @@ export function PersonAvatar({
   size?: 'md' | 'lg'
   className?: string
 }) {
-  const box = size === 'lg' ? 'size-32 sm:size-40' : 'size-16'
+  const box = size === 'lg' ? 'size-20 sm:size-40' : 'size-14 sm:size-16'
   if (photo) {
     return (
       <Image
@@ -38,7 +38,7 @@ export function PersonAvatar({
       aria-hidden="true"
       className={cn(
         'flex shrink-0 items-center justify-center rounded-md border border-primary/30 bg-secondary font-serif font-semibold text-primary',
-        size === 'lg' ? 'text-4xl sm:text-5xl' : 'text-xl',
+        size === 'lg' ? 'text-2xl sm:text-5xl' : 'text-lg sm:text-xl',
         box,
         className,
       )}

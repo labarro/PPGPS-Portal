@@ -10,7 +10,7 @@ const isExternal = (href: string) => /^(https?:|mailto:)/i.test(href)
 
 function FooterLink({ link }: { link: SiteLink }) {
   const className =
-    'inline-flex min-h-6 items-center rounded-sm text-inverse-foreground underline-offset-4 hover:underline'
+    'inline-flex min-h-11 items-center rounded-sm text-inverse-foreground underline-offset-4 hover:underline md:min-h-6'
   return isExternal(link.href) ? (
     <a href={link.href} className={className} rel="noopener noreferrer">
       {link.label}
@@ -22,14 +22,24 @@ function FooterLink({ link }: { link: SiteLink }) {
   )
 }
 
-function FooterColumn({ id, title, links }: { id: string; title: string; links: SiteLink[] }) {
+function FooterColumn({
+  id,
+  title,
+  links,
+  className,
+}: {
+  id: string
+  title: string
+  links: SiteLink[]
+  className?: string
+}) {
   if (links.length === 0) return null
   return (
-    <nav aria-labelledby={id}>
+    <nav aria-labelledby={id} className={className}>
       <h2 id={id} className="text-sm font-semibold text-inverse-foreground">
         {title}
       </h2>
-      <ul className="mt-3 flex flex-col gap-2 text-sm">
+      <ul className="mt-2 flex flex-col text-sm md:mt-3 md:gap-2">
         {links.map((link) => (
           <li key={`${link.href}-${link.label}`}>
             <FooterLink link={link} />
@@ -73,10 +83,13 @@ export function SiteFooter({
     ...footer.legalLinks.filter((link) => !legalHrefs.has(link.href)),
   ]
   return (
-    <footer className="surface-inverse mt-20 bg-inverse text-inverse-foreground">
-      <div className="mx-auto grid max-w-6xl gap-10 px-4 py-14 sm:px-6 md:grid-cols-2 lg:grid-cols-[1.4fr_1fr_1fr_1fr]">
-        <section aria-labelledby="rodape-grupo">
-          <h2 id="rodape-grupo" className="font-serif text-xl leading-snug font-semibold">
+    <footer className="surface-inverse mt-12 bg-inverse text-inverse-foreground sm:mt-20 [main:has(>section.bg-muted:last-child)+&]:mt-0">
+      <div className="mx-auto grid max-w-6xl grid-cols-2 gap-x-6 gap-y-8 px-4 py-10 sm:px-6 sm:py-14 md:gap-10 lg:grid-cols-[1.4fr_1fr_1fr_1fr]">
+        <section aria-labelledby="rodape-grupo" className="col-span-2 md:col-span-1">
+          <h2
+            id="rodape-grupo"
+            className="font-serif text-lg leading-snug font-semibold sm:text-xl"
+          >
             {chrome.siteName}
           </h2>
           {footer.about ? (
@@ -100,7 +113,10 @@ export function SiteFooter({
         <FooterColumn id="rodape-portal" title="Portal" links={PORTAL_LINKS} />
 
         {references.length > 0 ? (
-          <section aria-labelledby="rodape-referencias">
+          <section
+            aria-labelledby="rodape-referencias"
+            className="order-last col-span-2 md:order-none md:col-span-1"
+          >
             <h2 id="rodape-referencias" className="text-sm font-semibold">
               Referências institucionais
             </h2>

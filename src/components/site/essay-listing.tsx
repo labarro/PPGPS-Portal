@@ -47,17 +47,17 @@ export function EssayListing({
           Assinar o RSS do blog
         </Link>
       </PageHeader>
-      <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6 lg:py-14">
+      <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 sm:py-10 lg:py-14">
         <BlogCategoriesNav categories={categories} currentSlug={currentCategory} />
         {aside}
         <h2 className="sr-only">Ensaios</h2>
         {result.docs.length > 0 ? (
           <>
-            <p className="mt-8 text-sm text-muted-foreground" aria-live="polite">
+            <p className="mt-6 text-sm text-muted-foreground sm:mt-8" aria-live="polite">
               {result.totalDocs === 1 ? '1 ensaio' : `${result.totalDocs} ensaios`}
               {result.totalPages > 1 ? ` · página ${result.page} de ${result.totalPages}` : null}
             </p>
-            <ul className="mt-4 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            <ul className="mt-4 grid gap-4 sm:grid-cols-2 sm:gap-6 lg:grid-cols-3">
               {result.docs.map((essay) => (
                 <li key={essay.id}>
                   <EssayCard essay={essay} />

@@ -105,6 +105,21 @@
     margin-top: 1.1em;
   }
 
+  .prose-portal :is(p, li) {
+    text-wrap: pretty;
+  }
+
+  /* Celular: entrelinha um pouco menor e títulos internos proporcionais à coluna estreita. */
+  @media (max-width: 30rem) {
+    .prose-portal {
+      line-height: 1.7;
+    }
+
+    .prose-portal h2 {
+      font-size: 1.45rem;
+    }
+  }
+
   .prose-portal :is(h2, h3, h4, h5, h6) {
     font-family: var(--font-serif);
     font-weight: 600;

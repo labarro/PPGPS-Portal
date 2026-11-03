@@ -141,7 +141,7 @@ export default async function EssayPage({ params }: Props) {
 
       <article aria-labelledby="titulo-ensaio">
         <header className="border-b bg-muted">
-          <div className="mx-auto max-w-3xl px-4 pt-6 pb-10 sm:px-6 sm:pb-12">
+          <div className="mx-auto max-w-3xl px-4 pt-4 pb-8 sm:px-6 sm:pt-6 sm:pb-12">
             <Breadcrumbs
               items={[
                 { label: 'Início', href: '/' },
@@ -152,12 +152,12 @@ export default async function EssayPage({ params }: Props) {
                 { label: essay.title },
               ]}
             />
-            <div className="mt-8 flex flex-wrap items-center gap-3">
+            <div className="mt-5 flex flex-wrap items-center gap-x-3 gap-y-2 sm:mt-8">
               <NatureBadge nature={essay.nature} />
               {summary.category ? (
                 <Link
                   href={categoryPath(summary.category.slug)}
-                  className="rounded-sm text-sm font-medium text-link underline underline-offset-4 hover:no-underline"
+                  className="inline-flex min-h-8 items-center rounded-sm text-sm font-medium text-link underline underline-offset-4 hover:no-underline"
                 >
                   {summary.category.name}
                 </Link>
@@ -168,18 +168,18 @@ export default async function EssayPage({ params }: Props) {
             </div>
             <h1
               id="titulo-ensaio"
-              className="mt-4 font-serif text-[2rem] leading-tight font-semibold text-primary sm:text-5xl"
+              className="mt-3 font-serif text-[1.875rem] leading-[1.15] font-semibold text-pretty text-primary sm:mt-4 sm:text-5xl sm:leading-tight"
             >
               {essay.title}
             </h1>
             {essay.subtitle ? (
-              <p className="mt-4 font-serif text-xl leading-relaxed text-muted-foreground sm:text-2xl">
+              <p className="mt-3 font-serif text-lg leading-relaxed text-muted-foreground sm:mt-4 sm:text-2xl">
                 {essay.subtitle}
               </p>
             ) : null}
             <div className="mt-6 flex flex-col gap-1 text-base text-foreground">
               <EssayByline authors={summary.authors} />
-              <p className="flex flex-wrap items-center gap-x-2 text-sm text-muted-foreground">
+              <p className="flex flex-col gap-0.5 text-sm text-muted-foreground sm:flex-row sm:flex-wrap sm:items-center sm:gap-x-2">
                 {published ? (
                   <span>
                     Publicado em <time dateTime={essay.publishedAt ?? undefined}>{published}</time>
@@ -189,11 +189,17 @@ export default async function EssayPage({ params }: Props) {
                 )}
                 {revised ? (
                   <span>
-                    · Atualizado em <time dateTime={essay.revisedAt ?? undefined}>{revised}</time>
+                    <span aria-hidden="true" className="hidden sm:inline">
+                      ·
+                    </span>{' '}
+                    Atualizado em <time dateTime={essay.revisedAt ?? undefined}>{revised}</time>
                   </span>
                 ) : null}
                 <span className="inline-flex items-center gap-1">
-                  · <ClockIcon className="size-4" aria-hidden="true" />
+                  <span aria-hidden="true" className="hidden sm:inline">
+                    ·
+                  </span>{' '}
+                  <ClockIcon className="size-4" aria-hidden="true" />
                   {readingTimeLabel(essay.readingTime)}
                 </span>
               </p>

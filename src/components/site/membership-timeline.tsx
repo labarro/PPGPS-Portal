@@ -55,7 +55,7 @@ export function MembershipTimeline({
                     {index > 0 ? ' · ' : null}
                     <Link
                       href={researchLinePath(line.slug)}
-                      className="text-link underline underline-offset-4 hover:no-underline"
+                      className="inline-flex min-h-6 items-center text-link underline underline-offset-4 hover:no-underline"
                     >
                       {line.name}
                     </Link>

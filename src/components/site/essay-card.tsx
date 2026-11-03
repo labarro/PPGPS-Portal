@@ -53,7 +53,7 @@ export function EssayCard({
             <span className="text-sm text-muted-foreground">{essay.category.name}</span>
           ) : null}
         </div>
-        <Heading className="font-serif text-xl leading-snug font-semibold text-primary sm:text-2xl">
+        <Heading className="font-serif text-[1.1875rem] leading-snug font-semibold text-pretty text-primary sm:text-2xl">
           <Link
             href={essayPath(essay.slug)}
             className="rounded-sm after:absolute after:inset-0 after:content-[''] hover:underline"
@@ -62,7 +62,9 @@ export function EssayCard({
           </Link>
         </Heading>
         {essay.excerpt ? (
-          <p className="line-clamp-4 leading-relaxed text-muted-foreground">{essay.excerpt}</p>
+          <p className="line-clamp-3 leading-relaxed text-muted-foreground sm:line-clamp-4">
+            {essay.excerpt}
+          </p>
         ) : null}
         <div className="mt-auto flex flex-col gap-1 pt-2 text-sm text-muted-foreground">
           <EssayByline authors={essay.authors} linked={false} className="text-foreground" />

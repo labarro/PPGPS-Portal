@@ -50,8 +50,10 @@ export const viewport: Viewport = {
 export default async function SiteLayout({ children }: { children: ReactNode }) {
   const [chrome, profile, readContext] = await Promise.all([
     getSiteChrome(),
-    getGroupProfile(),
-    getReadContext(),
+    // Cabeçalho e rodapé nunca derrubam o layout: em indisponibilidade do banco, a própria
+    // página falha (erro de servidor) e o layout usa os valores padrão (S06).
+    getGroupProfile().catch(() => null),
+    getReadContext().catch(() => ({ draft: false, user: null })),
   ])
   return (
     <html lang={defaultLocale} className={`${sans.variable} ${serif.variable}`}>

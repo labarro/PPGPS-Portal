@@ -12,16 +12,22 @@ export function Breadcrumbs({ items }: { items: Crumb[] }) {
         {items.map((item, index) => {
           const last = index === items.length - 1
           return (
-            <li key={`${item.label}-${index}`} className="flex items-center gap-1">
+            <li
+              key={`${item.label}-${index}`}
+              className={last ? 'flex min-w-0 items-center gap-1' : 'flex items-center gap-1'}
+            >
               {item.href && !last ? (
                 <Link
                   href={item.href}
-                  className="inline-flex min-h-6 items-center rounded-sm text-link underline underline-offset-4 hover:no-underline"
+                  className="inline-flex min-h-8 items-center rounded-sm text-link underline underline-offset-4 hover:no-underline"
                 >
                   {item.label}
                 </Link>
               ) : (
-                <span aria-current={last ? 'page' : undefined} className="text-foreground">
+                <span
+                  aria-current={last ? 'page' : undefined}
+                  className="line-clamp-1 text-foreground sm:line-clamp-none"
+                >
                   {item.label}
                 </span>
               )}

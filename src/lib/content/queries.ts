@@ -4,6 +4,7 @@ import { getPayload, type Payload } from 'payload'
 import { cache } from 'react'
 
 import { isAdminOrEditor } from '@/access'
+import { withDatabaseRetry } from '@/lib/db/availability'
 import { defaultLocale } from '@/lib/i18n/locales'
 import { buildDirectory, type DirectoryPerson } from '@/lib/people/directory'
 import type {
@@ -21,6 +22,7 @@ import type {
 import { cachedRead } from './cache'
 import { CACHE_TAGS, essayTag, pageTag, personTag, researchLineTag } from './cache-tags'
 import { isLegalPageSlug, normalizePath } from './paths'
+import { handleReadError } from './read-errors'
 import { canViewPublic, essayListedWhere, essayPublicWhere } from './visibility'
 
 /**
@@ -33,7 +35,8 @@ type ReadContext = { draft: boolean; user: User | null }
 
 const isBuildPhase = () => process.env.NEXT_PHASE === 'phase-production-build'
 
-const getPayloadClient = (): Promise<Payload> => getPayload({ config })
+/** Uma nova tentativa se a inicialização falhar por indisponibilidade do banco (S06). */
+const getPayloadClient = (): Promise<Payload> => withDatabaseRetry(() => getPayload({ config }))
 
 export const getReadContext = cache(async (): Promise<ReadContext> => {
   if (isBuildPhase()) return { draft: false, user: null }
@@ -65,8 +68,7 @@ async function read<T>(
   try {
     return ctx.draft ? await run() : await cachedRead(key, tags, run)
   } catch (error) {
-    console.error(`[site] Falha ao ler ${key.join('/')}.`, error)
-    return fallback
+    return handleReadError(key, fallback, error)
   }
 }
 
@@ -207,10 +209,7 @@ export const listDirectory = cache((): Promise<DirectoryPerson[]> =>
           }),
         ])
         return buildDirectory(people.docs, memberships.docs)
-      }).catch((error) => {
-        console.error('[site] Falha ao ler o diretório de integrantes.', error)
-        return []
-      }),
+      }).catch((error) => handleReadError(['people', 'directory'], [], error)),
 )
 
 /** Perfil público completo (sempre anônimo; 
@@ -228,10 +227,7 @@ export const getPerson = cache((slug: string): Promise<Person | null> =>
           ...anonymousArgs,
         })
         return result.docs[0] ?? null
-      }).catch((error) => {
-        console.error(`[site] Falha ao ler o perfil ${slug}.`, error)
-        return null
-      }),
+      }).catch((error) => handleReadError(['people', 'slug', slug], null, error)),
 )
 
 /**
@@ -566,10 +562,7 @@ export const listEssays = cache(async (filter: EssayListFilter = {}): Promise<Es
       totalPages: result.totalPages,
       totalDocs: result.totalDocs,
     }
-  }).catch((error) => {
-    console.error('[site] Falha ao listar ensaios.', error)
-    return empty
-  })
+  }).catch((error) => handleReadError(['essays', 'list'], empty, error))
 })
 
 /** Destaques da home: fixados no global "Página inicial" (se listáveis) ou os 3 mais recentes. */
@@ -599,7 +592,7 @@ export const getFeaturedEssays = cache(
         const byId = new Map(result.docs.map((doc) => [doc.id, toEssaySummary(doc as Essay)]))
         return ids.map((id) => byId.get(id)).filter((doc): doc is EssaySummary => !!doc)
       },
-    ).catch(() => [] as EssaySummary[])
+    ).catch((error) => handleReadError(['essays', 'featured'], [] as EssaySummary[], error))
     // Completa com os mais recentes se algum fixado não estiver mais publicado.
     const extra = recent.docs.filter((doc) => !chosen.some((item) => item.id === doc.id))
     return [...chosen, ...extra].slice(0, 3)
@@ -643,7 +636,7 @@ const taxonomyQuery = (collection: 'categories' | 'tags') =>
         ...anonymousArgs,
       })
       return (result.docs[0] as Category | Tag | undefined) ?? null
-    }).catch(() => null)
+    }).catch((error) => handleReadError([collection, 'slug', slug], null, error))
   })
 
 export const getCategory = taxonomyQuery('categories')
@@ -663,5 +656,5 @@ export const listCategories = cache(async (): Promise<Category[]> => {
       ...anonymousArgs,
     })
     return result.docs
-  }).catch(() => [])
+  }).catch((error) => handleReadError(['categories', 'list'], [] as Category[], error))
 })

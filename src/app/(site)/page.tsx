@@ -74,29 +74,42 @@ function Hero({
   actions: { label: string; href: string }[]
   profile: GroupProfile | null
 }) {
+  const redundantEyebrow =
+    !!eyebrow &&
+    name.toLocaleLowerCase('pt-BR').startsWith(eyebrow.trim().toLocaleLowerCase('pt-BR'))
   return (
     <section
       aria-labelledby="titulo"
       className="surface-inverse relative isolate overflow-hidden bg-inverse-deep text-inverse-foreground"
     >
       <IntersectionMotif className="pointer-events-none absolute top-1/2 right-[-14rem] -z-10 hidden w-[52rem] -translate-y-1/2 text-inverse-line opacity-30 md:block" />
-      <div className="mx-auto grid max-w-6xl gap-12 px-4 py-16 sm:px-6 sm:py-20 lg:grid-cols-[1fr_20rem] lg:items-end lg:gap-16 lg:py-24">
+      <div className="mx-auto grid max-w-6xl gap-8 px-4 py-10 sm:gap-12 sm:px-6 sm:py-20 lg:grid-cols-[1fr_20rem] lg:items-end lg:gap-16 lg:py-24">
         <div>
-          {eyebrow ? <p className="text-base text-inverse-line">{eyebrow}</p> : null}
+          {eyebrow ? (
+            <p
+              className={cn(
+                'mb-4 text-base text-inverse-line',
+                // No celular, omite o sobretítulo quando ele só repete o início do nome.
+                redundantEyebrow && 'hidden sm:block',
+              )}
+            >
+              {eyebrow}
+            </p>
+          ) : null}
           <h1
             id="titulo"
-            className="mt-4 max-w-3xl font-serif text-[2.1rem] leading-[1.08] font-semibold tracking-tight sm:text-5xl lg:text-[3.6rem]"
+            className="max-w-3xl font-serif text-[1.875rem] leading-[1.12] font-semibold tracking-tight min-[400px]:text-[2.1rem] sm:text-5xl sm:leading-[1.08] lg:text-[3.6rem]"
           >
             {name}
           </h1>
           {purpose ? (
-            <p className="mt-6 max-w-2xl text-lg leading-relaxed text-inverse-muted-foreground sm:text-xl">
+            <p className="mt-4 max-w-2xl text-[1.0625rem] leading-relaxed text-inverse-muted-foreground sm:mt-6 sm:text-xl">
               {purpose}
             </p>
           ) : null}
           {profile?.provisionalTexts ? <ProvisionalNote inverse className="mt-5" /> : null}
           {actions.length > 0 ? (
-            <div className="mt-9 flex flex-col gap-3 sm:flex-row">
+            <div className="mt-7 flex flex-col gap-3 sm:mt-9 sm:flex-row">
               {actions.map((action, index) => {
                 const href = safeHref(action.href)
                 if (!href) return null
@@ -119,7 +132,7 @@ function Hero({
           ) : null}
         </div>
         {profile ? (
-          <div className="rounded-lg border border-white/25 bg-inverse/60 p-6 backdrop-blur-sm">
+          <div className="rounded-lg border border-white/25 bg-inverse/60 p-5 backdrop-blur-sm sm:p-6">
             <h2 className="font-serif text-lg font-semibold">Registro do grupo</h2>
             <GroupFacts profile={profile} inverse className="mt-2" />
           </div>
@@ -142,11 +155,15 @@ function SectionHeading({
     <div className="max-w-3xl">
       <h2
         id={id}
-        className="font-serif text-3xl leading-tight font-semibold text-primary sm:text-4xl"
+        className="font-serif text-[1.75rem] leading-tight font-semibold text-primary sm:text-4xl"
       >
         {heading}
       </h2>
-      {intro ? <p className="mt-4 text-lg leading-relaxed text-muted-foreground">{intro}</p> : null}
+      {intro ? (
+        <p className="mt-3 text-base leading-relaxed text-muted-foreground sm:mt-4 sm:text-lg">
+          {intro}
+        </p>
+      ) : null}
     </div>
   )
 }
@@ -198,32 +215,19 @@ export default async function HomePage() {
             if (!profile || aboutParagraphs.length === 0) return null
             return (
               <section key={id} aria-labelledby={id} className="border-b">
-                <div className="mx-auto grid max-w-6xl gap-10 px-4 py-16 sm:px-6 lg:grid-cols-[1fr_1.6fr] lg:gap-16 lg:py-20">
-                  <div>
-                    <SectionHeading id={id} heading={section.heading} intro={section.intro} />
-                    <nav aria-label="Páginas sobre o grupo" className="mt-8">
-                      <ul className="flex flex-col border-t">
-                        {GROUP_SECTIONS.filter((item) => item.slug).map((item) => (
-                          <li key={item.href} className="border-b">
-                            <Link
-                              href={item.href}
-                              className="flex min-h-12 items-center justify-between gap-4 rounded-sm py-2 text-foreground hover:text-primary hover:underline"
-                            >
-                              {item.label}
-                              <ArrowRightIcon className="size-4 text-primary" aria-hidden="true" />
-                            </Link>
-                          </li>
-                        ))}
-                      </ul>
-                    </nav>
-                  </div>
-                  <div className="flex flex-col gap-5">
+                {/* No celular a ordem de leitura é título → texto → links; no desktop os links
+                    ficam sob o título, na coluna da esquerda. */}
+                <div className="mx-auto grid max-w-6xl gap-6 px-4 py-12 sm:gap-10 sm:px-6 sm:py-16 lg:grid-cols-[1fr_1.6fr] lg:grid-rows-[auto_1fr] lg:gap-x-16 lg:gap-y-8 lg:py-20">
+                  <SectionHeading id={id} heading={section.heading} intro={section.intro} />
+                  <div className="flex flex-col gap-4 sm:gap-5 lg:col-start-2 lg:row-span-2 lg:row-start-1">
                     {aboutParagraphs.map((text, index) => (
                       <p
                         key={index}
                         className={cn(
-                          'font-serif leading-relaxed text-foreground',
-                          index === 0 ? 'text-xl sm:text-2xl sm:leading-relaxed' : 'text-lg',
+                          'font-serif leading-relaxed text-pretty text-foreground',
+                          index === 0
+                            ? 'text-[1.1875rem] sm:text-2xl sm:leading-relaxed'
+                            : 'text-[1.0625rem] sm:text-lg',
                         )}
                       >
                         {text}
@@ -231,11 +235,26 @@ export default async function HomePage() {
                     ))}
                     <Link
                       href="/o-grupo"
-                      className="mt-2 inline-flex min-h-11 items-center self-start rounded-sm font-medium text-link underline underline-offset-4 hover:no-underline"
+                      className="inline-flex min-h-11 items-center self-start rounded-sm font-medium text-link underline underline-offset-4 hover:no-underline sm:mt-2"
                     >
                       Leia a apresentação completa
                     </Link>
                   </div>
+                  <nav aria-label="Páginas sobre o grupo" className="lg:col-start-1 lg:row-start-2">
+                    <ul className="flex flex-col border-t">
+                      {GROUP_SECTIONS.filter((item) => item.slug).map((item) => (
+                        <li key={item.href} className="border-b">
+                          <Link
+                            href={item.href}
+                            className="flex min-h-12 items-center justify-between gap-4 rounded-sm py-2 text-foreground hover:text-primary hover:underline"
+                          >
+                            {item.label}
+                            <ArrowRightIcon className="size-4 text-primary" aria-hidden="true" />
+                          </Link>
+                        </li>
+                      ))}
+                    </ul>
+                  </nav>
                 </div>
               </section>
             )
@@ -243,9 +262,9 @@ export default async function HomePage() {
             if (lines.length === 0) return null
             return (
               <section key={id} aria-labelledby={id}>
-                <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6 lg:py-20">
+                <div className="mx-auto max-w-6xl px-4 py-12 sm:px-6 sm:py-16 lg:py-20">
                   <SectionHeading id={id} heading={section.heading} intro={section.intro} />
-                  <ResearchLinesDiptych lines={lines} className="mt-10" />
+                  <ResearchLinesDiptych lines={lines} className="mt-6 sm:mt-10" />
                 </div>
               </section>
             )
@@ -253,9 +272,12 @@ export default async function HomePage() {
             if (highlights.length === 0) return null
             return (
               <section key={id} aria-labelledby={id} className="border-t bg-muted">
-                <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6 lg:py-20">
+                <div className="mx-auto max-w-6xl px-4 py-12 sm:px-6 sm:py-16 lg:py-20">
                   <SectionHeading id={id} heading={section.heading} intro={section.intro} />
-                  <ul className="mt-10 grid gap-6 md:grid-cols-3" data-testid="home-essays">
+                  <ul
+                    className="mt-6 grid gap-4 sm:mt-10 sm:gap-6 md:grid-cols-3"
+                    data-testid="home-essays"
+                  >
                     {highlights.map((essay) => (
                       <li key={essay.id}>
                         <EssayCard essay={essay} />
@@ -275,9 +297,9 @@ export default async function HomePage() {
             if (featured.length === 0) return null
             return (
               <section key={id} aria-labelledby={id} className="border-t">
-                <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6 lg:py-20">
+                <div className="mx-auto max-w-6xl px-4 py-12 sm:px-6 sm:py-16 lg:py-20">
                   <SectionHeading id={id} heading={section.heading} intro={section.intro} />
-                  <ul className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                  <ul className="mt-6 grid gap-3 sm:mt-10 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3">
                     {featured.map((person) => (
                       <li key={person.id}>
                         <PersonCard person={person} lines={linesById} />
@@ -297,9 +319,9 @@ export default async function HomePage() {
             if (references.length === 0) return null
             return (
               <section key={id} aria-labelledby={id} className="bg-muted">
-                <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6 lg:py-20">
+                <div className="mx-auto max-w-6xl px-4 py-12 sm:px-6 sm:py-16 lg:py-20">
                   <SectionHeading id={id} heading={section.heading} intro={section.intro} />
-                  <InstitutionalReferences references={references} className="mt-10" />
+                  <InstitutionalReferences references={references} className="mt-6 sm:mt-10" />
                 </div>
               </section>
             )

@@ -47,7 +47,7 @@ export function EssayNotice({
             <a
               href={resolved.url}
               rel="license noopener noreferrer"
-              className="text-link underline underline-offset-4 hover:no-underline"
+              className="inline-flex min-h-6 items-center text-link underline underline-offset-4 hover:no-underline"
             >
               {resolved.label}
               <span className="sr-only"> (site externo)</span>
