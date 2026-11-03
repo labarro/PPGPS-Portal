@@ -14,6 +14,17 @@
 | Alto | Site fora do ar; erro em todas as páginas | Rollback (`rollback.md`) e passo 4 |
 | Médio | Uma página/funcionalidade quebrada | Correção em nova release |
 
+### Banco de dados indisponível (lição do alerta de 02/11/2026)
+
+- **Sintoma:**
+  - páginas respondem 500 com "Não foi possível carregar esta página";
+  - Sentry: `cannot connect to Postgres` / `DatabaseUnavailableError` (antes da v1.0.2 aparecia como `Error: undefined`, via `onunhandledrejection`).
+- **Comportamento esperado:** uma nova tentativa automática em 400 ms. Se persistir, a página falha com 5xx (não indexável) e nada degradado fica em cache. A recuperação é automática quando o banco volta.
+- **Verificar:**
+  - status do Neon e operações da branch `production` (`start_compute`/`suspend_compute` no horário);
+  - Runtime Logs da Vercel. O plano Hobby retém pouco tempo, então consulte logo após o alerta.
+- **Se persistir:** siga `restauracao.md` (Opção A) somente se houver corrupção; indisponibilidade do provedor apenas se acompanha.
+
 ## 2. Conter
 
 - **Exposição de dados de uma pessoa:** revogue a autorização no painel (**Consentimentos**, abra o registro e preencha a data de revogação). A revogação retira o perfil, a foto e o e-mail imediatamente. Se o dado estiver num ensaio, arquive o ensaio.

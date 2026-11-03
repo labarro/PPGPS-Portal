@@ -15,12 +15,12 @@
 | Situação da S03 | **Concluída** (30/10/2026; PR #14). Revisão visual/funcional, navegação desktop/mobile, conteúdo provisório e os 9 critérios aprovados pelo responsável técnico; textos definitivos do coordenador (Q7) seguem pendentes para a S06 |
 | Situação da S04 | **Concluída** (30/10/2026; PRs #23 e #24). Roteiro de homologação executado e os 8 critérios aprovados pelo responsável técnico; autorizações individuais reais e dados do grupo seguem pendentes (bloqueiam só a publicação dos perfis, S06) |
 | Situação da S05 | **Concluída** (30/10/2026; PRs #34, #35, #36 e PR de encerramento). Homologação manual e ADR-0015 aprovados pelo responsável técnico; Lighthouse ≥ 0,90 nas 4 categorias comprovado no runner do CI |
-| Situação da S06 | **Em execução** — portal **publicado** em `https://bioeticaps.app` (release `v1.0.1`, 31/10/2026 UTC) com a estrutura aprovada; critérios de conteúdo do M1 pendentes do coordenador (ver `docs/qualidade/relatorio-m1.md`) |
-| Próxima sprint | S07 — somente após a conclusão da S06 |
-| Domínio oficial | **`https://bioeticaps.app`** (ADR-0014) — **no ar** desde 31/10/2026 (`www` → 308 para o apex); `PRODUCTION_DEPLOY_ENABLED=true` |
-| Última atualização | 31/10/2026 |
+| Situação da S06 | **Concluída** (03/11/2026; PRs #38–#42, #48 e PR de encerramento). Portal em produção (`v1.0.2`); critérios técnicos comprovados; exceções residuais autorizadas pelo responsável técnico (conteúdo acadêmico, autorizações individuais e registros administrativos), com pendências rastreáveis em `docs/qualidade/relatorio-m1.md` §4 |
+| Próxima sprint | **S07 — Orientações, conclusões acadêmicas e egressos** — **não iniciada** (somente com autorização do responsável técnico) |
+| Domínio oficial | **`https://bioeticaps.app`** (ADR-0014) — **no ar** desde 31/10/2026, release **`v1.0.2`** (03/11/2026); `www` → 308 para o apex; `PRODUCTION_DEPLOY_ENABLED=true` |
+| Última atualização | 03/11/2026 |
 | Planejamento vigente | `docs/PLANEJAMENTO_PORTAL_PPGPS.md` **v1.4** (30/10/2026) |
-| ADRs | 0001–0015 **Aceitos**; **0016 (hospedagem de produção) Proposto** |
+| ADRs | 0001–0016 **Aceitos** (0016 — hospedagem de produção — em 03/11/2026) |
 
 ## Situação das sprints
 
@@ -32,12 +32,91 @@
 | S03 | Portal do grupo: identidade, linhas temáticas e homepage v1 | M1 | **Concluída** (30/10/2026; PR #14) |
 | S04 | Integrantes, vínculos e consentimentos | M1 | **Concluída** (30/10/2026; PRs #23 e #24) |
 | S05 | Blog acadêmico e fluxo editorial | M1 | **Concluída** (30/10/2026; PRs #34–#36) |
-| S06 | Reauditoria, conteúdo inicial e lançamento do M1 | M1 | **Em execução** (portal publicado; conteúdo pendente) |
+| S06 | Reauditoria, conteúdo inicial e lançamento do M1 | M1 | **Concluída** (03/11/2026; exceções residuais de conteúdo autorizadas) |
 | S07 | Orientações, conclusões acadêmicas e egressos | M2 | Não iniciada |
 | S08 | Catálogo de publicações do grupo | M2 | Não iniciada |
 | S09 | Importação em lote, deduplicação e busca global | M2 | Não iniciada |
 | S10 | Eventos, projetos e impacto social | M2 | Não iniciada |
 | S11 | Consolidação, carga de dados acadêmicos e lançamento do M2 | M2 | Não iniciada |
+
+## Sessão de 03/11/2026 — correções pós-lançamento e encerramento da S06
+
+**Modo:** autônomo, autorizado expressamente pelo responsável técnico (correções mobile e do Sentry, itens restantes e encerramento da S06). S07 **não iniciada**.
+
+### Confirmações do responsável técnico (03/11/2026)
+
+| Item | Registro |
+|---|---|
+| Aprovação institucional | O prof. Lucas aprovou o portal, a estrutura, a identidade visual e as funcionalidades até a S05; o lançamento público foi autorizado |
+| Conta do coordenador | **Já existe**: conta `editor` do prof. Lucas criada no Payload, com acesso ao painel configurado. Não foi recriada nem alterada |
+| Recuperação de senha e SMTP de produção (Resend) | Testados com envio real e **homologados** |
+| Primeira versão pública | Testada e homologada |
+| ADR-0016 | Aceite autorizado, condicionado à coerência com a infraestrutura → conferido e **Aceito** |
+| Contas em produção | O log do pipeline registra 4 contas. O responsável técnico declarou que as 2 adicionais são **legítimas** (decisão registrada; a ficha previa só as duas reais) |
+
+A aprovação institucional geral **não** substitui as autorizações individuais: nenhum perfil, foto ou e-mail pessoal foi publicado.
+
+### PR #48 (squash `f0156f7`) e release `v1.0.2`
+
+**Alerta do Sentry** (issue 7825652445, `Error: undefined`, `GET /privacidade`, 02/11/2026 21:43 UTC):
+
+- Causa reproduzida: falha de conexão com o Postgres na inicialização do Payload → `rejectInitializing()` sem motivo no `@payloadcms/db-postgres@3.92` → `unhandledRejection: undefined`.
+- O Neon estava ativo no horário (não foi partida a frio). Logs da Vercel não retidos (Hobby) e Sentry sem acesso do agente: a origem exata da falha de rede de 02/11 fica **não determinada**.
+- Correção:
+  - `src/lib/db/safe-adapter.ts`;
+  - timeout de conexão de 15 s;
+  - uma nova tentativa;
+  - indisponibilidade persistente → 500 com a página de erro (antes: 200 vazio e 404 em perfis);
+  - erros comuns registrados no Sentry.
+- Validação: 0 rejeições não tratadas na reprodução e 8 testes unitários.
+- A issue **não** foi marcada como resolvida pelo agente.
+
+**Revisão mobile-first:**
+
+- cabeçalho de uma linha;
+- menu com links de apoio, móvel até 1024 px (o tablet quebrava itens);
+- home mais enxuta e na ordem de leitura;
+- hierarquia das linhas temáticas corrigida;
+- pílulas de seção visíveis;
+- perfil e ensaio compactos;
+- rodapé em duas colunas;
+- alvos de toque ≥ 24 px.
+
+Capturas antes/depois em `docs/qualidade/mobile-s06/`. 14 E2E novos (320/375/390/430, tablet, desktop).
+
+| Verificação | Resultado |
+|---|---|
+| Local | lint, format, typecheck; unit 272; integração 114; **E2E 116/116** contra `next start`; build; `migrate:check` sem drift; `pnpm audit --audit-level high` |
+| CI do PR #48 e da `main` (`f0156f7`) | Todos verdes: CI `41683350018`, migrations `41683349971`, homologação `41683349927` |
+| Lighthouse mobile (runner, mediana de 3) | Desempenho 0,90–0,93 nas 9 rotas (home 0,90; ensaio 0,92); acessibilidade, boas práticas e SEO 1,00 |
+| Produção `v1.0.2` | Run `41685129160` verde (ponto de restauração, migrate, conteúdo idempotente, R2, deploy, fumaça). Verificação independente: 19 rotas 200, APIs administrativas 403, GraphQL 404, `first-register` 403 |
+| Teclado e árvore de acessibilidade | `scripts/qa/a11y-keyboard.mjs`: 17 rotas × 2 larguras sem falhas. **NVDA não executado** (não instalado) |
+| Backups | Diários de produção com sucesso de 31/10 a 03/11; restauração mensal agendada (03/11) com sucesso |
+| Monitoramento | 14 execuções agendadas verdes, mas cadência real de ~6 h (mediana de 380 min). Monitor externo recomendado |
+| Search Console | **Não configurado** (sem verificação no DNS ou na página). Procedimento em `docs/runbooks/deploy.md` |
+
+### Encerramento da S06
+
+Classificação completa em `docs/sprints/S06.md` (seção "Encerramento"). Critérios técnicos atendidos e comprovados: vazamento, marca, restauração, rollback e Sentry/SMTP (homologação expressa). Exceções rastreáveis:
+
+- conteúdo do M1 (textos definitivos, perfis, ensaios);
+- demonstração do coordenador com conteúdo real;
+- arquivamento do registro original;
+- captura de e-mail em homologação;
+- NVDA;
+- Search Console;
+- monitor externo;
+- verificação de 7 dias (a partir de 07/11/2026).
+
+**S06 Concluída em 03/11/2026.**
+
+### Preparação para a S07
+
+- `main` estável e CI verde; produção e homologação atualizadas.
+- ADRs 0001–0016 aceitos.
+- Nenhuma coleção, migration ou rota da S07 criada.
+
+**PRs abertos do Dependabot** (#43–#47: Payload 3.9x, TypeScript 5.9, Sentry 11.10, AWS SDK) ficam para manutenção dedicada, antes ou no início da S07. Vulnerabilidades moderadas conhecidas (`esbuild` via `drizzle-kit`, `minimatch` via `eslint`, `glob` via `@sentry/bundler-plugins`) estão só em ferramentas de build/desenvolvimento.
 
 ## Sessão de 30–31/10/2026 — execução da S06 e lançamento do M1
 

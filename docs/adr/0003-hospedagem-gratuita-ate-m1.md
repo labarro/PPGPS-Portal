@@ -13,6 +13,8 @@
 
 > **Nota de 30/10/2026 (ADR-0014):** o domínio definitivo de produção é `https://bioeticaps.app`, já associado ao projeto na Vercel e sem deploy servido; ativação pública na S06.
 
+> **Nota de 03/11/2026 (ADR-0016, Aceito):** a hospedagem de produção do M1 foi decidida no ADR-0016 (mesmos planos gratuitos, operação e trava de produção). O domínio está ativo desde 31/10/2026.
+
 ## Contexto
 
 O projeto não tem orçamento aprovado para infraestrutura (RNF-14: operar em planos gratuitos até o lançamento). Desenvolvimento, previews e homologação precisam de banco Postgres com *branching* (previews isolados), armazenamento S3 compatível e CI. A hospedagem de produção depende de validação com os responsáveis do grupo (Q3 do planejamento v1.2: domínio e aceitação de hospedagem externa com dados possivelmente fora do Brasil). Revisado em 20/10/2026 para o escopo do grupo (ADR-0006), sem mudança na decisão.

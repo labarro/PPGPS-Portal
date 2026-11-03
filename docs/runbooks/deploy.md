@@ -44,6 +44,26 @@
 - A conta `admin` é criada sem senha conhecida: abra `https://bioeticaps.app/admin/forgot`, informe o e-mail de `BOOTSTRAP_ADMIN_EMAIL` e defina a senha pelo link (válido por 1 h).
 - Crie a conta `editor` do coordenador em **Usuários**. Ele recebe o e-mail para definir a própria senha.
 
+## Pós-lançamento (ações únicas do responsável técnico)
+
+### Google Search Console
+
+Situação em 03/11/2026: **não configurado**. Não há registro TXT de verificação no DNS, nem meta tag ou arquivo de verificação.
+
+1. Em <https://search.google.com/search-console>, adicione uma propriedade do tipo **Domínio**: `bioeticaps.app`.
+2. Copie o valor `google-site-verification=...` e crie o registro no DNS da Vercel (os nameservers do domínio são da Vercel):
+
+   ```bash
+   vercel dns add bioeticaps.app @ TXT "google-site-verification=<valor>" --scope labarros-projects
+   ```
+
+3. Clique em **Verificar**. Depois, em **Sitemaps**, envie `https://bioeticaps.app/sitemap.xml`.
+4. Confira em **Páginas** a indexação das rotas públicas. `/admin`, `/api` e `/next` são bloqueadas no `robots.txt`, como esperado.
+
+### Monitor externo de disponibilidade
+
+O `production-cron.yml` é executado pelo GitHub com cadência real de horas (ADR-0016). Para alerta rápido, crie gratuitamente um monitor HTTP para `https://bioeticaps.app/` (ex.: UptimeRobot ou Better Stack): intervalo de 5 min, alerta por e-mail ao responsável técnico. Nenhum segredo é necessário.
+
 ## Se a fumaça falhar
 
 O deploy já está no domínio. Siga `rollback.md` (*promote* do deploy anterior) e, se a migration for a causa, `restauracao.md`.
