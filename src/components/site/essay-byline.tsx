@@ -29,7 +29,7 @@ export function EssayByline({
           {linked && author.personSlug ? (
             <Link
               href={personPath(author.personSlug)}
-              className="rounded-sm font-medium text-link underline underline-offset-4 hover:no-underline"
+              className="inline-flex min-h-6 items-center rounded-sm font-medium text-link underline underline-offset-4 hover:no-underline"
             >
               {author.name}
             </Link>

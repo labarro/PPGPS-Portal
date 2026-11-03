@@ -14,10 +14,13 @@ import { ProvisionalNote } from './provisional-note'
 export function ResearchLinesDiptych({
   lines,
   headingLevel = 3,
+  size = 'display',
   className,
 }: {
   lines: ResearchLineSummary[]
   headingLevel?: 2 | 3
+  /** compact: dentro de uma seção com título menor (ex.: /o-grupo). */
+  size?: 'display' | 'compact'
   className?: string
 }) {
   if (lines.length === 0) return null
@@ -31,14 +34,22 @@ export function ResearchLinesDiptych({
         <li
           key={line.id}
           className={cn(
-            'group relative flex flex-col gap-5 py-10 md:py-12',
+            'group relative flex flex-col gap-3 py-7 sm:gap-5 sm:py-10 md:py-12',
             index % 2 === 0
               ? 'md:pr-10 lg:pr-14'
               : 'border-t border-primary/25 md:border-t-0 md:border-l md:border-l-primary md:pl-10 lg:pl-14',
             index > 1 && 'border-t border-primary/25',
           )}
         >
-          <Heading className="font-serif text-4xl leading-[1.05] font-semibold tracking-tight text-primary sm:text-5xl lg:text-6xl">
+          <Heading
+            className={cn(
+              'font-serif leading-[1.08] font-semibold tracking-tight text-primary',
+              // Celular: o nome da linha nunca supera o título da seção que o contém.
+              size === 'compact'
+                ? 'text-[1.375rem] sm:text-[1.75rem]'
+                : 'text-[1.75rem] sm:text-5xl lg:text-6xl',
+            )}
+          >
             <Link
               href={researchLinePath(line.slug)}
               className="rounded-sm decoration-2 underline-offset-[0.18em] after:absolute after:inset-0 hover:underline"
@@ -46,7 +57,9 @@ export function ResearchLinesDiptych({
               {line.name}
             </Link>
           </Heading>
-          <p className="max-w-md text-lg leading-relaxed text-muted-foreground">{line.summary}</p>
+          <p className="max-w-md text-base leading-relaxed text-muted-foreground sm:text-lg">
+            {line.summary}
+          </p>
           <p className="mt-auto text-sm font-medium text-link" aria-hidden="true">
             Ler sobre a linha
           </p>

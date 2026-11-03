@@ -115,7 +115,7 @@ export default async function PersonPage({ params }: Props) {
         ]}
       />
       <div className="border-b bg-muted">
-        <div className="mx-auto max-w-6xl px-4 pt-6 pb-10 sm:px-6 sm:pb-14">
+        <div className="mx-auto max-w-6xl px-4 pt-4 pb-8 sm:px-6 sm:pt-6 sm:pb-14">
           <Breadcrumbs
             items={[
               { label: 'Início', href: '/' },
@@ -123,10 +123,10 @@ export default async function PersonPage({ params }: Props) {
               { label: person.fullName },
             ]}
           />
-          <div className="mt-8 flex flex-col gap-6 sm:flex-row sm:items-end sm:gap-8">
+          <div className="mt-5 flex flex-col gap-4 sm:mt-8 sm:flex-row sm:items-end sm:gap-8">
             <PersonAvatar name={person.fullName} photo={photo} size="lg" />
-            <div className="min-w-0 border-l-4 border-primary pl-5 sm:pl-7">
-              <h1 className="font-serif text-3xl leading-tight font-semibold text-primary sm:text-5xl">
+            <div className="min-w-0 border-l-4 border-primary pl-4 sm:pl-7">
+              <h1 className="font-serif text-[1.875rem] leading-tight font-semibold text-pretty text-primary sm:text-5xl">
                 {person.fullName}
               </h1>
               <p className="mt-3 text-lg text-foreground" data-testid="current-role">
@@ -139,7 +139,7 @@ export default async function PersonPage({ params }: Props) {
                 </p>
               ) : null}
               {person.shortBio ? (
-                <p className="mt-4 max-w-3xl text-lg leading-relaxed text-muted-foreground">
+                <p className="mt-3 max-w-3xl text-[1.0625rem] leading-relaxed text-muted-foreground sm:mt-4 sm:text-lg">
                   {person.shortBio}
                 </p>
               ) : null}

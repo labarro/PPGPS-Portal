@@ -19,14 +19,14 @@ export function PageHeader({
 }) {
   return (
     <div className="border-b bg-muted">
-      <div className="mx-auto max-w-6xl px-4 pt-6 pb-10 sm:px-6 sm:pb-14">
+      <div className="mx-auto max-w-6xl px-4 pt-4 pb-8 sm:px-6 sm:pt-6 sm:pb-14">
         <Breadcrumbs items={breadcrumbs} />
-        <div className="mt-8 border-l-4 border-primary pl-5 sm:pl-7">
-          <h1 className="font-serif text-3xl leading-tight font-semibold text-primary sm:text-5xl">
+        <div className="mt-5 border-l-4 border-primary pl-4 sm:mt-8 sm:pl-7">
+          <h1 className="font-serif text-[1.875rem] leading-tight font-semibold text-pretty text-primary sm:text-5xl">
             {title}
           </h1>
           {lead ? (
-            <p className="mt-4 max-w-3xl text-lg leading-relaxed text-muted-foreground sm:text-xl">
+            <p className="mt-3 max-w-3xl text-[1.0625rem] leading-relaxed text-muted-foreground sm:mt-4 sm:text-xl">
               {lead}
             </p>
           ) : null}

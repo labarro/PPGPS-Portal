@@ -27,7 +27,7 @@ export function FilterBar({
       action={action}
       role="search"
       aria-label="Filtrar integrantes"
-      className="grid gap-4 rounded-lg border bg-muted p-4 sm:grid-cols-2 lg:grid-cols-[1fr_1fr_1fr_auto] lg:items-end"
+      className="grid gap-3 rounded-lg border bg-muted p-4 sm:grid-cols-2 sm:gap-4 lg:grid-cols-[1fr_1fr_1fr_auto] lg:items-end"
     >
       <div className="flex flex-col gap-1.5">
         <label htmlFor="filtro-situacao" className="text-sm font-medium">
@@ -79,10 +79,10 @@ export function FilterBar({
           ))}
         </select>
       </div>
-      <div className="flex flex-wrap items-center gap-3 sm:col-span-2 lg:col-span-1">
+      <div className="flex flex-wrap items-center gap-3 pt-1 sm:col-span-2 sm:pt-0 lg:col-span-1">
         <button
           type="submit"
-          className="inline-flex h-11 items-center justify-center rounded-md bg-primary px-5 text-base font-medium text-primary-foreground hover:bg-primary-hover"
+          className="inline-flex h-11 flex-1 items-center justify-center rounded-md bg-primary px-5 text-base font-medium text-primary-foreground hover:bg-primary-hover sm:flex-none"
         >
           Filtrar
         </button>

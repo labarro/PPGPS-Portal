@@ -35,8 +35,8 @@ export function NavLinks({
         const current = isCurrent(pathname, item.href)
         const external = isExternal(item.href)
         const className = cn(
-          'inline-flex min-h-10 items-center rounded-md px-3 text-sm font-medium transition-colors',
-          orientation === 'vertical' && 'w-full text-base',
+          'inline-flex min-h-10 items-center rounded-md px-3 text-sm font-medium whitespace-nowrap transition-colors',
+          orientation === 'vertical' && 'min-h-12 w-full px-4 text-lg',
           current
             ? 'bg-secondary text-primary underline decoration-2 underline-offset-8'
             : 'text-foreground hover:bg-secondary hover:text-primary',

@@ -25,7 +25,7 @@ export function InstitutionalReferences({
   if (variant === 'compact') {
     return (
       <ul
-        className={cn('flex flex-col gap-2 text-sm', className)}
+        className={cn('flex flex-col text-sm md:gap-2', className)}
         data-testid="institutional-references"
       >
         {references.map((reference) => (
@@ -34,7 +34,7 @@ export function InstitutionalReferences({
               <a
                 href={reference.url}
                 rel="noopener noreferrer"
-                className="inline-flex min-h-6 items-center rounded-sm underline-offset-4 hover:underline"
+                className="inline-flex min-h-11 items-center rounded-sm underline-offset-4 hover:underline md:min-h-6"
               >
                 {reference.name}
                 <span className="sr-only"> (site externo)</span>
@@ -62,10 +62,10 @@ export function InstitutionalReferences({
         return (
           <li
             key={reference.id ?? reference.name}
-            className="flex flex-col gap-2 bg-background p-6"
+            className="flex flex-col gap-2 bg-background p-5 sm:p-6"
           >
             <p className="text-sm text-muted-foreground">{referenceKindLabel(reference.kind)}</p>
-            <Heading className="font-serif text-xl leading-snug font-semibold text-primary">
+            <Heading className="font-serif text-lg leading-snug font-semibold text-pretty text-primary sm:text-xl">
               {reference.name}
             </Heading>
             <p className="leading-relaxed text-foreground">{reference.relationText}</p>

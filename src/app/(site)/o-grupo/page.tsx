@@ -89,7 +89,7 @@ export default async function GroupPage() {
             {lines.length > 0 ? (
               <section aria-labelledby="linhas">
                 <SectionTitle id="linhas">Linhas temáticas</SectionTitle>
-                <ResearchLinesDiptych lines={lines} className="mt-6" />
+                <ResearchLinesDiptych lines={lines} size="compact" className="mt-6" />
               </section>
             ) : null}
 
