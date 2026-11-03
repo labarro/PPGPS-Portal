@@ -32,6 +32,7 @@ import { Homepage } from './globals/Homepage'
 import { Navigation } from './globals/Navigation'
 import { SiteSettings } from './globals/SiteSettings'
 import { withAudit, withGlobalAudit } from './hooks/audit'
+import { withObservableInit } from './lib/db/safe-adapter'
 import { buildEmailAdapter } from './lib/email/adapter'
 import { resolveAppEnv } from './lib/env/app-env'
 import { defaultLocale, locales } from './lib/i18n/locales'
@@ -137,14 +138,20 @@ export default buildConfig({
   typescript: {
     outputFile: path.resolve(dirname, 'payload-types.ts'),
   },
-  db: postgresAdapter({
-    pool: {
-      connectionString: process.env.DATABASE_URL || '',
-    },
-    // Schema só muda por migrations versionadas (ADR-0005). Nunca sincronização automática.
-    push: false,
-    migrationDir: path.resolve(dirname, 'migrations'),
-  }),
+  // `withObservableInit`: falha de conexão na inicialização deixa de virar
+  // `unhandledRejection: undefined` (alerta do Sentry de 02/11/2026; ver safe-adapter.ts).
+  db: withObservableInit(
+    postgresAdapter({
+      pool: {
+        connectionString: process.env.DATABASE_URL || '',
+        // Sem limite, uma conexão travada prende a função até o timeout da plataforma.
+        connectionTimeoutMillis: 15_000,
+      },
+      // Schema só muda por migrations versionadas (ADR-0005). Nunca sincronização automática.
+      push: false,
+      migrationDir: path.resolve(dirname, 'migrations'),
+    }),
+  ),
   sharp,
   telemetry: false,
   hooks: {
